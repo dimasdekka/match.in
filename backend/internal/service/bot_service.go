@@ -350,6 +350,55 @@ func (s *botService) handleCallbackQuery(
 		return
 	}
 
+	if strings.HasPrefix(data, "swipe_like_") || strings.HasPrefix(data, "swipe_pass_") {
+		targetIDStr := ""
+		action := domain.ActionPass
+		if strings.HasPrefix(data, "swipe_like_") {
+			targetIDStr = strings.TrimPrefix(data, "swipe_like_")
+			action = domain.ActionLike
+		} else {
+			targetIDStr = strings.TrimPrefix(data, "swipe_pass_")
+		}
+
+		targetUserID, _ := strconv.ParseUint(targetIDStr, 10, 64)
+		if targetUserID > 0 {
+			swipe := &domain.Swipe{
+				SwiperID: user.ID,
+				TargetID: uint(targetUserID),
+				Action:   action,
+			}
+			_ = swipeRepo.RecordSwipe(nil, swipe)
+
+			if action == domain.ActionLike {
+				likedBack, _ := swipeRepo.HasLikedBack(nil, uint(targetUserID), user.ID)
+				if likedBack {
+					// MUTUAL MATCH! Create Match & Send Notifications
+					_, _ = matchRepo.CreateMatch(nil, user.ID, uint(targetUserID))
+					targetUser, _ := userRepo.GetByID(nil, uint(targetUserID))
+					targetProfile, _ := profileRepo.GetByUserID(nil, uint(targetUserID))
+
+					if targetUser != nil && targetProfile != nil {
+						_ = s.SendMatchNotification(user.TelegramID, targetProfile.Name, targetUser.Username, user.LanguageCode)
+
+						swiperProfile, _ := profileRepo.GetByUserID(nil, user.ID)
+						if swiperProfile != nil {
+							_ = s.SendMatchNotification(targetUser.TelegramID, swiperProfile.Name, user.Username, targetUser.LanguageCode)
+						}
+					}
+				}
+			}
+		}
+
+		// Automatically show next candidate profile in chat
+		s.handleCallbackQuery(&TelegramCallbackQuery{
+			ID:      query.ID,
+			From:    query.From,
+			Message: query.Message,
+			Data:    "cmd_search",
+		}, miniAppURL, profileRepo, userRepo, swipeRepo, matchRepo)
+		return
+	}
+
 	if data == "cmd_search" {
 		profile, _ := profileRepo.GetByUserID(nil, user.ID)
 		if profile == nil {
