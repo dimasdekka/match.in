@@ -482,6 +482,8 @@ func (s *botService) handleCallbackQuery(
 	swipeRepo repository.SwipeRepository,
 	matchRepo repository.MatchRepository,
 ) {
+	s.answerCallbackQuery(query.ID)
+
 	chatID := query.Message.Chat.ID
 	data := query.Data
 	from := query.From
@@ -979,6 +981,21 @@ func (s *botService) sendPhotoWithKeyboard(chatID int64, photoURL string, captio
 	}
 	bodyBytes, _ := json.Marshal(payload)
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", s.botToken)
+	resp, err := s.client.Post(apiURL, "application/json", bytes.NewBuffer(bodyBytes))
+	if err == nil {
+		resp.Body.Close()
+	}
+}
+
+func (s *botService) answerCallbackQuery(callbackQueryID string) {
+	if callbackQueryID == "" || s.botToken == "" {
+		return
+	}
+	payload := map[string]string{
+		"callback_query_id": callbackQueryID,
+	}
+	bodyBytes, _ := json.Marshal(payload)
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/answerCallbackQuery", s.botToken)
 	resp, err := s.client.Post(apiURL, "application/json", bytes.NewBuffer(bodyBytes))
 	if err == nil {
 		resp.Body.Close()
