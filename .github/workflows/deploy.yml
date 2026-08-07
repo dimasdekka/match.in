@@ -1,0 +1,38 @@
+name: Auto Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2 Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "🚀 Auto-deploying latest code on AWS..."
+            cd /var/www/matchin
+            git pull origin main
+            
+            echo "⚙️ Building Go Backend..."
+            cd /var/www/matchin/backend
+            go build -p 1 -o matchin-api cmd/api/main.go
+            sudo systemctl restart matchin-backend
+            
+            echo "💻 Building React Frontend..."
+            cd /var/www/matchin/frontend
+            npm install
+            npm run build
+            
+            echo "✅ Auto-deployment completed successfully!"
