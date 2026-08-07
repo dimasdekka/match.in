@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import type { ProfileFormData, Gender } from '../types';
 import { api } from '../services/api';
-import { User, MapPin, Mic, Tag, Save, CheckCircle } from 'lucide-react';
+import { User, MapPin, Mic, Tag, Save, CheckCircle, Camera, Plus, X } from 'lucide-react';
 
 export const ProfileEdit: React.FC = () => {
-  const { t } = useTranslation();
+  const [photoInput, setPhotoInput] = useState('');
+  const [interestInput, setInterestInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState(false);
+
   const [formData, setFormData] = useState<ProfileFormData>({
     name: 'Alex',
     age: 24,
@@ -21,11 +25,6 @@ export const ProfileEdit: React.FC = () => {
     photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80'],
     interests: ['Kopi', 'Musik', 'Travel', 'Coding'],
   });
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [savedMsg, setSavedMsg] = useState(false);
-  const [interestInput, setInterestInput] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -67,6 +66,10 @@ export const ProfileEdit: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.photos.length === 0) {
+      alert('Wajib memasukkan minimal 1 foto atau video!');
+      return;
+    }
     setSaving(true);
     setSavedMsg(false);
     try {
@@ -74,10 +77,24 @@ export const ProfileEdit: React.FC = () => {
       setSavedMsg(true);
       setTimeout(() => setSavedMsg(false), 3000);
     } catch (err) {
-      alert('Failed to save profile');
+      alert('Gagal menyimpan profil');
     } finally {
       setSaving(false);
     }
+  };
+
+  const addPhotoUrl = () => {
+    if (!photoInput.trim()) return;
+    if (formData.photos.length >= 3) {
+      alert('Maksimal 3 foto atau video!');
+      return;
+    }
+    setFormData({ ...formData, photos: [...formData.photos, photoInput.trim()] });
+    setPhotoInput('');
+  };
+
+  const removePhoto = (idx: number) => {
+    setFormData({ ...formData, photos: formData.photos.filter((_, i) => i !== idx) });
   };
 
   const addInterest = () => {
@@ -101,43 +118,91 @@ export const ProfileEdit: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 p-4 max-w-md mx-auto w-full pb-20">
+    <div className="flex-1 p-4 max-w-md mx-auto w-full pb-24 animate-fade-in">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <User className="w-5 h-5 text-pink-400" />
-            <span>{t('profileSetup')}</span>
+            <span>Pengaturan Profil</span>
           </h2>
 
           {savedMsg && (
             <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-              <CheckCircle className="w-3.5 h-3.5" /> Saved!
+              <CheckCircle className="w-3.5 h-3.5" /> Tersimpan!
             </span>
           )}
+        </div>
+
+        {/* Photo/Video Gallery Manager */}
+        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Camera className="w-4 h-4 text-pink-400" />
+              <span>Foto & Video Profil (Wajib 1-3)</span>
+            </span>
+            <span className="text-[11px] text-pink-400 font-bold">{formData.photos.length}/3</span>
+          </label>
+
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={photoInput}
+              onChange={(e) => setPhotoInput(e.target.value)}
+              placeholder="URL Foto / Video (https://...)"
+              className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={addPhotoUrl}
+              disabled={formData.photos.length >= 3}
+              className="px-3 py-2 rounded-xl bg-pink-500 text-white font-bold text-xs hover:bg-pink-600 disabled:opacity-50 flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" /> Tambah
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            {formData.photos.map((item, idx) => (
+              <div key={idx} className="relative w-full h-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+                {item.endsWith('.mp4') || item.endsWith('.webm') ? (
+                  <video src={item} className="w-full h-full object-cover" muted loop />
+                ) : (
+                  <img src={item} alt={`Photo ${idx}`} className="w-full h-full object-cover" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => removePhoto(idx)}
+                  className="absolute top-1 right-1 p-1 rounded-full bg-slate-950/80 text-rose-400 hover:text-white"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Name & Age */}
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2 space-y-1">
-            <label className="text-xs font-semibold text-slate-400">{t('fullName')}</label>
+            <label className="text-xs font-semibold text-slate-400">Nama Lengkap</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
               required
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400">{t('age')}</label>
+            <label className="text-xs font-semibold text-slate-400">Usia</label>
             <input
               type="number"
               min={18}
               max={100}
               value={formData.age}
               onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 18 })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none text-center font-bold"
               required
             />
           </div>
@@ -146,27 +211,27 @@ export const ProfileEdit: React.FC = () => {
         {/* Gender & Target Gender */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400">{t('gender')}</label>
+            <label className="text-xs font-semibold text-slate-400">Jenis Kelamin Saya</label>
             <select
               value={formData.gender}
               onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
             >
-              <option value="male">{t('male')}</option>
-              <option value="female">{t('female')}</option>
+              <option value="male">👨 Pria</option>
+              <option value="female">👩 Wanita</option>
             </select>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400">{t('interestedIn')}</label>
+            <label className="text-xs font-semibold text-slate-400">Mencari Pasangan</label>
             <select
               value={formData.target_gender}
               onChange={(e) => setFormData({ ...formData, target_gender: e.target.value as Gender })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
             >
-              <option value="female">{t('female')}</option>
-              <option value="male">{t('male')}</option>
-              <option value="all">{t('everyone')}</option>
+              <option value="female">👩 Wanita</option>
+              <option value="male">👨 Pria</option>
+              <option value="all">✨ Semua</option>
             </select>
           </div>
         </div>
@@ -176,13 +241,13 @@ export const ProfileEdit: React.FC = () => {
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-rose-400" />
-              <span>{t('country')}</span>
+              <span>Negara</span>
             </label>
             <input
               type="text"
               value={formData.country}
               onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
               required
             />
           </div>
@@ -190,13 +255,13 @@ export const ProfileEdit: React.FC = () => {
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-pink-400" />
-              <span>{t('city')}</span>
+              <span>Kota (Asal)</span>
             </label>
             <input
               type="text"
               value={formData.city}
               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
               required
             />
           </div>
@@ -204,12 +269,12 @@ export const ProfileEdit: React.FC = () => {
 
         {/* Bio */}
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-slate-400">{t('bio')}</label>
+          <label className="text-xs font-semibold text-slate-400">Deskripsi Singkat (Bio)</label>
           <textarea
             rows={3}
             value={formData.bio}
             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
+            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
             placeholder="Ceritakan sedikit tentang dirimu..."
           />
         </div>
@@ -218,14 +283,14 @@ export const ProfileEdit: React.FC = () => {
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
             <Mic className="w-3.5 h-3.5 text-purple-400" />
-            <span>{t('voiceBio')}</span>
+            <span>Voice Bio Audio URL (Opsional)</span>
           </label>
           <input
             type="url"
             value={formData.voice_bio_url}
             onChange={(e) => setFormData({ ...formData, voice_bio_url: e.target.value })}
-            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:border-pink-500 focus:outline-none"
-            placeholder="https://... audio url"
+            className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
+            placeholder="https://... URL audio .mp3 / .ogg"
           />
         </div>
 
@@ -233,7 +298,7 @@ export const ProfileEdit: React.FC = () => {
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
             <Tag className="w-3.5 h-3.5 text-amber-400" />
-            <span>{t('interests')}</span>
+            <span>Minat / Hobi</span>
           </label>
 
           <div className="flex gap-2">
@@ -241,13 +306,13 @@ export const ProfileEdit: React.FC = () => {
               type="text"
               value={interestInput}
               onChange={(e) => setInterestInput(e.target.value)}
-              placeholder="Tambah hobi (e.g. Kopi, Gaming)"
-              className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
+              placeholder="Tambah hobi (misal: Kopi, Gaming)"
+              className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
             />
             <button
               type="button"
               onClick={addInterest}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold hover:bg-slate-700"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700"
             >
               +
             </button>
@@ -270,10 +335,10 @@ export const ProfileEdit: React.FC = () => {
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20 hover:opacity-95 transition disabled:opacity-50"
+          className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20 hover:opacity-95 active:scale-98 transition disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
-          <span>{saving ? 'Saving...' : t('saveProfile')}</span>
+          <span>{saving ? 'Menyimpan...' : 'Simpan Perubahan Profil'}</span>
         </button>
       </form>
     </div>
