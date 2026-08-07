@@ -148,7 +148,10 @@ func (s *botService) StartPollingUpdates(
 		miniAppURL = "https://18-180-193-149.nip.io"
 	}
 
-	fmt.Println("🤖 Telegram Chat Bot Polling Started! Dual-mode Chat & Mini App enabled.")
+	// Register Bot Commands Menu in Telegram UI
+	s.registerBotCommands()
+
+	fmt.Println("🤖 Telegram Chat Bot Polling Started! Full Slash Commands Enabled.")
 
 	go func() {
 		offset := int64(0)
@@ -181,7 +184,7 @@ func (s *botService) StartPollingUpdates(
 				offset = update.UpdateID + 1
 
 				if update.Message != nil && update.Message.Text != "" {
-					s.handleTextMessage(update.Message, miniAppURL, profileRepo, userRepo)
+					s.handleTextMessage(update.Message, miniAppURL, profileRepo, userRepo, matchRepo)
 				} else if update.CallbackQuery != nil {
 					s.handleCallbackQuery(update.CallbackQuery, miniAppURL, profileRepo, userRepo, swipeRepo, matchRepo)
 				}
@@ -190,11 +193,31 @@ func (s *botService) StartPollingUpdates(
 	}()
 }
 
+func (s *botService) registerBotCommands() {
+	commands := []map[string]string{
+		{"command": "start", "description": "🔥 Mulai Bot & Tampilkan Menu Utama"},
+		{"command": "search", "description": "🔍 Cari Pasangan via Chat"},
+		{"command": "profile", "description": "👤 Lihat & Edit Profil Saya"},
+		{"command": "matches", "description": "💖 Daftar Pasangan Match Saya"},
+		{"command": "reset", "description": "📝 Isi / Buat Ulang Profil"},
+		{"command": "help", "description": "❓ Bantuan & Panduan Penggunaan"},
+	}
+
+	payload := map[string]interface{}{"commands": commands}
+	bodyBytes, _ := json.Marshal(payload)
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/setMyCommands", s.botToken)
+	resp, err := s.client.Post(apiURL, "application/json", bytes.NewBuffer(bodyBytes))
+	if err == nil {
+		resp.Body.Close()
+	}
+}
+
 func (s *botService) handleTextMessage(
 	msg *TelegramMessage,
 	miniAppURL string,
 	profileRepo repository.ProfileRepository,
 	userRepo repository.UserRepository,
+	matchRepo repository.MatchRepository,
 ) {
 	chatID := msg.Chat.ID
 	text := strings.TrimSpace(msg.Text)
@@ -218,12 +241,14 @@ func (s *botService) handleTextMessage(
 	state, exists := s.regStates[from.ID]
 	s.statesLock.Unlock()
 
-	if exists && state != nil && text != "/start" {
+	// If user is currently completing chat registration wizard
+	if exists && state != nil && !strings.HasPrefix(text, "/") {
 		s.processChatRegistrationStep(chatID, from.ID, text, state, miniAppURL, profileRepo, userRepo)
 		return
 	}
 
-	if text == "/start" || text == "/menu" {
+	switch text {
+	case "/start", "/menu":
 		s.statesLock.Lock()
 		delete(s.regStates, from.ID)
 		s.statesLock.Unlock()
@@ -231,9 +256,12 @@ func (s *botService) handleTextMessage(
 		welcomeMsg := fmt.Sprintf(
 			"🔥 <b>Selamat datang di Match.in / Ketemu.in!</b>\n\n"+
 				"Aplikasi dating & matchmaking modern berbasis Telegram.\n\n"+
-				"✨ <b>Pilih Cara Penggunaan:</b>\n"+
-				"1. 🚀 <b>Buka Mini App</b> (Swipe Visual, Voice Bio, & Filter Lokasi)\n"+
-				"2. 💬 <b>Isi Profil / Cari via Chat</b> (Mode Chat Klasik Telegram)",
+				"✨ <b>Pilihan Fitur Utama:</b>\n"+
+				"• 🚀 <b>Mini App</b>: Swipe visual Tinder-style, Voice Bio & Filter Lokasi\n"+
+				"• 🔍 <b>Cari via Chat</b> (/search): Cari jodoh langsung di Telegram\n"+
+				"• 👤 <b>Profil Saya</b> (/profile): Cek data profilmu\n"+
+				"• 💖 <b>Matches Saya</b> (/matches): Lihat pasangan saling menyukai\n"+
+				"• ❓ <b>Bantuan</b> (/help): Panduan bot",
 		)
 
 		keyboard := map[string]interface{}{
@@ -246,18 +274,165 @@ func (s *botService) handleTextMessage(
 				},
 				{
 					{
-						"text":          "👤 Isi Profil via Chat",
-						"callback_data": "cmd_reg_chat",
-					},
-					{
 						"text":          "🔍 Cari Jodoh via Chat",
 						"callback_data": "cmd_search",
+					},
+					{
+						"text":          "👤 Profil Saya",
+						"callback_data": "cmd_profile",
+					},
+				},
+				{
+					{
+						"text":          "💖 Matches Saya",
+						"callback_data": "cmd_matches",
+					},
+					{
+						"text":          "✍️ Buat / Edit Profil",
+						"callback_data": "cmd_reg_chat",
 					},
 				},
 			},
 		}
 
 		s.sendMessageWithKeyboard(chatID, welcomeMsg, keyboard)
+
+	case "/help":
+		helpMsg := fmt.Sprintf(
+			"❓ <b>PANDUAN BANTUAN MATCH.IN / KETEMU.IN</b>\n\n"+
+				"<b>1. Berapa Cara Penggunaan?</b>\n"+
+				"Kamu bisa memilih 2 cara:\n"+
+				"- 🚀 <b>Lewat Mini App</b>: Tekan tombol 'Buka Match.in Mini App' untuk pengalaman visual Tinder-style, Voice Bio, dan Swipe.\n"+
+				"- 💬 <b>Lewat Chat</b>: Gunakan perintah di bawah ini langsung di chat ini.\n\n"+
+				"<b>2. Perintah Telegram Chat (/):</b>\n"+
+				"• <code>/start</code> - Tampilkan menu utama\n"+
+				"• <code>/search</code> - Cari kandidat jodoh langsung di chat\n"+
+				"• <code>/profile</code> - Lihat & atur data profilmu\n"+
+				"• <code>/matches</code> - Lihat daftar orang yang saling menyukaimu\n"+
+				"• <code>/reset</code> - Isi ulang data profil dari awal\n"+
+				"• <code>/help</code> - Tampilkan panduan ini\n\n"+
+				"<b>3. Bagaimana Jika Saling Suka (Match)?</b>\n"+
+				"Jika kamu & kandidat saling menyukai, Bot akan otomatis mengirimkan notifikasi beserta link chat Telegram pribadi pasangan!",
+		)
+		s.sendMessageWithKeyboard(chatID, helpMsg, nil)
+
+	case "/profile", "/me":
+		dbUser, _ := userRepo.GetByTelegramID(nil, from.ID)
+		if dbUser == nil {
+			s.sendMessageWithKeyboard(chatID, "⚠️ Kamu belum terdaftar. Ketik /reset atau /start untuk mendaftar.", nil)
+			return
+		}
+		profile, _ := profileRepo.GetByUserID(nil, dbUser.ID)
+		if profile == nil {
+			msg := "⚠️ <b>Kamu belum mengisi profil!</b>\n\nKlik tombol di bawah untuk membuat profil:"
+			keyboard := map[string]interface{}{
+				"inline_keyboard": [][]map[string]interface{}{
+					{
+						{"text": "✍️ Buat Profil Sekarang", "callback_data": "cmd_reg_chat"},
+					},
+				},
+			}
+			s.sendMessageWithKeyboard(chatID, msg, keyboard)
+			return
+		}
+
+		profileMsg := fmt.Sprintf(
+			"👤 <b>PROFIL SAYA</b>\n\n"+
+				"• <b>Nama</b>: %s\n"+
+				"• <b>Usia</b>: %d tahun\n"+
+				"• <b>Gender</b>: %s\n"+
+				"• <b>Mencari</b>: %s\n"+
+				"• <b>Asal/Lokasi</b>: %s, %s\n"+
+				"• <b>Deskripsi Singkat</b>: %s\n",
+			profile.Name, profile.Age, profile.Gender, profile.TargetGender, profile.City, profile.Country, profile.Bio,
+		)
+
+		keyboard := map[string]interface{}{
+			"inline_keyboard": [][]map[string]interface{}{
+				{
+					{
+						"text":    "🚀 Edit via Mini App",
+						"web_app": map[string]string{"url": miniAppURL},
+					},
+					{
+						"text":          "✍️ Edit via Chat",
+						"callback_data": "cmd_reg_chat",
+					},
+				},
+			},
+		}
+
+		s.sendMessageWithKeyboard(chatID, profileMsg, keyboard)
+
+	case "/search", "/find":
+		s.handleCallbackQuery(&TelegramCallbackQuery{
+			From:    from,
+			Message: msg,
+			Data:    "cmd_search",
+		}, miniAppURL, profileRepo, userRepo, nil, matchRepo)
+
+	case "/matches":
+		dbUser, _ := userRepo.GetByTelegramID(nil, from.ID)
+		if dbUser == nil {
+			s.sendMessageWithKeyboard(chatID, "⚠️ Kamu belum terdaftar.", nil)
+			return
+		}
+		matches, _ := matchRepo.GetMatchesForUser(nil, dbUser.ID)
+		if len(matches) == 0 {
+			msg := "😔 <b>Belum ada pasangan match!</b>\n\nTerus sukai kandidat di /search atau Mini App untuk mendapatkan match pertamamu!"
+			s.sendMessageWithKeyboard(chatID, msg, nil)
+			return
+		}
+
+		matchListText := "💖 <b>DAFTAR PASANGAN MATCH SAYA:</b>\n\n"
+		var inlineButtons [][]map[string]interface{}
+
+		for idx, m := range matches {
+			var partnerUser *domain.User
+			var partnerProfile *domain.Profile
+			if m.User1ID == dbUser.ID {
+				partnerUser, _ = userRepo.GetByID(nil, m.User2ID)
+				partnerProfile, _ = profileRepo.GetByUserID(nil, m.User2ID)
+			} else {
+				partnerUser, _ = userRepo.GetByID(nil, m.User1ID)
+				partnerProfile, _ = profileRepo.GetByUserID(nil, m.User1ID)
+			}
+
+			if partnerUser != nil && partnerProfile != nil {
+				matchListText += fmt.Sprintf("%d. <b>%s (%d thn)</b> - 📍 %s, %s\n", idx+1, partnerProfile.Name, partnerProfile.Age, partnerProfile.City, partnerProfile.Country)
+				if partnerUser.Username != "" {
+					inlineButtons = append(inlineButtons, []map[string]interface{}{
+						{
+							"text": fmt.Sprintf("💬 Chat @%s (%s)", partnerUser.Username, partnerProfile.Name),
+							"url":  "https://t.me/" + partnerUser.Username,
+						},
+					})
+				}
+			}
+		}
+
+		keyboard := map[string]interface{}{
+			"inline_keyboard": inlineButtons,
+		}
+		s.sendMessageWithKeyboard(chatID, matchListText, keyboard)
+
+	case "/reset", "/register":
+		s.statesLock.Lock()
+		s.regStates[from.ID] = &RegistrationState{
+			Step:    1,
+			Name:    from.FirstName,
+			Country: "Indonesia",
+		}
+		s.statesLock.Unlock()
+
+		msg := fmt.Sprintf("📝 <b>Langkah 1 dari 4: Nama Lengkap</b>\n\nMasukkan nama panggilanmu (saat ini: <b>%s</b>). Balas pesan ini jika ingin mengubah nama:", from.FirstName)
+		s.sendMessageWithKeyboard(chatID, msg, nil)
+
+	default:
+		// Fallback for unknown slash commands or general text
+		if strings.HasPrefix(text, "/") {
+			s.sendMessageWithKeyboard(chatID, "⚠️ Perintah tidak dikenal. Ketik /help untuk melihat daftar perintah resmi.", nil)
+		}
 	}
 }
 
@@ -297,6 +472,24 @@ func (s *botService) handleCallbackQuery(
 
 		msg := fmt.Sprintf("📝 <b>Langkah 1 dari 4: Nama Lengkap</b>\n\nMasukkan nama panggilanmu (saat ini: <b>%s</b>). Balas pesan ini jika ingin mengubah nama:", from.FirstName)
 		s.sendMessageWithKeyboard(chatID, msg, nil)
+		return
+	}
+
+	if data == "cmd_profile" {
+		s.handleTextMessage(&TelegramMessage{
+			Chat: query.Message.Chat,
+			From: from,
+			Text: "/profile",
+		}, miniAppURL, profileRepo, userRepo, matchRepo)
+		return
+	}
+
+	if data == "cmd_matches" {
+		s.handleTextMessage(&TelegramMessage{
+			Chat: query.Message.Chat,
+			From: from,
+			Text: "/matches",
+		}, miniAppURL, profileRepo, userRepo, matchRepo)
 		return
 	}
 
@@ -361,7 +554,7 @@ func (s *botService) handleCallbackQuery(
 		}
 
 		targetUserID, _ := strconv.ParseUint(targetIDStr, 10, 64)
-		if targetUserID > 0 {
+		if targetUserID > 0 && swipeRepo != nil {
 			swipe := &domain.Swipe{
 				SwiperID: user.ID,
 				TargetID: uint(targetUserID),
