@@ -25,7 +25,6 @@ export const App: React.FC = () => {
   const [initialTelegramName, setInitialTelegramName] = useState<string>('');
 
   useEffect(() => {
-    // Initialize Telegram WebApp SDK
     let tgName = '';
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
       const tg = (window as any).Telegram.WebApp;
@@ -42,7 +41,6 @@ export const App: React.FC = () => {
       }
     }
 
-    // Check if user has an existing profile
     const checkUserProfile = async () => {
       try {
         const res = await api.getMyProfile();
@@ -80,7 +78,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Header with dynamic branding */}
+      {/* iOS Floating Header */}
       <Header
         onOpenFilter={() => setShowFilterModal(true)}
         currentLang={currentLang}
@@ -108,44 +106,46 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-md border-t border-slate-800/80 px-6 py-2.5 flex items-center justify-around">
-        <button
-          onClick={() => setActiveTab('discover')}
-          className={`flex flex-col items-center gap-1 text-xs font-semibold transition ${
-            activeTab === 'discover'
-              ? 'text-pink-400 scale-105'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Flame className="w-5 h-5" />
-          <span>{t('tabDiscover')}</span>
-        </button>
+      {/* iOS Floating Bottom Glass Tab Bar */}
+      <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto">
+        <nav className="ios-glass rounded-full px-6 py-3 flex items-center justify-around shadow-2xl border border-white/15">
+          <button
+            onClick={() => setActiveTab('discover')}
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition-all duration-200 ${
+              activeTab === 'discover'
+                ? 'text-pink-400 scale-110'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Flame className={`w-5 h-5 ${activeTab === 'discover' ? 'text-pink-400 fill-pink-400/20' : ''}`} />
+            <span>{t('tabDiscover')}</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('matches')}
-          className={`flex flex-col items-center gap-1 text-xs font-semibold transition ${
-            activeTab === 'matches'
-              ? 'text-pink-400 scale-105'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Heart className="w-5 h-5" />
-          <span>{t('tabMatches')}</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('matches')}
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition-all duration-200 ${
+              activeTab === 'matches'
+                ? 'text-pink-400 scale-110'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Heart className={`w-5 h-5 ${activeTab === 'matches' ? 'text-pink-400 fill-pink-400/20' : ''}`} />
+            <span>{t('tabMatches')}</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex flex-col items-center gap-1 text-xs font-semibold transition ${
-            activeTab === 'profile'
-              ? 'text-pink-400 scale-105'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <User className="w-5 h-5" />
-          <span>{t('tabProfile')}</span>
-        </button>
-      </nav>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition-all duration-200 ${
+              activeTab === 'profile'
+                ? 'text-pink-400 scale-110'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <User className={`w-5 h-5 ${activeTab === 'profile' ? 'text-pink-400 fill-pink-400/20' : ''}`} />
+            <span>{t('tabProfile')}</span>
+          </button>
+        </nav>
+      </div>
     </div>
   );
 };
