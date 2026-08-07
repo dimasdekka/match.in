@@ -54,11 +54,17 @@ func main() {
 	profileService := service.NewProfileService(profileRepo)
 	matchmakingService := service.NewMatchmakingService(swipeRepo, matchRepo, profileRepo, userRepo, botService)
 
+
+
 	authHandler := handler.NewAuthHandler(userRepo)
 	profileHandler := handler.NewProfileHandler(profileService)
 	matchHandler := handler.NewMatchHandler(matchmakingService)
 
-	// Router Setup
+	miniAppURL := os.Getenv("MINI_APP_URL")
+	if miniAppURL == "" {
+		miniAppURL = "https://18-180-193-149.nip.io"
+	}
+	botService.StartPollingUpdates(miniAppURL, profileRepo, userRepo, swipeRepo, matchRepo)
 	r := gin.Default()
 
 	// CORS Setup
