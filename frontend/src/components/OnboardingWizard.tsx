@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ProfileFormData } from '../types';
-import { Heart, ArrowRight, ArrowLeft, MapPin, User, Sparkles } from 'lucide-react';
+import { Heart, ArrowRight, ArrowLeft, MapPin, User, Camera, Sparkles, X, Plus } from 'lucide-react';
 
 interface OnboardingWizardProps {
   initialName?: string;
@@ -12,6 +12,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   onComplete,
 }) => {
   const [step, setStep] = useState<number>(1);
+  const [photoInput, setPhotoInput] = useState<string>('');
   const [formData, setFormData] = useState<ProfileFormData>({
     name: initialName || 'Alex',
     age: 22,
@@ -28,16 +29,41 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     interests: ['Kopi', 'Musik', 'Travel'],
   });
 
-  const nextStep = () => setStep((s) => s + 1);
+  const nextStep = () => {
+    if (step === 5 && formData.photos.length === 0) {
+      alert('Wajib memasukkan minimal 1 foto atau video!');
+      return;
+    }
+    setStep((s) => s + 1);
+  };
+
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
+  const addPhotoUrl = () => {
+    if (!photoInput.trim()) return;
+    if (formData.photos.length >= 3) {
+      alert('Maksimal 3 foto atau video!');
+      return;
+    }
+    setFormData({ ...formData, photos: [...formData.photos, photoInput.trim()] });
+    setPhotoInput('');
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData({ ...formData, photos: formData.photos.filter((_, i) => i !== index) });
+  };
+
   const handleFinish = () => {
+    if (formData.photos.length === 0) {
+      alert('Wajib memasukkan minimal 1 foto atau video!');
+      return;
+    }
     onComplete(formData);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-pink-500/30 p-6 flex flex-col justify-between min-h-[480px] shadow-2xl shadow-pink-500/10">
+      <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-pink-500/30 p-6 flex flex-col justify-between min-h-[500px] shadow-2xl shadow-pink-500/10">
         
         {/* Step Indicator */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -51,12 +77,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           </div>
 
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30">
-            Langkah {step} dari 5
+            Langkah {step} dari 6
           </span>
         </div>
 
         {/* Step Content */}
-        <div className="py-6 flex-1 flex flex-col justify-center">
+        <div className="py-4 flex-1 flex flex-col justify-center">
           {step === 1 && (
             <div className="space-y-4 text-center animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-pink-500/20 text-pink-400 mx-auto flex items-center justify-center">
@@ -190,7 +216,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <MapPin className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Dimana Lokasimu?</h3>
+                <h3 className="text-xl font-bold text-white">Dimana Lokasimu (Asal)?</h3>
                 <p className="text-xs text-slate-400 mt-1">Digunakan untuk mencocokkan jodoh di kotamu.</p>
               </div>
 
@@ -216,11 +242,75 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     required
                   />
                 </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold">Deskripsi Singkat (Bio)</label>
+                  <textarea
+                    rows={2}
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    placeholder="Tuliskan deskripsi singkat tentang dirimu..."
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {step === 5 && (
+            <div className="space-y-3 animate-fade-in text-center">
+              <div className="w-12 h-12 rounded-full bg-pink-500/20 text-pink-400 mx-auto flex items-center justify-center">
+                <Camera className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Upload Foto / Video</h3>
+                <p className="text-xs text-slate-400 mt-1">Wajib memasukkan 1 hingga 3 foto atau video.</p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={photoInput}
+                  onChange={(e) => setPhotoInput(e.target.value)}
+                  placeholder="URL Foto / Video (https://...)"
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-pink-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={addPhotoUrl}
+                  disabled={formData.photos.length >= 3}
+                  className="px-3 py-2 rounded-xl bg-pink-500 text-white font-bold text-xs hover:bg-pink-600 disabled:opacity-50 flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" /> tambah
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                {formData.photos.map((item, idx) => (
+                  <div key={idx} className="relative w-full h-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+                    {item.endsWith('.mp4') || item.endsWith('.webm') ? (
+                      <video src={item} className="w-full h-full object-cover" muted loop />
+                    ) : (
+                      <img src={item} alt={`Photo ${idx}`} className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(idx)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-slate-950/80 text-rose-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-[11px] text-slate-400 font-semibold">
+                Total File: {formData.photos.length} / 3 (Minimal 1 wajib)
+              </p>
+            </div>
+          )}
+
+          {step === 6 && (
             <div className="space-y-4 animate-fade-in text-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 mx-auto flex items-center justify-center text-white shadow-lg shadow-pink-500/30">
                 <Sparkles className="w-8 h-8 animate-spin" />
@@ -229,7 +319,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <div>
                 <h3 className="text-xl font-bold text-white">Profil Siap! 🎉</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Selamat datang di Match.in! Tekan tombol di bawah untuk mulai menemukan jodoh di sekitarmu.
+                  Semua data (Nama, Usia, Asal, Deskripsi Singkat, & Foto/Video) sudah tersimpan. Kamu bisa mengubahnya kapan saja di menu Profil.
                 </p>
               </div>
             </div>
@@ -250,7 +340,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div />
           )}
 
-          {step < 5 ? (
+          {step < 6 ? (
             <button
               onClick={nextStep}
               className="px-5 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-pink-500/20 hover:opacity-95"

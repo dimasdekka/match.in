@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Profile } from '../types';
-import { MapPin, CheckCircle, Volume2, VolumeX, Sparkles, Heart, X, Star } from 'lucide-react';
+import { MapPin, CheckCircle, Volume2, VolumeX, Sparkles, Heart, X, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SwipeCardProps {
   profile: Profile;
@@ -10,17 +10,24 @@ interface SwipeCardProps {
 
 export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe }) => {
   const { t } = useTranslation();
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Parse photos safely
-  let photos: string[] = [];
+  // Parse media (photos & videos) safely
+  let mediaList: string[] = [];
   try {
-    photos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
+    mediaList = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
   } catch {
-    photos = [];
+    mediaList = [];
   }
-  const mainPhoto = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80';
+  if (mediaList.length === 0) {
+    mediaList = ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80'];
+  }
+
+  // Ensure max 3 files display
+  mediaList = mediaList.slice(0, 3);
+  const currentMedia = mediaList[activeMediaIndex] || mediaList[0];
 
   // Parse interests safely
   let interests: string[] = [];
@@ -45,21 +52,67 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe }) => {
     }
   };
 
+  const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
+
   return (
-    <div className="relative w-full max-w-sm h-[520px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl flex flex-col select-none transition-all duration-300">
-      {/* Background Image with Gradient Overlay */}
+    <div className="relative w-full max-w-sm h-[540px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl flex flex-col select-none transition-all duration-300">
+      {/* Background Image / Video */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={mainPhoto}
-          alt={profile.name}
-          className="w-full h-full object-cover"
-        />
+        {isVideo(currentMedia) ? (
+          <video
+            src={currentMedia}
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={currentMedia}
+            alt={profile.name}
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
       </div>
+
+      {/* Top Media Gallery Bars */}
+      {mediaList.length > 1 && (
+        <div className="relative z-10 p-3 flex gap-1.5">
+          {mediaList.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 flex-1 rounded-full transition-all ${
+                idx === activeMediaIndex ? 'bg-white shadow-sm' : 'bg-white/40'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Media Navigation Controls */}
+      {mediaList.length > 1 && (
+        <div className="absolute inset-x-0 top-1/3 z-10 px-2 flex justify-between pointer-events-none">
+          <button
+            onClick={() => setActiveMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaList.length - 1))}
+            className="p-2 rounded-full bg-slate-950/40 text-white pointer-events-auto backdrop-blur-sm hover:bg-slate-950/70"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setActiveMediaIndex((prev) => (prev < mediaList.length - 1 ? prev + 1 : 0))}
+            className="p-2 rounded-full bg-slate-950/40 text-white pointer-events-auto backdrop-blur-sm hover:bg-slate-950/70"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Top Badges */}
       <div className="relative z-10 p-4 flex items-center justify-between">
         <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Asal (Kota, Negara) */}
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-700/50 text-xs font-semibold text-slate-200">
             <MapPin className="w-3.5 h-3.5 text-rose-400" />
             <span>
@@ -85,13 +138,18 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe }) => {
 
       {/* Card Body Info */}
       <div className="relative z-10 mt-auto p-5 space-y-3">
-        {/* Name & Age */}
+        {/* Nama & Umur */}
         <div>
           <div className="flex items-baseline gap-2">
             <h2 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h2>
             <span className="text-2xl font-light text-slate-300">{profile.age}</span>
           </div>
-          {profile.bio && <p className="text-sm text-slate-300 line-clamp-2 mt-1 font-normal leading-relaxed">{profile.bio}</p>}
+          {/* Deskripsi Singkat (Bio) */}
+          {profile.bio && (
+            <p className="text-xs text-slate-300 line-clamp-2 mt-1 font-normal leading-relaxed">
+              {profile.bio}
+            </p>
+          )}
         </div>
 
         {/* Voice Bio Player (if available) */}
