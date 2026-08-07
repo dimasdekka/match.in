@@ -1,0 +1,16 @@
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Go / Backend
+backend/matchin.db
+backend/matchin-api
+backend/*.exe
+backend/.env
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
