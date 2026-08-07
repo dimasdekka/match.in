@@ -94,8 +94,8 @@ func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserI
 		return nil, fmt.Errorf("failed to query profile recommendations: %w", err)
 	}
 
-	// Fallback if no specific city/country match found: show other candidates globally so app is never empty!
-	if len(profiles) == 0 && currentProfile.TargetLocationMode != domain.FilterGlobal {
+	// Always fallback to showing candidates matching target gender globally if current location filter yields 0 candidates!
+	if len(profiles) == 0 {
 		fallbackQuery := r.db.WithContext(ctx).Preload("User").Where("user_id != ?", currentUserID)
 		if len(swipedTargetIDs) > 0 {
 			fallbackQuery = fallbackQuery.Where("user_id NOT IN ?", swipedTargetIDs)

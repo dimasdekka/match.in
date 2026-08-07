@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"matchin-backend/internal/domain"
@@ -19,14 +22,27 @@ type BotService interface {
 }
 
 type botService struct {
-	botToken string
-	client   *http.Client
+	botToken   string
+	client     *http.Client
+	regStates  map[int64]*RegistrationState
+	statesLock sync.Mutex
+}
+
+type RegistrationState struct {
+	Step         int
+	Name         string
+	Age          int
+	Gender       domain.Gender
+	TargetGender domain.Gender
+	City         string
+	Country      string
 }
 
 func NewBotService(botToken string) BotService {
 	return &botService{
-		botToken: botToken,
-		client:   &http.Client{Timeout: 10 * time.Second},
+		botToken:  botToken,
+		client:    &http.Client{Timeout: 10 * time.Second},
+		regStates: make(map[int64]*RegistrationState),
 	}
 }
 
@@ -77,15 +93,13 @@ func (s *botService) SendMatchNotification(telegramID int64, matchedName string,
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", s.botToken)
 
 	resp, err := s.client.Post(apiURL, "application/json", bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return fmt.Errorf("failed to send bot message: %w", err)
+	if err == nil {
+		resp.Body.Close()
 	}
-	defer resp.Body.Close()
 
 	return nil
 }
 
-// Telegram Update Structures
 type TelegramUpdate struct {
 	UpdateID      int64                  `json:"update_id"`
 	Message       *TelegramMessage       `json:"message"`
@@ -134,7 +148,7 @@ func (s *botService) StartPollingUpdates(
 		miniAppURL = "https://18-180-193-149.nip.io"
 	}
 
-	fmt.Println("🤖 Telegram Chat Bot Polling Started! Listening to /start, /search, and chat commands...")
+	fmt.Println("🤖 Telegram Chat Bot Polling Started! Dual-mode Chat & Mini App enabled.")
 
 	go func() {
 		offset := int64(0)
@@ -183,29 +197,44 @@ func (s *botService) handleTextMessage(
 	userRepo repository.UserRepository,
 ) {
 	chatID := msg.Chat.ID
-	text := msg.Text
+	text := strings.TrimSpace(msg.Text)
 	from := msg.From
 
-	// Save or update user
-	if from != nil {
-		user := &domain.User{
-			TelegramID:   from.ID,
-			Username:     from.Username,
-			FirstName:    from.FirstName,
-			LastName:     from.LastName,
-			LanguageCode: from.LanguageCode,
-			IsActive:     true,
-		}
-		_ = userRepo.CreateOrUpdate(nil, user)
+	if from == nil {
+		return
+	}
+
+	user := &domain.User{
+		TelegramID:   from.ID,
+		Username:     from.Username,
+		FirstName:    from.FirstName,
+		LastName:     from.LastName,
+		LanguageCode: from.LanguageCode,
+		IsActive:     true,
+	}
+	_ = userRepo.CreateOrUpdate(nil, user)
+
+	// Check if user is in chat registration wizard state
+	s.statesLock.Lock()
+	state, exists := s.regStates[from.ID]
+	s.statesLock.Unlock()
+
+	if exists && state != nil && text != "/start" {
+		s.processChatRegistrationStep(chatID, from.ID, text, state, miniAppURL, profileRepo, userRepo)
+		return
 	}
 
 	if text == "/start" || text == "/menu" {
+		s.statesLock.Lock()
+		delete(s.regStates, from.ID)
+		s.statesLock.Unlock()
+
 		welcomeMsg := fmt.Sprintf(
 			"🔥 <b>Selamat datang di Match.in / Ketemu.in!</b>\n\n"+
 				"Aplikasi dating & matchmaking modern berbasis Telegram.\n\n"+
 				"✨ <b>Pilih Cara Penggunaan:</b>\n"+
-				"1. 🚀 <b>Buka Mini App</b>: Tampilan visual kartu swipe (Tinder-style), Voice Bio & Filter Lokasi.\n"+
-				"2. 💬 <b>Cari via Chat</b>: Cari jodoh langsung di dalam obrolan Telegram ini!",
+				"1. 🚀 <b>Buka Mini App</b> (Rekomendasi Utama - Swipe Visual, Voice Bio, & Filter)\n"+
+				"2. 💬 <b>Isi Profil / Cari via Chat</b> (Mode Chat Klasik Telegram)",
 		)
 
 		keyboard := map[string]interface{}{
@@ -218,12 +247,12 @@ func (s *botService) handleTextMessage(
 				},
 				{
 					{
-						"text":          "🔍 Cari Jodoh via Chat",
-						"callback_data": "cmd_search",
+						"text":          "👤 Isi Profil via Chat",
+						"callback_data": "cmd_reg_chat",
 					},
 					{
-						"text":          "💖 Matches Saya",
-						"callback_data": "cmd_matches",
+						"text":          "🔍 Cari Jodoh via Chat",
+						"callback_data": "cmd_search",
 					},
 				},
 			},
@@ -258,11 +287,58 @@ func (s *botService) handleCallbackQuery(
 		_ = userRepo.CreateOrUpdate(nil, user)
 	}
 
+	if data == "cmd_reg_chat" {
+		s.statesLock.Lock()
+		s.regStates[from.ID] = &RegistrationState{
+			Step:    1,
+			Name:    from.FirstName,
+			Country: "Indonesia",
+		}
+		s.statesLock.Unlock()
+
+		msg := fmt.Sprintf("📝 <b>Langkah 1 dari 4: Nama Lengkap</b>\n\nMasukkan nama panggilanmu (saat ini: <b>%s</b>). Balas pesan ini jika ingin mengubah nama:", from.FirstName)
+		s.sendMessageWithKeyboard(chatID, msg, nil)
+		return
+	}
+
+	if strings.HasPrefix(data, "gender_") {
+		s.statesLock.Lock()
+		state := s.regStates[from.ID]
+		if state != nil {
+			if data == "gender_male" {
+				state.Gender = domain.GenderMale
+			} else {
+				state.Gender = domain.GenderFemale
+			}
+			state.Step = 3
+			s.promptTargetGender(chatID)
+		}
+		s.statesLock.Unlock()
+		return
+	}
+
+	if strings.HasPrefix(data, "target_") {
+		s.statesLock.Lock()
+		state := s.regStates[from.ID]
+		if state != nil {
+			if data == "target_female" {
+				state.TargetGender = domain.GenderFemale
+			} else if data == "target_male" {
+				state.TargetGender = domain.GenderMale
+			} else {
+				state.TargetGender = domain.GenderAll
+			}
+			state.Step = 4
+			s.sendMessageWithKeyboard(chatID, "🏙️ <b>Langkah 4 dari 4: Kota Tempat Tinggal</b>\n\nKetik nama kotamu sekarang (contoh: Jakarta, Bandung, Subang):", nil)
+		}
+		s.statesLock.Unlock()
+		return
+	}
+
 	if data == "cmd_search" {
 		profile, _ := profileRepo.GetByUserID(nil, user.ID)
 		if profile == nil {
-			// User has no profile yet -> urge opening Mini App or quick prompt
-			promptMsg := "⚠️ <b>Profil Kamu Belum Lengkap!</b>\n\nBuka Mini App untuk mengisi profil 5 langkah singkat terlebih dahulu:"
+			promptMsg := "⚠️ <b>Profil Kamu Belum Ada!</b>\n\nPilih cara mengisi profil:"
 			keyboard := map[string]interface{}{
 				"inline_keyboard": [][]map[string]interface{}{
 					{
@@ -271,21 +347,26 @@ func (s *botService) handleCallbackQuery(
 							"web_app": map[string]string{"url": miniAppURL},
 						},
 					},
+					{
+						{
+							"text":          "👤 Isi Profil via Chat",
+							"callback_data": "cmd_reg_chat",
+						},
+					},
 				},
 			}
 			s.sendMessageWithKeyboard(chatID, promptMsg, keyboard)
 			return
 		}
 
-		// Fetch next recommendation profile
 		recs, _ := profileRepo.GetRecommendations(nil, user.ID, profile, 1)
 		if len(recs) == 0 {
-			noRecMsg := "😔 <b>Belum ada kandidat baru di sekitarmu!</b>\n\nCoba buka Mini App dan ubah filter lokasi menjadi Satu Negara atau Global:"
+			noRecMsg := "😔 <b>Belum ada kandidat baru!</b>\n\nCoba buka Mini App untuk mengubah filter:"
 			keyboard := map[string]interface{}{
 				"inline_keyboard": [][]map[string]interface{}{
 					{
 						{
-							"text":    "🌐 Buka Filter di Mini App",
+							"text":    "🌐 Buka Mini App",
 							"web_app": map[string]string{"url": miniAppURL},
 						},
 					},
@@ -325,7 +406,7 @@ func (s *botService) handleCallbackQuery(
 				},
 				{
 					{
-						"text":    "🚀 Buka Tampilan Mini App",
+						"text":    "🚀 Buka Mini App",
 						"web_app": map[string]string{"url": miniAppURL},
 					},
 				},
@@ -334,6 +415,133 @@ func (s *botService) handleCallbackQuery(
 
 		s.sendPhotoWithKeyboard(chatID, letPhoto, caption, keyboard)
 	}
+}
+
+func (s *botService) processChatRegistrationStep(
+	chatID int64,
+	telegramID int64,
+	text string,
+	state *RegistrationState,
+	miniAppURL string,
+	profileRepo repository.ProfileRepository,
+	userRepo repository.UserRepository,
+) {
+	user, _ := userRepo.GetByTelegramID(nil, telegramID)
+	if user == nil {
+		return
+	}
+
+	switch state.Step {
+	case 1:
+		state.Name = text
+		state.Step = 2
+		s.sendMessageWithKeyboard(chatID, "🎂 <b>Langkah 2 dari 4: Usia</b>\n\nMasukkan usiamu dalam angka (contoh: 23):", nil)
+
+	case 2:
+		age, err := strconv.Atoi(text)
+		if err != nil || age < 18 || age > 100 {
+			s.sendMessageWithKeyboard(chatID, "⚠️ Usia tidak valid. Masukkan angka antara 18 sampai 99:", nil)
+			return
+		}
+		state.Age = age
+		state.Step = 3
+		s.promptGender(chatID)
+
+	case 4:
+		state.City = text
+		// Finish Registration!
+		photosJSON, _ := json.Marshal([]string{"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80"})
+		interestsJSON, _ := json.Marshal([]string{"Musik", "Kopi", "Travel"})
+
+		profile := &domain.Profile{
+			UserID:             user.ID,
+			Name:               state.Name,
+			Age:                state.Age,
+			Gender:             state.Gender,
+			TargetGender:       state.TargetGender,
+			Bio:                "Halo! Saya pengguna baru di Match.in / Ketemu.in ✨",
+			Country:            state.Country,
+			City:               state.City,
+			TargetLocationMode: domain.FilterCity,
+			MinAgePref:         18,
+			MaxAgePref:         50,
+			Photos:             string(photosJSON),
+			Interests:          string(interestsJSON),
+		}
+
+		_ = profileRepo.Upsert(nil, profile)
+
+		s.statesLock.Lock()
+		delete(s.regStates, telegramID)
+		s.statesLock.Unlock()
+
+		finishMsg := fmt.Sprintf(
+			"🎉 <b>Profil Berhasil Dibuat!</b>\n\n"+
+				"👤 <b>Nama</b>: %s (%d thn)\n"+
+				"📍 <b>Lokasi</b>: %s, %s\n\n"+
+				"Silakan pilih mode untuk mulai mencari jodoh:",
+			profile.Name, profile.Age, profile.City, profile.Country,
+		)
+
+		keyboard := map[string]interface{}{
+			"inline_keyboard": [][]map[string]interface{}{
+				{
+					{
+						"text":    "🚀 Buka Match.in Mini App",
+						"web_app": map[string]string{"url": miniAppURL},
+					},
+				},
+				{
+					{
+						"text":          "🔍 Cari Jodoh via Chat",
+						"callback_data": "cmd_search",
+					},
+				},
+			},
+		}
+
+		s.sendMessageWithKeyboard(chatID, finishMsg, keyboard)
+	}
+}
+
+func (s *botService) promptGender(chatID int64) {
+	keyboard := map[string]interface{}{
+		"inline_keyboard": [][]map[string]interface{}{
+			{
+				{
+					"text":          "👨 Saya Pria",
+					"callback_data": "gender_male",
+				},
+				{
+					"text":          "👩 Saya Wanita",
+					"callback_data": "gender_female",
+				},
+			},
+		},
+	}
+	s.sendMessageWithKeyboard(chatID, "👫 <b>Langkah 3 dari 4: Jenis Kelamin</b>\n\nPilih jenis kelaminmu:", keyboard)
+}
+
+func (s *botService) promptTargetGender(chatID int64) {
+	keyboard := map[string]interface{}{
+		"inline_keyboard": [][]map[string]interface{}{
+			{
+				{
+					"text":          "👩 Mencari Wanita",
+					"callback_data": "target_female",
+				},
+				{
+					"text":          "👨 Mencari Pria",
+					"callback_data": "target_male",
+				},
+				{
+					"text":          "✨ Semua",
+					"callback_data": "target_all",
+				},
+			},
+		},
+	}
+	s.sendMessageWithKeyboard(chatID, "🎯 <b>Siapa yang ingin kamu cari?</b>", keyboard)
 }
 
 func (s *botService) sendMessageWithKeyboard(chatID int64, text string, keyboard map[string]interface{}) {
