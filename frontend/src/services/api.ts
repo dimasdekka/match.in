@@ -1,6 +1,6 @@
 import type { Profile, ProfileFormData, SwipeAction, SwipeResponse, MatchDetail, User } from '../types';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 // Retrieve Telegram InitData from WebApp SDK or query param fallback
 const getTelegramInitData = (): string => {
