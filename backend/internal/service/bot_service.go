@@ -587,12 +587,13 @@ func (s *botService) handleCallbackQuery(
 	if data == "photo_done" {
 		s.statesLock.Lock()
 		state := s.regStates[from.ID]
+		s.statesLock.Unlock()
+
 		if state != nil && len(state.Photos) > 0 {
 			s.finishChatRegistration(chatID, from.ID, state, miniAppURL, profileRepo, userRepo)
 		} else {
 			s.sendMessageWithKeyboard(chatID, "⚠️ Kamu wajib memasukkan minimal 1 foto/gambar terlebih dahulu!", nil)
 		}
-		s.statesLock.Unlock()
 		return
 	}
 
