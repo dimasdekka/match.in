@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Header } from './components/Header';
 import { LocationFilterModal } from './components/LocationFilterModal';
+import { OnboardingWizard } from './components/OnboardingWizard';
 import { Discover } from './pages/Discover';
 import { Matches } from './pages/Matches';
 import { ProfileEdit } from './pages/ProfileEdit';
-import type { LocationFilterMode } from './types';
+import type { LocationFilterMode, ProfileFormData, Profile } from './types';
+import { api } from './services/api';
 import { Flame, Heart, User } from 'lucide-react';
 import './i18n';
 
@@ -17,23 +19,67 @@ export const App: React.FC = () => {
   const [currentLang, setCurrentLang] = useState<string>(i18n.language || 'id');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [locationMode, setLocationMode] = useState<LocationFilterMode>('same_city');
+  
+  const [, setUserProfile] = useState<Profile | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [initialTelegramName, setInitialTelegramName] = useState<string>('');
 
   useEffect(() => {
-    // Initialize Telegram WebApp SDK viewport & theme
+    // Initialize Telegram WebApp SDK
+    let tgName = '';
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
       const tg = (window as any).Telegram.WebApp;
       tg.ready();
       tg.expand();
-      if (tg.initDataUnsafe?.user?.language_code) {
-        const userLang = tg.initDataUnsafe.user.language_code.startsWith('id') ? 'id' : 'en';
-        i18n.changeLanguage(userLang);
-        setCurrentLang(userLang);
+      if (tg.initDataUnsafe?.user) {
+        tgName = tg.initDataUnsafe.user.first_name || '';
+        setInitialTelegramName(tgName);
+        if (tg.initDataUnsafe.user.language_code) {
+          const userLang = tg.initDataUnsafe.user.language_code.startsWith('id') ? 'id' : 'en';
+          i18n.changeLanguage(userLang);
+          setCurrentLang(userLang);
+        }
       }
     }
+
+    // Check if user has an existing profile
+    const checkUserProfile = async () => {
+      try {
+        const res = await api.getMyProfile();
+        if (res.profile) {
+          setUserProfile(res.profile);
+          setShowOnboarding(false);
+        } else {
+          setShowOnboarding(true);
+        }
+      } catch (e) {
+        setShowOnboarding(true);
+      }
+    };
+
+    checkUserProfile();
   }, []);
+
+  const handleCompleteOnboarding = async (formData: ProfileFormData) => {
+    try {
+      const res = await api.saveProfile(formData);
+      setUserProfile(res.profile);
+      setShowOnboarding(false);
+    } catch (e) {
+      alert('Failed to save profile during registration');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
+      {/* Onboarding Wizard for New Users */}
+      {showOnboarding && (
+        <OnboardingWizard
+          initialName={initialTelegramName}
+          onComplete={handleCompleteOnboarding}
+        />
+      )}
+
       {/* Header with dynamic branding */}
       <Header
         onOpenFilter={() => setShowFilterModal(true)}
