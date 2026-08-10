@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import type { Profile } from '../types';
 
 interface ProfilePageProps {
-  onProfileUpdated?: (profile: Profile) => void; // eslint-disable-line @typescript-eslint/no-unused-vars
+  onProfileUpdated?: (profile: Profile) => void;
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated: _onProfileUpdated }) => {
@@ -32,22 +32,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated: _onP
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-slate-400">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#FF3366]" />
+        <RefreshCw className="w-7 h-7 animate-spin text-[#FF3366]" />
         <p className="text-xs font-semibold">Loading Profile...</p>
       </div>
     );
   }
 
-  // Parse photo
+  // Parse photos
   let photos: string[] = [];
   if (profile?.photos) {
     try {
       photos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos;
     } catch {
-      photos = [profile.photos];
+      if (typeof profile.photos === 'string') photos = [profile.photos];
     }
   }
-  const avatar = photos[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80';
+  const avatar = photos[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
 
   // Parse interests
   let interests: string[] = [];
@@ -55,90 +55,113 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated: _onP
     try {
       interests = typeof profile.interests === 'string' ? JSON.parse(profile.interests) : profile.interests;
     } catch {
-      interests = ['Design', 'Coffee', 'Travel', 'Music'];
+      interests = [];
     }
   }
-  if (interests.length === 0) {
-    interests = ['Design', 'Coffee', 'Travel', 'Music'];
-  }
+  if (interests.length === 0) interests = ['Design', 'Coffee', 'Travel', 'Music'];
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-3 space-y-6 pb-28 animate-fade-in">
-      {/* Top Header with Gear Icon */}
-      <div className="flex items-center justify-end pt-1">
-        <button className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 hover:bg-slate-100">
+    <div className="w-full max-w-md mx-auto bg-white min-h-screen">
+
+      {/* ── Top Bar: Settings Icon ── */}
+      <div className="flex items-center justify-end px-4 pt-4 pb-1">
+        <button className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition">
           <Settings className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Large Avatar & Edit Camera Button */}
-      <div className="flex flex-col items-center text-center space-y-3">
+      {/* ── Avatar + Camera Button ── */}
+      <div className="flex flex-col items-center pt-2 pb-4">
         <div className="relative">
           <img
             src={avatar}
             alt={profile?.name || 'You'}
-            className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl shadow-pink-500/10"
+            className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl"
           />
-          <button className="absolute bottom-0 right-0 p-2.5 rounded-full bg-white text-slate-700 border border-slate-200 shadow-md hover:bg-slate-50 transition active:scale-95">
-            <Camera className="w-4 h-4" />
+          {/* Camera Edit Button */}
+          <button className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-md hover:bg-slate-50 active:scale-95 transition">
+            <Camera className="w-4 h-4 text-slate-600" />
           </button>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-center gap-1.5">
-            <h2 className="text-xl font-extrabold text-slate-900">
-              {profile?.name || 'You'}
-            </h2>
-            <CheckCircle2 className="w-5 h-5 text-sky-400 fill-sky-400 text-white" />
-          </div>
-
-          <p className="text-xs font-semibold text-slate-400 mt-0.5">
-            {profile?.age || 28} • {profile?.city || 'Jakarta'}, {profile?.country || 'Indonesia'}
-          </p>
-
-          <p className="text-xs text-slate-600 font-normal max-w-xs mx-auto mt-2 leading-relaxed">
-            {profile?.bio || 'Product Designer who loves good coffee and adventures.'}
-          </p>
-        </div>
-
-        {/* Soft Translucent Pink Interest Pills */}
-        <div className="flex flex-wrap justify-center gap-2 pt-1">
-          {interests.map((interest, idx) => (
-            <span
-              key={idx}
-              className="px-4 py-1.5 rounded-full bg-pink-50 text-[#FF3366] border border-pink-100 text-xs font-bold"
-            >
-              {interest}
-            </span>
-          ))}
         </div>
       </div>
 
-      {/* Preferences List (Screen 6 format) */}
-      <div className="space-y-3">
-        {/* Looking For Card */}
-        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Looking for</span>
-            <p className="text-sm font-bold text-slate-900 mt-0.5">Long-term relationship</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-400" />
+      {/* ── Name + Verified ── */}
+      <div className="text-center space-y-1">
+        <div className="flex items-center justify-center gap-1.5">
+          <h2 className="text-xl font-extrabold text-slate-900">
+            {profile?.name || 'You'}
+          </h2>
+          <CheckCircle2 className="w-5 h-5 text-sky-500 fill-sky-500" style={{ color: 'white' }} />
         </div>
 
-        {/* Show Me On match.in Toggle */}
-        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-900">Show me on match.in</span>
+        {/* Age • City, Country */}
+        <p className="text-sm text-slate-400 font-medium">
+          {profile?.age || 28} • {profile?.city || 'Jakarta'}, {profile?.country || 'Indonesia'}
+        </p>
+      </div>
 
-          <button
-            onClick={() => setShowOnMatchin(!showOnMatchin)}
-            className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 flex items-center ${
-              showOnMatchin ? 'bg-[#FF3366] justify-end' : 'bg-slate-300 justify-start'
-            }`}
+      {/* ── Bio ── */}
+      <div className="px-8 pt-3 pb-4">
+        <p className="text-center text-[13px] text-slate-500 leading-relaxed italic">
+          {profile?.bio || 'Product Designer who loves good coffee and adventures.'}
+        </p>
+      </div>
+
+      {/* ── Interest Pills ── */}
+      <div className="flex flex-wrap justify-center gap-2 px-6 pb-6">
+        {interests.map((interest, idx) => (
+          <span
+            key={idx}
+            className="px-5 py-2 rounded-full bg-pink-50 text-[#FF3366] border border-pink-200 text-xs font-bold"
           >
-            <div className="w-5 h-5 rounded-full bg-white shadow-md" />
-          </button>
-        </div>
+            {interest}
+          </span>
+        ))}
       </div>
+
+      {/* ── Divider ── */}
+      <div className="mx-6 border-t border-slate-100" />
+
+      {/* ── Looking For ── */}
+      <div className="px-6 py-4">
+        <button className="w-full flex items-center justify-between py-1 group">
+          <div>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider text-left">
+              Looking for
+            </p>
+            <p className="text-[15px] font-bold text-slate-900 mt-0.5 text-left">
+              Long-term relationship
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition" />
+        </button>
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="mx-6 border-t border-slate-100" />
+
+      {/* ── Show me on match.in Toggle ── */}
+      <div className="px-6 py-4 flex items-center justify-between">
+        <span className="text-[15px] font-bold text-slate-900">
+          Show me on match.in
+        </span>
+
+        <button
+          onClick={() => setShowOnMatchin(!showOnMatchin)}
+          className={`relative w-[52px] h-[30px] rounded-full p-1 transition-colors duration-300 ${
+            showOnMatchin ? 'bg-[#FF3366]' : 'bg-slate-300'
+          }`}
+        >
+          <div
+            className={`w-[22px] h-[22px] rounded-full bg-white shadow-md transition-transform duration-300 ${
+              showOnMatchin ? 'translate-x-[22px]' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Bottom spacing for navbar */}
+      <div className="pb-24" />
     </div>
   );
 };
