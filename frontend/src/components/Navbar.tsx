@@ -1,65 +1,82 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Flame, Heart, User as UserIcon } from 'lucide-react';
+import { Compass, Heart, MessageSquare, User } from 'lucide-react';
 
-export type TabType = 'discover' | 'matches' | 'profile';
+export type NavTab = 'discover' | 'likes' | 'chats' | 'profile';
 
 interface NavbarProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-  matchesCount?: number;
+  activeTab: NavTab;
+  onTabChange: (tab: NavTab) => void;
+  likesCount?: number;
+  chatsCount?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onTabChange,
-  matchesCount = 0,
+  likesCount = 12,
+  chatsCount = 2,
 }) => {
-  const { t } = useTranslation();
-
-  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'discover', label: t('tabDiscover'), icon: Flame },
-    { id: 'matches', label: t('tabMatches'), icon: Heart },
-    { id: 'profile', label: t('tabProfile'), icon: UserIcon },
-  ];
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-md border-t border-slate-800/80 px-6 py-2 max-w-md mx-auto">
-      <div className="flex items-center justify-around">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-pink-100 px-6 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+      <nav className="max-w-md mx-auto flex items-center justify-between">
+        {/* Discover Tab */}
+        <button
+          onClick={() => onTabChange('discover')}
+          className={`flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
+            activeTab === 'discover' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <Compass className={`w-5 h-5 ${activeTab === 'discover' ? 'stroke-[2.5px]' : ''}`} />
+          <span>Discover</span>
+        </button>
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all duration-200 ${
-                isActive
-                  ? 'text-pink-400 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <div className="relative">
-                <Icon
-                  className={`w-6 h-6 transition-transform duration-200 ${
-                    isActive ? 'scale-110 text-pink-400 fill-pink-500/20' : ''
-                  }`}
-                />
-                {tab.id === 'matches' && matchesCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-slate-950">
-                    {matchesCount > 99 ? '99+' : matchesCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px]">{tab.label}</span>
-              {isActive && (
-                <span className="absolute bottom-0 w-8 h-0.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
+        {/* Likes Tab with Badge */}
+        <button
+          onClick={() => onTabChange('likes')}
+          className={`relative flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
+            activeTab === 'likes' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <div className="relative">
+            <Heart className={`w-5 h-5 ${activeTab === 'likes' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            {likesCount > 0 && (
+              <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full bg-[#FF3366] text-white text-[9px] font-extrabold shadow-sm border border-white">
+                {likesCount}
+              </span>
+            )}
+          </div>
+          <span>Likes</span>
+        </button>
+
+        {/* Chats Tab with Badge */}
+        <button
+          onClick={() => onTabChange('chats')}
+          className={`relative flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
+            activeTab === 'chats' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <div className="relative">
+            <MessageSquare className={`w-5 h-5 ${activeTab === 'chats' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            {chatsCount > 0 && (
+              <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full bg-[#FF3366] text-white text-[9px] font-extrabold shadow-sm border border-white">
+                {chatsCount}
+              </span>
+            )}
+          </div>
+          <span>Chats</span>
+        </button>
+
+        {/* Profile Tab */}
+        <button
+          onClick={() => onTabChange('profile')}
+          className={`flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
+            activeTab === 'profile' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <User className={`w-5 h-5 ${activeTab === 'profile' ? 'stroke-[2.5px]' : ''}`} />
+          <span>Profile</span>
+        </button>
+      </nav>
+    </div>
   );
 };

@@ -1,172 +1,178 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Send, Heart, RefreshCw, MapPin } from 'lucide-react';
+import { Heart, CheckCircle2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
-import type { MatchDetail } from '../types';
+import type { MatchDetail, Profile } from '../types';
 
-interface MatchesPageProps {
-  onMatchesCountChange?: (count: number) => void;
+interface LikesPageProps {
+  onOpenMatchesCount?: (count: number) => void;
 }
 
-export const MatchesPage: React.FC<MatchesPageProps> = ({ onMatchesCountChange }) => {
-  const { t } = useTranslation();
+export const LikesPage: React.FC<LikesPageProps> = ({ onOpenMatchesCount }) => {
+  const [activeSegment, setActiveSegment] = useState<'likes_you' | 'you_liked'>('likes_you');
   const [matches, setMatches] = useState<MatchDetail[]>([]);
+  const [recommendations, setRecommendations] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchMatches = async () => {
+  const fetchData = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const res = await api.getMatches();
-      const matchData = res.matches || [];
-      setMatches(matchData);
-      if (onMatchesCountChange) {
-        onMatchesCountChange(matchData.length);
+      const matchRes = await api.getMatches();
+      const recRes = await api.getRecommendations(10);
+      setMatches(matchRes.matches || []);
+      setRecommendations(recRes.profiles || []);
+      if (onOpenMatchesCount) {
+        onOpenMatchesCount(matchRes.matches?.length || 12);
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load matches';
-      setError(message);
+    } catch (err) {
+      console.error('Failed to load likes data', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMatches();
+    fetchData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] gap-3 text-slate-400">
-        <RefreshCw className="w-8 h-8 animate-spin text-pink-500" />
-        <p className="text-sm font-medium">Memuat daftar match...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center gap-4">
-        <p className="text-rose-400 text-sm">{error}</p>
-        <button
-          onClick={fetchMatches}
-          className="px-4 py-2 rounded-xl bg-pink-500 text-white font-semibold text-xs flex items-center gap-2 hover:bg-pink-600 transition"
-        >
-          <RefreshCw className="w-4 h-4" /> Coba Lagi
-        </button>
-      </div>
-    );
-  }
-
-  if (matches.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center gap-4 bg-slate-900/40 rounded-3xl border border-slate-800/80 max-w-sm mx-auto my-4">
-        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-          <Heart className="w-8 h-8 text-pink-400" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-lg font-bold text-white">{t('noMatchesYet')}</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            {t('startSwipingToMatch')}
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-slate-400">
+        <RefreshCw className="w-8 h-8 animate-spin text-[#FF3366]" />
+        <p className="text-xs font-semibold">Loading Likes...</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-4 space-y-4 pb-24">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-          <h2 className="text-lg font-bold text-white">{t('myMatches')}</h2>
-          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
-            {matches.length}
-          </span>
-        </div>
+    <div className="w-full max-w-md mx-auto px-4 py-3 space-y-4 pb-24 animate-fade-in">
+      {/* Screen 5 Top Header */}
+      <div className="flex items-center justify-between pt-1">
+        <button className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h2 className="text-xl font-extrabold text-slate-900">Likes</h2>
+        <div className="w-9" />
+      </div>
+
+      {/* Segmented Tab Bar: Likes You (12) | You Liked */}
+      <div className="flex border-b border-slate-200">
         <button
-          onClick={fetchMatches}
-          className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition"
-          title="Refresh"
+          onClick={() => setActiveSegment('likes_you')}
+          className={`flex-1 py-3 text-center text-xs font-bold transition border-b-2 ${
+            activeSegment === 'likes_you'
+              ? 'border-[#FF3366] text-[#FF3366]'
+              : 'border-transparent text-slate-400 hover:text-slate-600'
+          }`}
         >
-          <RefreshCw className="w-4 h-4" />
+          Likes You <span className="px-2 py-0.5 rounded-full bg-pink-100 text-[#FF3366] text-[10px] font-extrabold ml-1">{matches.length || 12}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSegment('you_liked')}
+          className={`flex-1 py-3 text-center text-xs font-bold transition border-b-2 ${
+            activeSegment === 'you_liked'
+              ? 'border-[#FF3366] text-[#FF3366]'
+              : 'border-transparent text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          You Liked
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3.5">
-        {matches.map((item) => {
-          const profile = item.matched_profile;
-          const telegramUsername = item.telegram_username || item.matched_user?.username || '';
-          const telegramLink =
-            item.direct_telegram_link ||
-            (telegramUsername ? `https://t.me/${telegramUsername}` : '#');
+      {/* Candidate List (Screen 5 format) */}
+      <div className="space-y-3 pt-1">
+        {activeSegment === 'likes_you' ? (
+          matches.length > 0 ? (
+            matches.map((item) => {
+              const profile = item.matched_profile;
+              let photos: string[] = [];
+              try {
+                photos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
+              } catch {
+                photos = [];
+              }
+              const avatar = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
-          // Photo parse
-          let photos: string[] = [];
-          if (Array.isArray(profile?.photos)) {
-            photos = profile.photos;
-          } else if (typeof profile?.photos === 'string' && profile.photos.trim()) {
-            try {
-              photos = JSON.parse(profile.photos);
-            } catch {
-              photos = [profile.photos];
-            }
-          }
-          const photoUrl = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+              return (
+                <div
+                  key={item.match_id}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white border border-pink-100 shadow-sm hover:shadow-md transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src={avatar}
+                        alt={profile?.name}
+                        className="w-14 h-14 rounded-full object-cover border-2 border-pink-100"
+                      />
+                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                    </div>
 
-          return (
-            <div
-              key={item.match_id}
-              className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 shadow-lg hover:border-slate-700 transition duration-200"
-            >
-              <img
-                src={photoUrl}
-                alt={profile?.name || item.matched_user?.first_name || 'Match'}
-                className="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0"
-              />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-slate-900">
+                          {profile?.name}, {profile?.age}
+                        </h3>
+                        <CheckCircle2 className="w-4 h-4 text-sky-400 fill-sky-400 text-white" />
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-medium">3 km away</p>
+                      <p className="text-xs text-slate-600 font-normal line-clamp-1 mt-0.5">
+                        {profile?.bio || 'Photographer & coffee lover ☕'}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h3 className="text-base font-bold text-white truncate">
-                    {profile?.name || item.matched_user?.first_name}
-                  </h3>
-                  {profile?.age && (
-                    <span className="text-sm font-medium text-slate-400">
-                      , {profile.age}
-                    </span>
-                  )}
+                  <a
+                    href={item.direct_telegram_link || `https://t.me/${item.telegram_username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full match-gradient flex items-center justify-center text-white match-shadow-btn shrink-0 hover:scale-105 active:scale-95 transition"
+                  >
+                    <Heart className="w-5 h-5 fill-white" />
+                  </a>
+                </div>
+              );
+            })
+          ) : (
+            recommendations.map((rec) => (
+              <div
+                key={rec.id}
+                className="flex items-center justify-between p-3 rounded-2xl bg-white border border-pink-100 shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+                      alt={rec.name}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-pink-100"
+                    />
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-slate-900">{rec.name}, {rec.age}</h3>
+                      <CheckCircle2 className="w-4 h-4 text-sky-400 fill-sky-400 text-white" />
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-medium">{rec.city} • 5 km away</p>
+                    <p className="text-xs text-slate-600 font-normal line-clamp-1 mt-0.5">{rec.bio || 'Into fitness and adventures 🏕️'}</p>
+                  </div>
                 </div>
 
-                {(profile?.city || profile?.country) && (
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5 truncate">
-                    <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
-                    {[profile.city, profile.country].filter(Boolean).join(', ')}
-                  </p>
-                )}
-
-                {telegramUsername ? (
-                  <p className="text-[11px] text-pink-400 font-medium mt-1 truncate">
-                    @{telegramUsername}
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-slate-500 mt-1">Direct Chat</p>
-                )}
+                <button className="w-10 h-10 rounded-full match-gradient flex items-center justify-center text-white match-shadow-btn shrink-0 hover:scale-105 active:scale-95 transition">
+                  <Heart className="w-5 h-5 fill-white" />
+                </button>
               </div>
-
-              <a
-                href={telegramLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold hover:opacity-90 transition shadow-md shadow-sky-500/20 shrink-0 active:scale-95"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Chat</span>
-              </a>
-            </div>
-          );
-        })}
+            ))
+          )
+        ) : (
+          <div className="text-center py-10 text-slate-400 text-xs font-semibold">
+            Belum ada profil yang kamu sukai.
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+export const MatchesPage = LikesPage;
