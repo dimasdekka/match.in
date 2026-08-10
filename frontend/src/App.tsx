@@ -102,8 +102,10 @@ export const App: React.FC = () => {
 
   const currentCandidate = profiles[currentIndex];
 
+  const isFullscreenOverlay = showWelcome || showOnboarding;
+
   return (
-    <div className="min-h-screen match-bg text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
       {/* Screen 1: Welcome / Landing Screen */}
       {showWelcome && (
         <WelcomeScreen
@@ -122,46 +124,53 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Screen 2 Top Header */}
-      <Header
-        currentLang={currentLang}
-        onLanguageChange={(lang) => setCurrentLang(lang)}
-      />
+      {/* Header — hidden during welcome/onboarding */}
+      {!isFullscreenOverlay && (
+        <Header
+          currentLang={currentLang}
+          onLanguageChange={(lang) => setCurrentLang(lang)}
+        />
+      )}
 
-      {/* Main Content Area (NavTab based) */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Main Content Area */}
+      {!isFullscreenOverlay && (
+      <main className="flex-1 flex flex-col relative overflow-y-auto pb-20">
         {/* Screen 2: Discover / Swipe Tab */}
         {activeTab === 'discover' && (
           loading ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-slate-400">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="w-8 h-8 animate-spin text-[#FF3366]" />
               <p className="text-xs font-semibold">Finding matches nearby...</p>
             </div>
           ) : currentCandidate ? (
-            <DiscoverCard profile={currentCandidate} onSwipe={handleSwipe} />
+            <div className="flex-1 flex flex-col items-center justify-center p-4">
+              <DiscoverCard profile={currentCandidate} onSwipe={handleSwipe} />
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-[32px] border border-pink-100 shadow-xl max-w-sm my-auto space-y-4">
-              <div className="w-16 h-16 rounded-full match-gradient flex items-center justify-center text-white match-shadow-btn">
-                <Heart className="w-8 h-8 fill-white" />
+            <div className="flex-1 flex flex-col items-center justify-center p-6">
+              <div className="text-center space-y-4 max-w-xs">
+                <div className="w-16 h-16 rounded-full match-gradient flex items-center justify-center text-white match-shadow-btn mx-auto">
+                  <Heart className="w-8 h-8 fill-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900">Belum Ada Profil Baru</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Kamu telah melihat semua rekomendasi di sekitarmu. Coba ubah filter lokasi atau refresh kembali nanti!
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    setCurrentIndex(0);
+                    const res = await api.getRecommendations(10);
+                    setProfiles(res.profiles || []);
+                    setLoading(false);
+                  }}
+                  className="px-6 py-3 rounded-full match-gradient text-white font-bold text-xs match-shadow-btn active:scale-95 transition"
+                >
+                  Refresh Rekomendasi
+                </button>
               </div>
-              <div>
-                <h3 className="text-lg font-extrabold text-slate-900">Belum Ada Profil Baru</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Kamu telah melihat semua rekomendasi di sekitarmu. Coba ubah filter lokasi atau refresh kembali nanti!
-                </p>
-              </div>
-              <button
-                onClick={async () => {
-                  setLoading(true);
-                  setCurrentIndex(0);
-                  const res = await api.getRecommendations(10);
-                  setProfiles(res.profiles || []);
-                  setLoading(false);
-                }}
-                className="px-6 py-3 rounded-full match-gradient text-white font-bold text-xs match-shadow-btn active:scale-95 transition"
-              >
-                Refresh Rekomendasi
-              </button>
             </div>
           )
         )}
@@ -222,6 +231,7 @@ export const App: React.FC = () => {
         {/* Screen 6: Profile Tab */}
         {activeTab === 'profile' && <ProfilePage />}
       </main>
+      )}
 
       {/* Screen 3: It's a match! Celebration Modal */}
       {showMatchModal && matchedProfile && (
@@ -243,11 +253,13 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Floating Bottom Tab Bar (Screen 2/5/6 Bottom Nav) */}
-      <Navbar
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-      />
+      {/* Bottom Nav — hidden during welcome/onboarding */}
+      {!isFullscreenOverlay && (
+        <Navbar
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab)}
+        />
+      )}
     </div>
   );
 };
