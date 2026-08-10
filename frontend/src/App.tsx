@@ -5,6 +5,7 @@ import { Navbar, type NavTab } from './components/Navbar';
 import { DiscoverCard } from './components/DiscoverCard';
 import { MatchModal } from './components/MatchModal';
 import { ChatModal } from './components/ChatModal';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { LikesPage } from './pages/MatchesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { OnboardingWizard } from './components/OnboardingWizard';
@@ -28,6 +29,7 @@ export const App: React.FC = () => {
   const [activeChatProfile, setActiveChatProfile] = useState<Profile | null>(null);
 
   const [, setUserProfile] = useState<Profile | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [initialTelegramName, setInitialTelegramName] = useState<string>('');
 
@@ -54,9 +56,10 @@ export const App: React.FC = () => {
         const profRes = await api.getMyProfile();
         if (profRes.profile) {
           setUserProfile(profRes.profile);
+          setShowWelcome(false);
           setShowOnboarding(false);
         } else {
-          setShowOnboarding(true);
+          setShowWelcome(true);
         }
 
         const recRes = await api.getRecommendations(10);
@@ -101,7 +104,17 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen match-bg text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
-      {/* Screen 1: Welcome / Landing Screen (Onboarding Wizard for new users) */}
+      {/* Screen 1: Welcome / Landing Screen */}
+      {showWelcome && (
+        <WelcomeScreen
+          onContinue={() => {
+            setShowWelcome(false);
+            setShowOnboarding(true);
+          }}
+        />
+      )}
+
+      {/* Onboarding Registration Wizard (after Welcome) */}
       {showOnboarding && (
         <OnboardingWizard
           initialName={initialTelegramName}
