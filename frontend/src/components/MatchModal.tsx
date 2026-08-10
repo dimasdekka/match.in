@@ -11,7 +11,7 @@ interface MatchModalProps {
 
 export const MatchModal: React.FC<MatchModalProps> = ({
   matchedProfile,
-  userAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+  userAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   onClose,
   onOpenMatches,
 }) => {
@@ -22,69 +22,90 @@ export const MatchModal: React.FC<MatchModalProps> = ({
   } catch {
     photos = [];
   }
-  const matchedAvatar = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+  const matchedAvatar = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-sm rounded-[32px] bg-white p-6 flex flex-col items-center text-center shadow-2xl space-y-6 border border-pink-100">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-1">
-          <span className="text-xl font-black text-slate-900">
-            match<span className="text-[#FF3366]">.in</span>
-          </span>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/30 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-white rounded-[32px] px-6 py-8 flex flex-col items-center text-center shadow-2xl space-y-5 border border-pink-50">
 
-        {/* 3D Heart Illustration */}
-        <div className="relative flex items-center justify-center py-2">
-          <div className="w-20 h-20 rounded-full match-gradient flex items-center justify-center match-shadow-btn animate-bounce">
-            <Heart className="w-10 h-10 text-white fill-white" />
+        {/* Brand */}
+        <span className="text-lg font-black text-slate-900 tracking-tight">
+          match<span className="text-[#FF3366]">.in</span>
+        </span>
+
+        {/* 3D Pink Heart */}
+        <div className="relative py-2">
+          {/* Soft pink glow behind */}
+          <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-pink-200/50 blur-2xl" />
+          <div className="relative w-24 h-24 mx-auto">
+            {/* Heart shape using gradient */}
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ filter: 'drop-shadow(0 8px 20px rgba(255, 51, 102, 0.35))' }}>
+              <defs>
+                <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FF7EB3" />
+                  <stop offset="50%" stopColor="#FF3366" />
+                  <stop offset="100%" stopColor="#FF2A60" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M50 88 C25 65, 0 45, 0 28 C0 12, 12 0, 25 0 C35 0, 45 8, 50 18 C55 8, 65 0, 75 0 C88 0, 100 12, 100 28 C100 45, 75 65, 50 88Z"
+                fill="url(#heartGrad)"
+              />
+              {/* Shine highlight */}
+              <ellipse cx="32" cy="22" rx="12" ry="8" fill="rgba(255,255,255,0.35)" transform="rotate(-25 32 22)" />
+            </svg>
           </div>
         </div>
 
-        {/* Headline */}
-        <div className="space-y-1">
+        {/* Title */}
+        <div className="space-y-1.5">
           <h2 className="text-2xl font-black text-slate-900">It's a match! 💕</h2>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-sm text-slate-500 font-medium">
             You and {matchedProfile.name} liked each other.
           </p>
         </div>
 
-        {/* Overlapping Avatars Joined by Pink Heart */}
-        <div className="relative flex items-center justify-center py-3">
-          <div className="relative flex items-center -space-x-4">
+        {/* Overlapping Avatars with Joining Heart */}
+        <div className="relative flex items-center justify-center py-2">
+          <div className="flex items-center">
+            {/* Your Avatar */}
             <img
               src={userAvatar}
               alt="You"
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+              className="w-24 h-24 rounded-full object-cover border-[4px] border-white shadow-lg z-10"
             />
+            {/* Matched Avatar */}
             <img
               src={matchedAvatar}
               alt={matchedProfile.name}
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+              className="w-24 h-24 rounded-full object-cover border-[4px] border-white shadow-lg -ml-5 z-0"
             />
           </div>
-          {/* Joining Heart Badge */}
-          <div className="absolute z-10 w-8 h-8 rounded-full match-gradient flex items-center justify-center border-2 border-white shadow-md">
+
+          {/* Small Heart Bridge */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20 w-9 h-9 rounded-full match-gradient flex items-center justify-center border-[3px] border-white shadow-md">
             <Heart className="w-4 h-4 text-white fill-white" />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="w-full space-y-2.5 pt-2">
+        <div className="w-full space-y-2.5 pt-3">
+          {/* Send a message */}
           <button
             onClick={() => {
               onClose();
               onOpenMatches();
             }}
-            className="w-full py-3.5 rounded-full match-gradient text-white font-bold text-xs flex items-center justify-center gap-2 match-shadow-btn hover:opacity-95 active:scale-98 transition"
+            className="w-full py-3.5 rounded-full match-gradient text-white font-bold text-sm flex items-center justify-center gap-2 match-shadow-btn hover:opacity-95 active:scale-[0.98] transition"
           >
-            <MessageCircle className="w-4 h-4 fill-white" />
+            <MessageCircle className="w-4 h-4" />
             <span>Send a message</span>
           </button>
 
+          {/* Keep swiping */}
           <button
             onClick={onClose}
-            className="w-full py-3.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-100 active:scale-98 transition"
+            className="w-full py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 active:scale-[0.98] transition"
           >
             Keep swiping
           </button>
