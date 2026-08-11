@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,10 +46,6 @@ func main() {
 	err = db.AutoMigrate(&domain.User{}, &domain.Profile{}, &domain.Swipe{}, &domain.Match{}, &domain.ChatMessage{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
-	}
-
-	if err := seedDemoData(db); err != nil {
-		log.Printf("Warning: error seeding demo data: %v\n", err)
 	}
 
 	userRepo := repository.NewUserRepository(db)
@@ -135,157 +130,4 @@ func main() {
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Server stopped: %v", err)
 	}
-}
-
-func seedDemoData(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&domain.User{}).Count(&count).Error; err != nil {
-		return fmt.Errorf("failed to count existing users for seeding: %w", err)
-	}
-	if count > 0 {
-		return nil
-	}
-
-	fmt.Println("🌱 Seeding realistic demo profiles for Match.in / Ketemu.in...")
-
-	demoUsers := []struct {
-		User    domain.User
-		Profile domain.Profile
-		Photos  []string
-		Interests []string
-	}{
-		{
-			User: domain.User{
-				TelegramID:   999001,
-				Username:     "siti_subang",
-				FirstName:    "Siti",
-				LastName:     "Aisyah",
-				LanguageCode: "id",
-				IsActive:     true,
-			},
-			Profile: domain.Profile{
-				Name:               "Siti Aisyah",
-				Age:                23,
-				Gender:             domain.GenderFemale,
-				TargetGender:       domain.GenderMale,
-				Bio:                "Penyuka kopi, musik akustik & penikmat pemandangan alam. Yuk ngobrol santai! ☕✨",
-				VoiceBioURL:        "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg",
-				Country:            "Indonesia",
-				City:               "Subang",
-				TargetLocationMode: domain.FilterCity,
-				MinAgePref:         20,
-				MaxAgePref:         30,
-				IsVerified:         true,
-				IsBoosted:          true,
-			},
-			Photos:    []string{"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80", "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80"},
-			Interests: []string{"Kopi", "Musik", "Travel", "Kuliner"},
-		},
-		{
-			User: domain.User{
-				TelegramID:   999002,
-				Username:     "dian_bandung",
-				FirstName:    "Dian",
-				LastName:     "Sastro",
-				LanguageCode: "id",
-				IsActive:     true,
-			},
-			Profile: domain.Profile{
-				Name:               "Dian Lestari",
-				Age:                25,
-				Gender:             domain.GenderFemale,
-				TargetGender:       domain.GenderMale,
-				Bio:                "Designer & penikmat seni di Bandung. Suka fotografi & hunting tempat lucu! 📸🎨",
-				VoiceBioURL:        "https://actions.google.com/sounds/v1/human_voices/applause.ogg",
-				Country:            "Indonesia",
-				City:               "Bandung",
-				TargetLocationMode: domain.FilterCountry,
-				MinAgePref:         22,
-				MaxAgePref:         32,
-				IsVerified:         true,
-			},
-			Photos:    []string{"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80"},
-			Interests: []string{"Art", "Design", "Fotografi", "Kopi"},
-		},
-		{
-			User: domain.User{
-				TelegramID:   999003,
-				Username:     "budi_jakarta",
-				FirstName:    "Budi",
-				LastName:     "Santoso",
-				LanguageCode: "id",
-				IsActive:     true,
-			},
-			Profile: domain.Profile{
-				Name:               "Budi Santoso",
-				Age:                27,
-				Gender:             domain.GenderMale,
-				TargetGender:       domain.GenderFemale,
-				Bio:                "Software Engineer di Jakarta. Suka olahraga, badminton & ngopi akhir pekan 🏸💻",
-				VoiceBioURL:        "",
-				Country:            "Indonesia",
-				City:               "Jakarta",
-				TargetLocationMode: domain.FilterCity,
-				MinAgePref:         20,
-				MaxAgePref:         28,
-				IsVerified:         true,
-			},
-			Photos:    []string{"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80"},
-			Interests: []string{"Coding", "Badminton", "Kopi", "Tech"},
-		},
-		{
-			User: domain.User{
-				TelegramID:   999004,
-				Username:     "sophia_sg",
-				FirstName:    "Sophia",
-				LastName:     "Chen",
-				LanguageCode: "en",
-				IsActive:     true,
-			},
-			Profile: domain.Profile{
-				Name:               "Sophia Chen",
-				Age:                24,
-				Gender:             domain.GenderFemale,
-				TargetGender:       domain.GenderMale,
-				Bio:                "Based in Singapore 🇸🇬 Foodie, gym enthusiast & cafe hopper. Let's match & explore!",
-				VoiceBioURL:        "",
-				Country:            "Singapore",
-				City:               "Singapore",
-				TargetLocationMode: domain.FilterGlobal,
-				MinAgePref:         22,
-				MaxAgePref:         32,
-				IsVerified:         true,
-			},
-			Photos:    []string{"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80"},
-			Interests: []string{"Fitness", "Foodie", "Travel", "Cafe"},
-		},
-	}
-
-	for _, item := range demoUsers {
-		u := item.User
-		if err := db.Create(&u).Error; err != nil {
-			return fmt.Errorf("failed to create demo user %d: %w", u.TelegramID, err)
-		}
-		p := item.Profile
-		p.UserID = u.ID
-
-		photosBytes, err := json.Marshal(item.Photos)
-		if err != nil {
-			return fmt.Errorf("failed to marshal demo photos: %w", err)
-		}
-		p.Photos = string(photosBytes)
-
-		interestsBytes, err := json.Marshal(item.Interests)
-		if err != nil {
-			return fmt.Errorf("failed to marshal demo interests: %w", err)
-		}
-		p.Interests = string(interestsBytes)
-
-		if err := db.Create(&p).Error; err != nil {
-			return fmt.Errorf("failed to create demo profile for user %d: %w", u.ID, err)
-		}
-	}
-
-	fmt.Println("✅ Demo profiles seeded successfully!")
-	return nil
 }
