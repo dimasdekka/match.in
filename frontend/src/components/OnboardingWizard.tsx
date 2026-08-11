@@ -171,7 +171,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    {g === 'male' ? '👨' : g === 'female' ? '👩' : '👫'} {g === 'all' ? 'Semua' : g === 'male' ? 'Pria' : 'Wanita'}
+                    {g === 'male' ? '👨 Laki-laki' : g === 'female' ? '👩 Perempuan' : '👫 Semua'}
                   </button>
                 ))}
               </div>
