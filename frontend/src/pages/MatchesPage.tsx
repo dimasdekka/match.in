@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CheckCircle2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Heart, CheckCircle2, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import type { MatchDetail, Profile } from '../types';
 
@@ -66,12 +66,8 @@ export const LikesPage: React.FC<LikesPageProps> = ({ onOpenMatchesCount: _onOpe
   return (
     <div className="w-full max-w-md mx-auto bg-white min-h-screen">
       {/* ── Top Header ── */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h2 className="text-lg font-extrabold text-slate-900">Likes</h2>
-        <div className="w-9" /> {/* Spacer */}
+      <div className="px-4 pt-4 pb-2 flex items-center justify-start">
+        <h2 className="text-xl font-extrabold text-slate-900">Likes</h2>
       </div>
 
       {/* ── Segmented Tabs ── */}
