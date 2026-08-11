@@ -236,47 +236,80 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
         {step === 6 && (
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-lg font-extrabold text-slate-900">Upload Foto 📸</h2>
-              <p className="text-xs text-slate-500 mt-1">Minimal 1 foto, maksimal 3 (URL foto)</p>
+              <h2 className="text-lg font-extrabold text-slate-900">Upload Foto Profil 📸</h2>
+              <p className="text-xs text-slate-500 mt-1">Pilih dari galeri HP atau masukkan URL foto (1-3 foto)</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               {photoUrls.map((url, idx) => (
-                <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-pink-200 shadow-sm">
+                <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-pink-200 shadow-sm group">
                   <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                   <button
                     onClick={() => setPhotoUrls((prev) => prev.filter((_, i) => i !== idx))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-slate-900/60 text-white text-xs flex items-center justify-center"
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-slate-900/70 text-white text-xs flex items-center justify-center shadow hover:bg-red-600 transition"
                   >
                     ✕
                   </button>
+                  {idx === 0 && (
+                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-pink-600 text-white text-[9px] font-bold">
+                      Utama
+                    </span>
+                  )}
                 </div>
               ))}
 
               {photoUrls.length < 3 && (
-                <div className="aspect-square rounded-2xl border-2 border-dashed border-pink-200 bg-pink-50/50 flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-pink-300" />
-                </div>
+                <label className="aspect-square rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50/60 hover:bg-pink-100/60 flex flex-col items-center justify-center gap-1 cursor-pointer transition active:scale-95">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (event.target?.result) {
+                            setPhotoUrls((prev) => [...prev, event.target!.result as string]);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-xs">
+                    <Camera className="w-5 h-5 text-[#FF3366]" />
+                  </div>
+                  <span className="text-[10px] font-bold text-pink-600">Pilih Foto</span>
+                </label>
               )}
             </div>
 
             {photoUrls.length < 3 && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={photoInput}
-                  onChange={(e) => setPhotoInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addPhoto()}
-                  placeholder="Paste URL foto..."
-                  className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
-                />
-                <button
-                  onClick={addPhoto}
-                  disabled={!photoInput.trim()}
-                  className="px-4 py-2.5 rounded-2xl match-gradient text-white text-xs font-bold match-shadow-btn disabled:opacity-40 active:scale-95 transition"
-                >
-                  Tambah
-                </button>
+              <div className="space-y-1.5 pt-2">
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-2 text-[10px] text-slate-400 font-semibold uppercase">atau tempel URL</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={photoInput}
+                    onChange={(e) => setPhotoInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addPhoto()}
+                    placeholder="https://..."
+                    className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
+                  />
+                  <button
+                    onClick={addPhoto}
+                    disabled={!photoInput.trim()}
+                    className="px-4 py-2.5 rounded-2xl match-gradient text-white text-xs font-bold match-shadow-btn disabled:opacity-40 active:scale-95 transition cursor-pointer"
+                  >
+                    Tambah
+                  </button>
+                </div>
               </div>
             )}
           </div>

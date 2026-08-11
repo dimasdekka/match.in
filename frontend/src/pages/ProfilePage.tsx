@@ -72,17 +72,62 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated: _onP
 
       {/* ── Avatar + Camera Button ── */}
       <div className="flex flex-col items-center pt-2 pb-4">
-        <div className="relative">
+        <div className="relative group">
           <img
             src={avatar}
             alt={profile?.name || 'You'}
             className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl"
           />
           {/* Camera Edit Button */}
-          <button className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-md hover:bg-slate-50 active:scale-95 transition">
-            <Camera className="w-4 h-4 text-slate-600" />
-          </button>
+          <label className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-md hover:bg-pink-50 active:scale-95 transition cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file && profile) {
+                  const reader = new FileReader();
+                  reader.onload = async (event) => {
+                    if (event.target?.result) {
+                      const newPhotoUrl = event.target.result as string;
+                      let existingPhotos: string[] = [];
+                      try {
+                        existingPhotos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
+                      } catch {
+                        existingPhotos = [];
+                      }
+                      const updatedPhotos = [newPhotoUrl, ...existingPhotos.slice(0, 2)];
+                      try {
+                        const res = await api.saveProfile({
+                          name: profile.name,
+                          age: profile.age,
+                          gender: profile.gender,
+                          target_gender: profile.target_gender,
+                          bio: profile.bio,
+                          voice_bio_url: profile.voice_bio_url || '',
+                          country: profile.country || 'Indonesia',
+                          city: profile.city || 'Jakarta',
+                          target_location_mode: profile.target_location_mode || 'same_city',
+                          min_age_pref: profile.min_age_pref || 18,
+                          max_age_pref: profile.max_age_pref || 99,
+                          photos: updatedPhotos,
+                          interests: typeof profile.interests === 'string' ? JSON.parse(profile.interests) : profile.interests || [],
+                        });
+                        setProfile(res.profile);
+                      } catch (err) {
+                        console.error('Failed to update photo', err);
+                      }
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+            <Camera className="w-4.5 h-4.5 text-[#FF3366]" />
+          </label>
         </div>
+        <p className="text-[11px] text-pink-500 font-semibold mt-2">Ketuk ikon kamera untuk ubah foto</p>
       </div>
 
       {/* ── Name + Verified ── */}
