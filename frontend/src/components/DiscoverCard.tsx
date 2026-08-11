@@ -13,7 +13,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
   // Swipe / Drag gesture state
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [swipingDirection, setSwipingDirection] = useState<'like' | 'pass' | null>(null);
+  const [swipingDirection, setSwipingDirection] = useState<'like' | 'pass' | 'superlike' | null>(null);
 
   const startPos = useRef({ x: 0, y: 0 });
 
