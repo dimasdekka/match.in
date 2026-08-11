@@ -9,7 +9,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { LikesPage } from './pages/MatchesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { OnboardingWizard } from './components/OnboardingWizard';
-import type { LocationFilterMode, ProfileFormData, Profile } from './types';
+import type { ProfileFormData, Profile } from './types';
 import { api } from './services/api';
 import { Heart, RefreshCw } from 'lucide-react';
 import './i18n';
@@ -18,7 +18,7 @@ export const App: React.FC = () => {
   const { i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<NavTab>('discover');
   const [currentLang, setCurrentLang] = useState<string>(i18n.language || 'id');
-  const [locationMode] = useState<LocationFilterMode>('same_city');
+
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
