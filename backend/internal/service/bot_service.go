@@ -449,17 +449,23 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 			ParseMode:   "HTML",
 			ReplyMarkup: s.getPersistentKeyboard(),
 		})
+
+	case "continue_chat":
+		return s.SendMessage(ctx, &TelegramSendMessagePayload{
+			ChatID:    chatID,
+			Text:      "💬 <b>Mode Telegram Chat Aktif!</b>\n\nKamu bisa mencari pasangan dan mengobrol langsung di Telegram ini:\n\n🔍 /search - Cari rekomendasi kandidat\n👤 /profile - Lihat profil kamu\n🎉 /matches - Lihat daftar match kamu\n⭐ /premium - Info fitur VIP\n\nGunakan menu keyboard di bawah untuk navigasi cepat!",
+			ParseMode: "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
+		})
 	}
 
 	return nil
 }
 
 func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user *domain.User) error {
-	dict := i18n.GetDict(user.LanguageCode)
 	text := fmt.Sprintf(
 		"👋 Halo <b>%s</b>! Selamat datang di <b>Match.in</b> 💕\n\n"+
-			"Tempat terbaik mencari pasangan dan teman ngobrol seru disekitarmu!\n\n"+
-			"Klik tombol <b>🚀 Match.in Mini App</b> di bawah untuk langsung swipe & mencari pasangan!",
+			"Pilih metode yang ingin kamu gunakan untuk mencari pasangan:",
 		user.FirstName,
 	)
 
@@ -472,8 +478,14 @@ func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user 
 		"inline_keyboard": [][]map[string]interface{}{
 			{
 				{
-					"text":    "🚀 Buka " + dict.AppName + " Mini App",
+					"text":    "📱 Buka Match.in Mini App",
 					"web_app": map[string]string{"url": appURL},
+				},
+			},
+			{
+				{
+					"text":          "💬 Lanjutkan via Telegram Chat",
+					"callback_data": "continue_chat",
 				},
 			},
 		},
@@ -486,15 +498,7 @@ func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user 
 		ReplyMarkup: replyMarkup,
 	}
 
-	_ = s.SendMessage(ctx, payload)
-
-	// Send persistent keyboard as follow-up
-	return s.SendMessage(ctx, &TelegramSendMessagePayload{
-		ChatID:      chatID,
-		Text:        "Gunakan menu keyboard di bawah untuk akses cepat:",
-		ParseMode:   "HTML",
-		ReplyMarkup: s.getPersistentKeyboard(),
-	})
+	return s.SendMessage(ctx, payload)
 }
 
 func (s *botService) handlePremiumCommand(ctx context.Context, chatID int64, user *domain.User) error {
