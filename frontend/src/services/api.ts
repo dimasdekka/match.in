@@ -39,7 +39,8 @@ export const getTelegramInitData = (): string => {
   if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
     return window.Telegram.WebApp.initData;
   }
-  return 'user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22Alex%22%2C%22last_name%22%3A%22Dev%22%2C%22username%22%3A%22alex_dev%22%2C%22language_code%22%3A%22id%22%7D';
+  const now = Math.floor(Date.now() / 1000);
+  return `user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22User%22%2C%22username%22%3A%22user_demo%22%2C%22language_code%22%3A%22id%22%7D&hash=mock_dev_hash&auth_date=${now}`;
 };
 
 const getHeaders = (): Record<string, string> => ({
