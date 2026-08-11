@@ -36,9 +36,28 @@ declare global {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const getTelegramInitData = (): string => {
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
-    return window.Telegram.WebApp.initData;
+  if (typeof window !== 'undefined') {
+    // 1. Direct Telegram WebApp SDK object
+    if (window.Telegram?.WebApp?.initData) {
+      return window.Telegram.WebApp.initData;
+    }
+
+    // 2. URL hash parameter (tgWebAppInitData)
+    if (window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const initDataFromHash = hashParams.get('tgWebAppInitData');
+      if (initDataFromHash) return initDataFromHash;
+    }
+
+    // 3. URL search parameter
+    if (window.location.search) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const initDataFromQuery = searchParams.get('tgWebAppInitData') || searchParams.get('initData');
+      if (initDataFromQuery) return initDataFromQuery;
+    }
   }
+
+  // 4. Dev fallback ONLY when testing in standalone browser
   const now = Math.floor(Date.now() / 1000);
   return `user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22User%22%2C%22username%22%3A%22user_demo%22%2C%22language_code%22%3A%22id%22%7D&hash=mock_dev_hash&auth_date=${now}`;
 };
