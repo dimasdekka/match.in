@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, MoreHorizontal, Paperclip, Send, Eye, Image as ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Paperclip, Send, Eye, X } from 'lucide-react';
 import type { Profile, ChatMessage } from '../types';
 import { api } from '../services/api';
 import { compressImageFile } from '../utils/imageCompressor';
