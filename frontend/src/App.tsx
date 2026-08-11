@@ -64,11 +64,17 @@ export const App: React.FC = () => {
           setShowWelcome(true);
           setShowOnboarding(false);
         }
+      } catch (e) {
+        console.error('Failed to load profile', e);
+        setShowWelcome(true);
+        setShowOnboarding(false);
+      }
 
+      try {
         const recRes = await api.getRecommendations(10);
         setProfiles(recRes.profiles || []);
       } catch (e) {
-        console.error('Failed to load profile/recommendations', e);
+        console.error('Failed to load recommendations', e);
       } finally {
         setLoading(false);
       }
@@ -116,6 +122,19 @@ export const App: React.FC = () => {
   const currentCandidate = profiles[currentIndex];
 
   const isFullscreenOverlay = showWelcome || showOnboarding;
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white gap-3">
+        <div className="w-16 h-16 rounded-full match-gradient flex items-center justify-center text-white match-shadow-btn animate-pulse">
+          <Heart className="w-8 h-8 fill-white" />
+        </div>
+        <span className="text-xl font-black text-slate-900 tracking-tight">
+          match<span className="text-[#FF3366]">.in</span>
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
