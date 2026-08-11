@@ -157,7 +157,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated }) =>
       : '👫 Semua (Laki-laki & Perempuan)';
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white min-h-screen relative">
+    <div className="w-full max-w-md mx-auto bg-white pb-24 relative">
 
       {/* ── Top Bar: Settings & Edit Icon ── */}
       <div className="flex items-center justify-between px-5 pt-4 pb-1">

@@ -44,7 +44,7 @@ export const LikesPage: React.FC<LikesPageProps> = ({ onOpenMatchesCount: _onOpe
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-slate-400">
         <RefreshCw className="w-7 h-7 animate-spin text-[#FF3366]" />
-        <p className="text-xs font-semibold">Loading...</p>
+        <p className="text-xs font-semibold">Memuat data menyukai...</p>
       </div>
     );
   }
@@ -64,108 +64,109 @@ export const LikesPage: React.FC<LikesPageProps> = ({ onOpenMatchesCount: _onOpe
   const likesCount = displayList.length;
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white min-h-screen">
+    <div className="w-full max-w-md mx-auto bg-white pb-24">
       {/* ── Top Header ── */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-start">
+      <div className="px-5 pt-4 pb-2 flex items-center justify-start">
         <h2 className="text-xl font-extrabold text-slate-900">Likes</h2>
       </div>
 
       {/* ── Segmented Tabs ── */}
-      <div className="flex border-b border-slate-200 px-4">
+      <div className="flex border-b border-slate-200 px-5">
         <button
           onClick={() => setActiveSegment('likes_you')}
-          className={`flex-1 pb-3 text-center text-sm font-bold transition-all border-b-[2.5px] ${
+          className={`flex-1 pb-3 text-center text-xs font-bold transition-all border-b-[2.5px] cursor-pointer ${
             activeSegment === 'likes_you'
               ? 'border-[#FF3366] text-slate-900'
               : 'border-transparent text-slate-400 hover:text-slate-600'
           }`}
         >
           <span>Likes You</span>
-          <span className="ml-1.5 px-2 py-0.5 rounded-full bg-[#FF3366] text-white text-[10px] font-extrabold align-middle">
-            {likesCount}
-          </span>
+          {likesCount > 0 && (
+            <span className="ml-1.5 px-2 py-0.5 rounded-full bg-[#FF3366] text-white text-[10px] font-extrabold align-middle">
+              {likesCount}
+            </span>
+          )}
         </button>
 
         <button
           onClick={() => setActiveSegment('you_liked')}
-          className={`flex-1 pb-3 text-center text-sm font-bold transition-all border-b-[2.5px] ${
+          className={`flex-1 pb-3 text-center text-xs font-bold transition-all border-b-[2.5px] cursor-pointer ${
             activeSegment === 'you_liked'
               ? 'border-[#FF3366] text-slate-900'
               : 'border-transparent text-slate-400 hover:text-slate-600'
           }`}
         >
-          You Liked
+          <span>You Liked</span>
+          {likesCount > 0 && (
+            <span className="ml-1.5 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-extrabold align-middle">
+              {likesCount}
+            </span>
+          )}
         </button>
       </div>
 
       {/* ── List ── */}
-      <div className="px-4 py-3">
-        {activeSegment === 'likes_you' ? (
-          displayList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-              <div className="w-14 h-14 rounded-full bg-pink-50 flex items-center justify-center">
-                <Heart className="w-7 h-7 text-pink-300" />
-              </div>
-              <p className="text-sm font-bold text-slate-700">Belum ada orang yang menyukaimu</p>
-              <p className="text-xs text-slate-400">Terus swipe di Discover untuk menemukan match!</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {displayList.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between py-3.5 border-b border-slate-100 last:border-b-0"
-                >
-                  {/* Left: Avatar + Info */}
-                  <div className="flex items-center gap-3.5">
-                    {/* Avatar with Online Dot */}
-                    <div className="relative shrink-0">
-                      <img
-                        src={item.avatar}
-                        alt={item.name}
-                        className="w-14 h-14 rounded-full object-cover"
-                      />
-                      <span className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
-                    </div>
-
-                    {/* Name + Distance + Bio */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
-                          {item.name}, {item.age}
-                        </h3>
-                        {item.isVerified && (
-                          <CheckCircle2 className="w-4 h-4 text-sky-500 fill-sky-500 shrink-0" style={{ color: 'white' }} />
-                        )}
-                      </div>
-                      <p className="text-[12px] text-slate-400 font-medium mt-0.5 leading-tight">
-                        {item.city || '3 km away'}
-                      </p>
-                      <p className="text-[13px] text-slate-600 mt-0.5 leading-snug truncate max-w-[200px]">
-                        {item.bio || 'Hey there! 👋'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: Heart Button */}
-                  <a
-                    href={item.telegramLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-11 h-11 rounded-full match-gradient flex items-center justify-center text-white shrink-0 shadow-md shadow-pink-500/20 hover:scale-105 active:scale-90 transition"
-                  >
-                    <Heart className="w-5 h-5 fill-white" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          )
-        ) : (
+      <div className="px-5 py-3">
+        {displayList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
             <div className="w-14 h-14 rounded-full bg-pink-50 flex items-center justify-center">
               <Heart className="w-7 h-7 text-pink-300" />
             </div>
-            <p className="text-sm text-slate-400 font-medium">Belum ada profil yang kamu sukai.</p>
+            <p className="text-sm font-bold text-slate-700">
+              {activeSegment === 'likes_you' ? 'Belum ada orang yang menyukaimu' : 'Belum ada profil yang kamu sukai'}
+            </p>
+            <p className="text-xs text-slate-400">Terus swipe di Discover untuk menemukan match!</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {displayList.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between py-3.5 border-b border-slate-100 last:border-b-0"
+              >
+                {/* Left: Avatar + Info */}
+                <div className="flex items-center gap-3.5">
+                  {/* Avatar with Online Dot */}
+                  <div className="relative shrink-0">
+                    <img
+                      src={item.avatar}
+                      alt={item.name}
+                      className="w-13 h-13 rounded-full object-cover border border-slate-100"
+                    />
+                    <span className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                  </div>
+
+                  {/* Name + Distance + Bio */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                        {item.name}, {item.age}
+                      </h3>
+                      {item.isVerified && (
+                        <CheckCircle2 className="w-4 h-4 text-sky-500 fill-sky-500 shrink-0" style={{ color: 'white' }} />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">
+                      {item.city || '3 km away'}
+                    </p>
+                    <p className="text-xs text-slate-600 mt-0.5 leading-snug truncate max-w-[180px]">
+                      {item.bio || 'Menyukai kopi & petualangan.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Heart Button / Telegram Link */}
+                <a
+                  href={item.telegramLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full match-gradient flex items-center justify-center text-white shrink-0 shadow-md shadow-pink-500/20 hover:scale-105 active:scale-90 transition"
+                  title="Chat via Telegram"
+                >
+                  <Heart className="w-4.5 h-4.5 fill-white" />
+                </a>
+              </div>
+            ))}
           </div>
         )}
       </div>
