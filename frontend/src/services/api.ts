@@ -117,4 +117,29 @@ export const api = {
     const parsed = getMatchesResponseSchema.parse(data);
     return { matches: parsed.matches as MatchDetail[] };
   },
+
+  async getConversations(): Promise<{ conversations: any[] }> {
+    const res = await fetch(`${API_BASE_URL}/chats`, { headers: getHeaders() });
+    if (!res.ok) throw new Error(`Failed to fetch conversations: ${res.statusText}`);
+    const data = await res.json();
+    return { conversations: data.conversations || [] };
+  },
+
+  async getChatMessages(matchId: number): Promise<{ messages: any[] }> {
+    const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, { headers: getHeaders() });
+    if (!res.ok) throw new Error(`Failed to fetch messages: ${res.statusText}`);
+    const data = await res.json();
+    return { messages: data.messages || [] };
+  },
+
+  async sendChatMessage(matchId: number, content: string, imageUrl?: string): Promise<{ message: any }> {
+    const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ content, image_url: imageUrl }),
+    });
+    if (!res.ok) throw new Error(`Failed to send message: ${res.statusText}`);
+    const data = await res.json();
+    return { message: data.message };
+  },
 };

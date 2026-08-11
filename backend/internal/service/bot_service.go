@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,10 +17,12 @@ import (
 
 type BotService interface {
 	SendMatchNotification(ctx context.Context, telegramID int64, matchedName string, matchedTelegramUsername string, langCode string) error
+	SendSingleLikeNotification(ctx context.Context, targetTelegramID int64, swiperUserID uint, swiperName string, langCode string) error
 	ProcessUpdate(ctx context.Context, update *domain.TelegramBotUpdate) error
 	SendMessage(ctx context.Context, payload *TelegramSendMessagePayload) error
 	StartPolling(ctx context.Context)
 	SetMatchmakingService(matchmakingService MatchmakingService)
+	RegisterBotCommands(ctx context.Context) error
 }
 
 type botService struct {
@@ -57,19 +60,88 @@ type TelegramSendMessagePayload struct {
 	ReplyMarkup map[string]interface{} `json:"reply_markup,omitempty"`
 }
 
+type TelegramSendPhotoPayload struct {
+	ChatID      int64                  `json:"chat_id"`
+	Photo       string                 `json:"photo"`
+	Caption     string                 `json:"caption"`
+	ParseMode   string                 `json:"parse_mode"`
+	ReplyMarkup map[string]interface{} `json:"reply_markup,omitempty"`
+}
+
+func (s *botService) getPersistentKeyboard() map[string]interface{} {
+	appURL := s.webAppURL
+	if appURL == "" {
+		appURL = "https://t.me/matchin_bot/app"
+	}
+	return map[string]interface{}{
+		"keyboard": [][]map[string]interface{}{
+			{
+				{"text": "🚀 Mini App", "web_app": map[string]string{"url": appURL}},
+				{"text": "👤 Profile"},
+			},
+			{
+				{"text": "⭐ Premium"},
+				{"text": "📩 Complain"},
+				{"text": "🌐 Language"},
+			},
+		},
+		"resize_keyboard": true,
+	}
+}
+
+func (s *botService) RegisterBotCommands(ctx context.Context) error {
+	if s.botToken == "" {
+		return nil
+	}
+
+	payload := map[string]interface{}{
+		"commands": []map[string]string{
+			{"command": "app", "description": "🚀 Buka Match.in Mini App"},
+			{"command": "profile", "description": "👤 Lihat Profil Saya"},
+			{"command": "premium", "description": "⭐ Fitur Premium & VIP"},
+			{"command": "complain", "description": "📩 Bantuan & Laporan"},
+			{"command": "language", "description": "🌐 Ganti Bahasa"},
+			{"command": "help", "description": "❓ Bantuan & Petunjuk"},
+		},
+	}
+
+	bodyBytes, _ := json.Marshal(payload)
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/setMyCommands", s.botToken)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		log.Println("✅ Telegram Bot Commands registered successfully.")
+	}
+	return nil
+}
+
 func (s *botService) SendMatchNotification(ctx context.Context, telegramID int64, matchedName string, matchedTelegramUsername string, langCode string) error {
 	if s.botToken == "" {
 		log.Printf("[BOT MOCK NOTIF] To TelegramID: %d | Matched with: %s (@%s)\n", telegramID, matchedName, matchedTelegramUsername)
 		return nil
 	}
 
-	dict := i18n.GetDict(langCode)
-	msgText := fmt.Sprintf("%s\n\n"+dict.NewMatchMessage, dict.NewMatchTitle, matchedName)
+	msgText := fmt.Sprintf("🎉 <b>It's a Match!</b> 💕\n\nKamu dan <b>%s</b> saling menyukai!\n\nLangsung alihkan ke Telegram untuk mulai chatting:", matchedName)
+
+	if matchedTelegramUsername != "" {
+		msgText += fmt.Sprintf("\n💬 Telegram: @%s", matchedTelegramUsername)
+	}
 
 	payload := TelegramSendMessagePayload{
-		ChatID:    telegramID,
-		Text:      msgText,
-		ParseMode: "HTML",
+		ChatID:      telegramID,
+		Text:        msgText,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
 	}
 
 	if matchedTelegramUsername != "" {
@@ -77,12 +149,45 @@ func (s *botService) SendMatchNotification(ctx context.Context, telegramID int64
 			"inline_keyboard": [][]map[string]string{
 				{
 					{
-						"text": "💬 Chat @" + matchedTelegramUsername,
+						"text": "💬 Chat @" + matchedTelegramUsername + " di Telegram",
 						"url":  "https://t.me/" + matchedTelegramUsername,
 					},
 				},
 			},
 		}
+	}
+
+	return s.SendMessage(ctx, &payload)
+}
+
+func (s *botService) SendSingleLikeNotification(ctx context.Context, targetTelegramID int64, swiperUserID uint, swiperName string, langCode string) error {
+	if s.botToken == "" {
+		log.Printf("[BOT MOCK LIKE NOTIF] To TelegramID: %d | Swiped by UserID: %d (%s)\n", targetTelegramID, swiperUserID, swiperName)
+		return nil
+	}
+
+	msgText := "💖 <b>Ada 1 orang yang menyukaimu!</b>\n\nSeseorang di Match.in tertarik dengan profilmu 😉. Ingin lihat profilnya?"
+
+	replyMarkup := map[string]interface{}{
+		"inline_keyboard": [][]map[string]interface{}{
+			{
+				{
+					"text":          "👁️ Lihat Profil",
+					"callback_data": fmt.Sprintf("view_like:%d", swiperUserID),
+				},
+				{
+					"text":          "❌ Skip",
+					"callback_data": fmt.Sprintf("skip_like:%d", swiperUserID),
+				},
+			},
+		},
+	}
+
+	payload := TelegramSendMessagePayload{
+		ChatID:      targetTelegramID,
+		Text:        msgText,
+		ParseMode:   "HTML",
+		ReplyMarkup: replyMarkup,
 	}
 
 	return s.SendMessage(ctx, &payload)
@@ -123,16 +228,52 @@ func (s *botService) SendMessage(ctx context.Context, payload *TelegramSendMessa
 	return nil
 }
 
+func (s *botService) SendPhoto(ctx context.Context, payload *TelegramSendPhotoPayload) error {
+	if payload == nil {
+		return fmt.Errorf("send photo payload cannot be nil")
+	}
+
+	if s.botToken == "" {
+		log.Printf("[BOT MOCK PHOTO] To ChatID: %d | Photo: %s\n", payload.ChatID, payload.Photo)
+		return nil
+	}
+
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal photo payload: %w", err)
+	}
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", s.botToken)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create http request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send bot photo: %w", err)
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
 func (s *botService) ProcessUpdate(ctx context.Context, update *domain.TelegramBotUpdate) error {
-	if update == nil || update.Message == nil {
+	if update == nil {
+		return nil
+	}
+
+	// ── Handle Callback Query (Button Clicks) ──
+	if update.CallbackQuery != nil {
+		return s.handleCallbackQuery(ctx, update.CallbackQuery)
+	}
+
+	if update.Message == nil || update.Message.From == nil || update.Message.Text == "" {
 		return nil
 	}
 
 	msg := update.Message
-	if msg.From == nil || msg.Text == "" {
-		return nil
-	}
-
 	chatID := msg.Chat.ID
 	userPayload := msg.From
 	text := strings.TrimSpace(msg.Text)
@@ -170,12 +311,18 @@ func (s *botService) ProcessUpdate(ctx context.Context, update *domain.TelegramB
 	}
 
 	switch strings.ToLower(cmd) {
-	case "/start":
+	case "/start", "/app", "🚀 mini app":
 		return s.handleStartCommand(ctx, chatID, dbUser)
+	case "/profile", "👤 profile":
+		return s.handleProfileCommand(ctx, chatID, dbUser)
+	case "/premium", "⭐ premium":
+		return s.handlePremiumCommand(ctx, chatID, dbUser)
+	case "/complain", "📩 complain":
+		return s.handleComplainCommand(ctx, chatID, dbUser)
+	case "/language", "🌐 language":
+		return s.handleLanguageCommand(ctx, chatID, dbUser)
 	case "/search":
 		return s.handleSearchCommand(ctx, chatID, dbUser)
-	case "/profile":
-		return s.handleProfileCommand(ctx, chatID, dbUser)
 	case "/matches":
 		return s.handleMatchesCommand(ctx, chatID, dbUser)
 	case "/reset":
@@ -184,20 +331,137 @@ func (s *botService) ProcessUpdate(ctx context.Context, update *domain.TelegramB
 		return s.handleHelpCommand(ctx, chatID, dbUser)
 	default:
 		if strings.HasPrefix(text, "/") {
-			dict := i18n.GetDict(dbUser.LanguageCode)
+			return s.SendMessage(ctx, &TelegramSendMessagePayload{
+				ChatID:      chatID,
+				Text:        "❓ Perintah tidak dikenali. Ketik /help atau gunakan menu keyboard di bawah.",
+				ParseMode:   "HTML",
+				ReplyMarkup: s.getPersistentKeyboard(),
+			})
+		}
+		return s.handleStartCommand(ctx, chatID, dbUser)
+	}
+}
+
+func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.TelegramCallbackQuery) error {
+	if cb == nil || cb.From == nil {
+		return nil
+	}
+
+	chatID := cb.Message.Chat.ID
+	data := cb.Data
+
+	targetUser, err := s.userService.GetByTelegramID(ctx, cb.From.ID)
+	if err != nil || targetUser == nil {
+		return nil
+	}
+
+	parts := strings.Split(data, ":")
+	action := parts[0]
+
+	switch action {
+	case "view_like":
+		if len(parts) < 2 {
+			return nil
+		}
+		swiperUserID, _ := strconv.ParseUint(parts[1], 10, 64)
+		swiperProf, err := s.profileService.GetProfileByUserID(ctx, uint(swiperUserID))
+		if err != nil || swiperProf == nil {
 			return s.SendMessage(ctx, &TelegramSendMessagePayload{
 				ChatID:    chatID,
-				Text:      dict.BotUnknownCommand,
+				Text:      "Profil tidak lagi tersedia.",
 				ParseMode: "HTML",
 			})
 		}
-		return s.handleHelpCommand(ctx, chatID, dbUser)
+
+		bio := swiperProf.Bio
+		if bio == "" {
+			bio = "Suka ngobrol santai & kopi."
+		}
+
+		caption := fmt.Sprintf(
+			"👤 <b>%s</b>, %d\n📍 %s, %s\n💬 <i>\"%s\"</i>\n\nIngin match dengan %s?",
+			swiperProf.Name, swiperProf.Age, swiperProf.City, swiperProf.Country, bio, swiperProf.Name,
+		)
+
+		replyMarkup := map[string]interface{}{
+			"inline_keyboard": [][]map[string]interface{}{
+				{
+					{
+						"text":          "💖 Suka Juga!",
+						"callback_data": fmt.Sprintf("like_back:%d", swiperUserID),
+					},
+					{
+						"text":          "❌ Skip",
+						"callback_data": fmt.Sprintf("skip_like:%d", swiperUserID),
+					},
+				},
+			},
+		}
+
+		var photoURL string
+		if swiperProf.Photos != "" {
+			var photos []string
+			if json.Unmarshal([]byte(swiperProf.Photos), &photos) == nil && len(photos) > 0 {
+				photoURL = photos[0]
+			}
+		}
+
+		if photoURL != "" {
+			return s.SendPhoto(ctx, &TelegramSendPhotoPayload{
+				ChatID:      chatID,
+				Photo:       photoURL,
+				Caption:     caption,
+				ParseMode:   "HTML",
+				ReplyMarkup: replyMarkup,
+			})
+		}
+
+		return s.SendMessage(ctx, &TelegramSendMessagePayload{
+			ChatID:      chatID,
+			Text:        caption,
+			ParseMode:   "HTML",
+			ReplyMarkup: replyMarkup,
+		})
+
+	case "like_back":
+		if len(parts) < 2 {
+			return nil
+		}
+		swiperUserID, _ := strconv.ParseUint(parts[1], 10, 64)
+		if s.matchmakingService != nil {
+			req := &domain.SwipeRequest{
+				TargetID: uint(swiperUserID),
+				Action:   domain.ActionLike,
+			}
+			_, _ = s.matchmakingService.ProcessSwipe(ctx, targetUser.ID, req)
+		}
+		return s.SendMessage(ctx, &TelegramSendMessagePayload{
+			ChatID:      chatID,
+			Text:        "🎉 Mantap! Kamu sudah menyukai balik. Selamat mengobrol!",
+			ParseMode:   "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
+		})
+
+	case "skip_like":
+		return s.SendMessage(ctx, &TelegramSendMessagePayload{
+			ChatID:      chatID,
+			Text:        "Oke, profil di-skip.",
+			ParseMode:   "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
+		})
 	}
+
+	return nil
 }
 
 func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user *domain.User) error {
 	dict := i18n.GetDict(user.LanguageCode)
-	text := dict.BotWelcome
+	text := fmt.Sprintf(
+		"👋 Halo <b>%s</b>! Selamat datang di <b>Match.in</b> 💕\n\n"+
+			"Tempat terbaik mencari pasangan dan teman ngobrol seru disekitarmu!\n\n"+
+			"Klik tombol <b>🚀 Match.in Mini App</b> di bawah untuk langsung swipe & mencari pasangan!",
+		user.FirstName,
+	)
 
 	appURL := s.webAppURL
 	if appURL == "" {
@@ -208,7 +472,7 @@ func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user 
 		"inline_keyboard": [][]map[string]interface{}{
 			{
 				{
-					"text":    "🚀 " + dict.AppName + " Mini App",
+					"text":    "🚀 Buka " + dict.AppName + " Mini App",
 					"web_app": map[string]string{"url": appURL},
 				},
 			},
@@ -222,7 +486,89 @@ func (s *botService) handleStartCommand(ctx context.Context, chatID int64, user 
 		ReplyMarkup: replyMarkup,
 	}
 
-	return s.SendMessage(ctx, payload)
+	_ = s.SendMessage(ctx, payload)
+
+	// Send persistent keyboard as follow-up
+	return s.SendMessage(ctx, &TelegramSendMessagePayload{
+		ChatID:      chatID,
+		Text:        "Gunakan menu keyboard di bawah untuk akses cepat:",
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
+	})
+}
+
+func (s *botService) handlePremiumCommand(ctx context.Context, chatID int64, user *domain.User) error {
+	text := "⭐ <b>Match.in VIP & Premium</b>\n\n" +
+		"Nikmati fitur eksklusif:\n" +
+		"• 💖 Unlimited Likes setiap hari\n" +
+		"• 👁️ Lihat siapa yang menyukaimu lebih dulu\n" +
+		"• 🚀 Profile Boost ke urutan teratas\n" +
+		"• 🌐 Ubah lokasi jelajah ke kota manapun\n\n" +
+		"Buka Mini App untuk mengaktifkan Premium!"
+
+	appURL := s.webAppURL
+	if appURL == "" {
+		appURL = "https://t.me/matchin_bot/app"
+	}
+
+	replyMarkup := map[string]interface{}{
+		"inline_keyboard": [][]map[string]interface{}{
+			{
+				{
+					"text":    "⭐ Buka Mini App & Upgrade VIP",
+					"web_app": map[string]string{"url": appURL},
+				},
+			},
+		},
+	}
+
+	return s.SendMessage(ctx, &TelegramSendMessagePayload{
+		ChatID:      chatID,
+		Text:        text,
+		ParseMode:   "HTML",
+		ReplyMarkup: replyMarkup,
+	})
+}
+
+func (s *botService) handleComplainCommand(ctx context.Context, chatID int64, user *domain.User) error {
+	text := "📩 <b>Laporan & Bantuan Pelanggan</b>\n\n" +
+		"Ada masalah atau pertanyaan terkait akun Match.in kamu?\n\n" +
+		"Tim bantuan kami siap membantu 24/7. Hubungi kami langsung di:\n" +
+		"💬 Admin Support: @MatchinSupportBot\n" +
+		"📧 Email: support@matchin.app"
+
+	return s.SendMessage(ctx, &TelegramSendMessagePayload{
+		ChatID:      chatID,
+		Text:        text,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
+	})
+}
+
+func (s *botService) handleLanguageCommand(ctx context.Context, chatID int64, user *domain.User) error {
+	newLang := "en"
+	if user.LanguageCode == "en" {
+		newLang = "id"
+	}
+
+	user.LanguageCode = newLang
+	if s.userService != nil {
+		_ = s.userService.CreateOrUpdate(ctx, user)
+	}
+
+	langText := "Bahasa Indonesia 🇮🇩"
+	if newLang == "en" {
+		langText = "English 🇬🇧"
+	}
+
+	text := fmt.Sprintf("🌐 Bahasa berhasil diubah ke <b>%s</b>!", langText)
+
+	return s.SendMessage(ctx, &TelegramSendMessagePayload{
+		ChatID:      chatID,
+		Text:        text,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
+	})
 }
 
 func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user *domain.User) error {
@@ -239,14 +585,15 @@ func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user
 
 	if len(recs) == 0 {
 		return s.SendMessage(ctx, &TelegramSendMessagePayload{
-			ChatID:    chatID,
-			Text:      dict.BotNoRecommendations,
-			ParseMode: "HTML",
+			ChatID:      chatID,
+			Text:        dict.BotNoRecommendations,
+			ParseMode:   "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
 		})
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("🔍 <b>%s Candidate Recommendations</b> (%d found):\n\n", dict.AppName, len(recs)))
+	sb.WriteString(fmt.Sprintf("🔍 <b>Rekomendasi Match.in</b> (%d ditemukan):\n\n", len(recs)))
 
 	for i, rec := range recs {
 		interestsStr := "-"
@@ -260,13 +607,13 @@ func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user
 		location := fmt.Sprintf("%s, %s", rec.City, rec.Country)
 		bio := rec.Bio
 		if bio == "" {
-			bio = "No bio provided."
+			bio = "Suka ngobrol santai & kopi."
 		}
 
 		sb.WriteString(fmt.Sprintf("%d. <b>%s</b>, %d\n", i+1, rec.Name, rec.Age))
-		sb.WriteString(fmt.Sprintf("📍 Location: %s\n", location))
+		sb.WriteString(fmt.Sprintf("📍 Lokasi: %s\n", location))
 		sb.WriteString(fmt.Sprintf("💬 <i>\"%s\"</i>\n", bio))
-		sb.WriteString(fmt.Sprintf("🏷️ Interests: %s\n\n", interestsStr))
+		sb.WriteString(fmt.Sprintf("🏷️ Minat: %s\n\n", interestsStr))
 	}
 
 	appURL := s.webAppURL
@@ -278,7 +625,7 @@ func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user
 		"inline_keyboard": [][]map[string]interface{}{
 			{
 				{
-					"text":    "💖 Swipe in Mini App",
+					"text":    "💖 Swipe di Mini App",
 					"web_app": map[string]string{"url": appURL},
 				},
 			},
@@ -294,8 +641,6 @@ func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user
 }
 
 func (s *botService) handleProfileCommand(ctx context.Context, chatID int64, user *domain.User) error {
-	dict := i18n.GetDict(user.LanguageCode)
-
 	if s.profileService == nil {
 		return fmt.Errorf("profile service is not configured")
 	}
@@ -307,9 +652,10 @@ func (s *botService) handleProfileCommand(ctx context.Context, chatID int64, use
 
 	if profile == nil {
 		return s.SendMessage(ctx, &TelegramSendMessagePayload{
-			ChatID:    chatID,
-			Text:      dict.BotNoProfile,
-			ParseMode: "HTML",
+			ChatID:      chatID,
+			Text:        "👤 Kamu belum mengisi profil! Buka Mini App untuk melengkapi profilmu.",
+			ParseMode:   "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
 		})
 	}
 
@@ -321,38 +667,36 @@ func (s *botService) handleProfileCommand(ctx context.Context, chatID int64, use
 		}
 	}
 
-	verifiedBadge := "❌ Not Verified"
+	verifiedBadge := "❌ Belum Verifikasi"
 	if profile.IsVerified {
-		verifiedBadge = "✅ Verified Profile"
+		verifiedBadge = "✅ Profil Terverifikasi"
 	}
 
 	text := fmt.Sprintf(
-		"👤 <b>Your %s Profile</b>\n\n"+
-			"<b>Name:</b> %s\n"+
-			"<b>Age:</b> %d\n"+
-			"<b>Gender:</b> %s\n"+
-			"<b>Target Gender:</b> %s\n"+
-			"<b>Location:</b> %s, %s (%s)\n"+
-			"<b>Age Preference:</b> %d - %d\n"+
+		"👤 <b>Profil Match.in Kamu</b>\n\n"+
+			"<b>Nama:</b> %s\n"+
+			"<b>Usia:</b> %d\n"+
+			"<b>Jenis Kelamin:</b> %s\n"+
+			"<b>Mencari:</b> %s\n"+
+			"<b>Lokasi:</b> %s, %s\n"+
 			"<b>Bio:</b> %s\n"+
-			"<b>Interests:</b> %s\n"+
+			"<b>Minat:</b> %s\n"+
 			"<b>Status:</b> %s\n",
-		dict.AppName,
 		profile.Name,
 		profile.Age,
 		profile.Gender,
 		profile.TargetGender,
-		profile.City, profile.Country, profile.TargetLocationMode,
-		profile.MinAgePref, profile.MaxAgePref,
+		profile.City, profile.Country,
 		profile.Bio,
 		interestsStr,
 		verifiedBadge,
 	)
 
 	return s.SendMessage(ctx, &TelegramSendMessagePayload{
-		ChatID:    chatID,
-		Text:      text,
-		ParseMode: "HTML",
+		ChatID:      chatID,
+		Text:        text,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
 	})
 }
 
@@ -370,14 +714,15 @@ func (s *botService) handleMatchesCommand(ctx context.Context, chatID int64, use
 
 	if len(matches) == 0 {
 		return s.SendMessage(ctx, &TelegramSendMessagePayload{
-			ChatID:    chatID,
-			Text:      dict.BotNoMatches,
-			ParseMode: "HTML",
+			ChatID:      chatID,
+			Text:        dict.BotNoMatches,
+			ParseMode:   "HTML",
+			ReplyMarkup: s.getPersistentKeyboard(),
 		})
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("🎉 <b>Your %s Matches</b> (%d):\n\n", dict.AppName, len(matches)))
+	sb.WriteString(fmt.Sprintf("🎉 <b>Daftar Match Kamu</b> (%d):\n\n", len(matches)))
 
 	for i, m := range matches {
 		name := "Unknown"
@@ -407,9 +752,10 @@ func (s *botService) handleMatchesCommand(ctx context.Context, chatID int64, use
 	}
 
 	return s.SendMessage(ctx, &TelegramSendMessagePayload{
-		ChatID:    chatID,
-		Text:      sb.String(),
-		ParseMode: "HTML",
+		ChatID:      chatID,
+		Text:        sb.String(),
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
 	})
 }
 
@@ -425,18 +771,20 @@ func (s *botService) handleResetCommand(ctx context.Context, chatID int64, user 
 	}
 
 	return s.SendMessage(ctx, &TelegramSendMessagePayload{
-		ChatID:    chatID,
-		Text:      dict.BotResetSuccess,
-		ParseMode: "HTML",
+		ChatID:      chatID,
+		Text:        dict.BotResetSuccess,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
 	})
 }
 
 func (s *botService) handleHelpCommand(ctx context.Context, chatID int64, user *domain.User) error {
 	dict := i18n.GetDict(user.LanguageCode)
 	return s.SendMessage(ctx, &TelegramSendMessagePayload{
-		ChatID:    chatID,
-		Text:      dict.BotHelp,
-		ParseMode: "HTML",
+		ChatID:      chatID,
+		Text:        dict.BotHelp,
+		ParseMode:   "HTML",
+		ReplyMarkup: s.getPersistentKeyboard(),
 	})
 }
 
@@ -445,6 +793,9 @@ func (s *botService) StartPolling(ctx context.Context) {
 		log.Println("Info: TELEGRAM_BOT_TOKEN is empty; Telegram bot long-polling engine disabled.")
 		return
 	}
+
+	log.Println("🤖 Registering Telegram Bot menu commands...")
+	_ = s.RegisterBotCommands(ctx)
 
 	log.Println("🤖 Starting Telegram Bot long-polling engine...")
 	offset := int64(0)

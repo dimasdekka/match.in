@@ -32,6 +32,8 @@ export const App: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [initialTelegramName, setInitialTelegramName] = useState<string>('');
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [chatsLoading, setChatsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let tgName = '';
@@ -73,6 +75,16 @@ export const App: React.FC = () => {
 
     loadAppData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'chats') {
+      setChatsLoading(true);
+      api.getConversations()
+        .then((res) => setConversations(res.conversations || []))
+        .catch((err) => console.error('Failed to load conversations', err))
+        .finally(() => setChatsLoading(false));
+    }
+  }, [activeTab]);
 
   const handleSwipe = async (action: 'like' | 'pass' | 'superlike') => {
     if (currentIndex >= profiles.length) return;
@@ -180,51 +192,84 @@ export const App: React.FC = () => {
           <LikesPage onOpenMatchesCount={() => {}} />
         )}
 
-        {/* Chats Tab: Displays Active Conversations or Launches Screen 4 Chat View */}
+        {/* Chats Tab: Displays Active Conversations */}
         {activeTab === 'chats' && (
-          <div className="w-full max-w-md mx-auto space-y-4 pb-24 animate-fade-in">
-            <h2 className="text-xl font-extrabold text-slate-900 pt-1 px-2">Chats</h2>
-            <div
-              onClick={() =>
-                setActiveChatProfile({
-                  id: 999,
-                  user_id: 999,
-                  name: 'Jane',
-                  age: 26,
-                  gender: 'female',
-                  target_gender: 'all',
-                  bio: 'Love traveling, coffee, and good conversations.',
-                  voice_bio_url: '',
-                  country: 'Indonesia',
-                  city: 'Jakarta',
-                  target_location_mode: locationMode,
-                  min_age_pref: 18,
-                  max_age_pref: 35,
-                  photos: '["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"]',
-                  interests: '["Travel","Coffee","Design"]',
-                  is_verified: true,
-                })
-              }
-              className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white border border-pink-100 shadow-xs hover:shadow-md transition cursor-pointer"
-            >
-              <div className="relative">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"
-                  alt="Jane"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-pink-100"
-                />
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+          <div className="w-full max-w-md mx-auto space-y-3 px-4 pb-24 animate-fade-in">
+            <h2 className="text-xl font-extrabold text-slate-900 pt-2">Chats</h2>
+
+            {chatsLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
+                <RefreshCw className="w-6 h-6 animate-spin text-[#FF3366]" />
+                <p className="text-xs">Memuat daftar chat...</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Jane</h3>
-                  <span className="text-[10px] text-slate-400">10:34</span>
+            ) : conversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-pink-50 flex items-center justify-center text-pink-400 font-bold text-xl">
+                  💬
                 </div>
-                <p className="text-xs text-pink-600 font-medium truncate mt-0.5">
-                  Cappadocia! It was absolutely stunning 😍
-                </p>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">Belum Ada Chat</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Dapatkan match terlebih dahulu untuk mulai mengobrol!
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              conversations.map((conv) => {
+                const prof = conv.matched_profile || {
+                  name: conv.matched_user?.first_name || 'User',
+                  photos: '[]',
+                };
+                let photos: string[] = [];
+                try {
+                  photos = typeof prof.photos === 'string' ? JSON.parse(prof.photos) : prof.photos || [];
+                } catch {
+                  photos = [];
+                }
+                const avatar = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+                const lastMsg = conv.last_message?.content || 'Match baru! Mulai obrolan sekarang 💕';
+                const timeStr = conv.last_message?.created_at
+                  ? new Date(conv.last_message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : '';
+
+                return (
+                  <div
+                    key={conv.match_id}
+                    onClick={() =>
+                      setActiveChatProfile({
+                        ...prof,
+                        match_id: conv.match_id,
+                        user_id: conv.matched_user?.id || 0,
+                      })
+                    }
+                    className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white border border-pink-100 shadow-xs hover:shadow-md transition cursor-pointer active:scale-98"
+                  >
+                    <div className="relative">
+                      <img
+                        src={avatar}
+                        alt={prof.name}
+                        className="w-13 h-13 rounded-full object-cover border-2 border-pink-100"
+                      />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-900">{prof.name}</h3>
+                        {timeStr && <span className="text-[10px] text-slate-400">{timeStr}</span>}
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                        {lastMsg}
+                      </p>
+                    </div>
+                    {conv.unread_count > 0 && (
+                      <span className="w-5 h-5 rounded-full bg-[#FF3366] text-white text-[10px] font-extrabold flex items-center justify-center">
+                        {conv.unread_count}
+                      </span>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 

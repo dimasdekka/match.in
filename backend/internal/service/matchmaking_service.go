@@ -101,6 +101,19 @@ func (s *matchmakingService) ProcessSwipe(ctx context.Context, swiperID uint, re
 				Match:   match,
 				Profile: targetProfile,
 			}, nil
+		} else {
+			// Single like (not mutual yet) -> Notify target user on Telegram!
+			targetUser, tErr := s.userRepo.GetByID(ctx, req.TargetID)
+			swiperProfile, sProfErr := s.profileRepo.GetByUserID(ctx, swiperID)
+			if tErr == nil && targetUser != nil && sProfErr == nil && swiperProfile != nil {
+				swiperName := swiperProfile.Name
+				if swiperName == "" {
+					swiperName = "Seseorang"
+				}
+				if notifErr := s.botService.SendSingleLikeNotification(ctx, targetUser.TelegramID, swiperID, swiperName, targetUser.LanguageCode); notifErr != nil {
+					log.Printf("Warning: failed to send single like notification to user %d: %v\n", targetUser.TelegramID, notifErr)
+				}
+			}
 		}
 	}
 

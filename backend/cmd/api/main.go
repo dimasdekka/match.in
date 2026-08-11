@@ -44,7 +44,7 @@ func main() {
 		log.Fatalf("Failed to connect to database at %s: %v", dbPath, err)
 	}
 
-	err = db.AutoMigrate(&domain.User{}, &domain.Profile{}, &domain.Swipe{}, &domain.Match{})
+	err = db.AutoMigrate(&domain.User{}, &domain.Profile{}, &domain.Swipe{}, &domain.Match{}, &domain.ChatMessage{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}
@@ -57,12 +57,14 @@ func main() {
 	profileRepo := repository.NewProfileRepository(db)
 	swipeRepo := repository.NewSwipeRepository(db)
 	matchRepo := repository.NewMatchRepository(db)
+	chatRepo := repository.NewChatRepository(db)
 
 	webAppURL := os.Getenv("WEB_APP_URL")
 
 	userService := service.NewUserService(userRepo)
 	authService := service.NewAuthService(userService, botToken)
 	profileService := service.NewProfileService(profileRepo)
+	chatService := service.NewChatService(chatRepo, matchRepo, userRepo, profileRepo)
 	botService := service.NewBotService(botToken, webAppURL, userService, profileService)
 	matchmakingService := service.NewMatchmakingService(swipeRepo, matchRepo, profileRepo, userRepo, botService)
 
@@ -71,6 +73,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService)
 	profileHandler := handler.NewProfileHandler(profileService)
 	matchHandler := handler.NewMatchHandler(matchmakingService)
+	chatHandler := handler.NewChatHandler(chatService)
 	botHandler := handler.NewBotHandler(botService)
 
 	if os.Getenv("ENABLE_BOT_POLLING") == "true" {
@@ -122,6 +125,10 @@ func main() {
 
 		api.POST("/swipe", matchHandler.Swipe)
 		api.GET("/matches", matchHandler.GetMatches)
+
+		api.GET("/chats", chatHandler.GetConversations)
+		api.GET("/chats/:match_id/messages", chatHandler.GetMessages)
+		api.POST("/chats/:match_id/messages", chatHandler.SendMessage)
 	}
 
 	fmt.Printf("🚀 Match.in / Ketemu.in Backend API running on port %s...\n", port)

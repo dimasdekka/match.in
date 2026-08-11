@@ -56,6 +56,7 @@ func (r *SwipeRepositoryImpl) ResetSwipes(ctx context.Context, swiperID uint) er
 type MatchRepository interface {
 	CreateMatch(ctx context.Context, user1ID, user2ID uint) (*domain.Match, error)
 	GetMatchesForUser(ctx context.Context, userID uint) ([]*domain.Match, error)
+	GetByID(ctx context.Context, matchID uint) (*domain.Match, error)
 }
 
 func NewMatchRepository(db *gorm.DB) MatchRepository {
@@ -90,4 +91,16 @@ func (r *matchRepository) GetMatchesForUser(ctx context.Context, userID uint) ([
 		return nil, fmt.Errorf("failed to get matches for user %d: %w", userID, err)
 	}
 	return matches, nil
+}
+
+func (r *matchRepository) GetByID(ctx context.Context, matchID uint) (*domain.Match, error) {
+	var match domain.Match
+	err := r.db.WithContext(ctx).First(&match, matchID).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch match %d: %w", matchID, err)
+	}
+	return &match, nil
 }

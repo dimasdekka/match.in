@@ -15,6 +15,7 @@ export interface User {
 export interface Profile {
   id: number;
   user_id: number;
+  match_id?: number;
   name: string;
   age: number;
   gender: Gender;
@@ -63,4 +64,24 @@ export interface SwipeResponse {
   is_match: boolean;
   match?: any;
   profile?: Profile;
+}
+
+export interface ChatMessage {
+  id: number;
+  match_id: number;
+  sender_id: number;
+  receiver_id: number;
+  content: string;
+  image_url?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface Conversation {
+  match_id: number;
+  matched_user: User;
+  matched_profile: Profile;
+  last_message?: ChatMessage;
+  unread_count: number;
+  matched_at: string;
 }

@@ -17,49 +17,49 @@ export const Navbar: React.FC<NavbarProps> = ({
   chatsCount = 2,
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-pink-100 px-6 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-      <nav className="max-w-md mx-auto flex items-center justify-between">
+    <div className="fixed bottom-5 left-0 right-0 z-40 px-6 pointer-events-none">
+      <nav className="max-w-sm mx-auto bg-white/95 backdrop-blur-xl rounded-full flex items-center justify-around px-6 py-2.5 shadow-[0_4px_30px_rgba(0,0,0,0.1)] border border-slate-100/80 pointer-events-auto">
         {/* Discover Tab */}
         <button
           onClick={() => onTabChange('discover')}
-          className={`flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
-            activeTab === 'discover' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
+            activeTab === 'discover' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
           }`}
         >
-          <Compass className={`w-5 h-5 ${activeTab === 'discover' ? 'stroke-[2.5px]' : ''}`} />
+          <Compass className={`w-[22px] h-[22px] ${activeTab === 'discover' ? 'stroke-[2.5px]' : ''}`} />
           <span>Discover</span>
         </button>
 
-        {/* Likes Tab with Badge */}
+        {/* Likes Tab */}
         <button
           onClick={() => onTabChange('likes')}
-          className={`relative flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
-            activeTab === 'likes' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
+            activeTab === 'likes' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
           }`}
         >
           <div className="relative">
-            <Heart className={`w-5 h-5 ${activeTab === 'likes' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            <Heart className={`w-[22px] h-[22px] ${activeTab === 'likes' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
             {likesCount > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full bg-[#FF3366] text-white text-[9px] font-extrabold shadow-sm border border-white">
-                {likesCount}
+              <span className="absolute -top-1.5 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-[#FF3366] text-white text-[8px] font-extrabold flex items-center justify-center border-2 border-white">
+                {likesCount > 99 ? '99+' : likesCount}
               </span>
             )}
           </div>
           <span>Likes</span>
         </button>
 
-        {/* Chats Tab with Badge */}
+        {/* Chats Tab */}
         <button
           onClick={() => onTabChange('chats')}
-          className={`relative flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
-            activeTab === 'chats' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
+            activeTab === 'chats' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
           }`}
         >
           <div className="relative">
-            <MessageSquare className={`w-5 h-5 ${activeTab === 'chats' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            <MessageSquare className={`w-[22px] h-[22px] ${activeTab === 'chats' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
             {chatsCount > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full bg-[#FF3366] text-white text-[9px] font-extrabold shadow-sm border border-white">
-                {chatsCount}
+              <span className="absolute -top-1.5 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-[#FF3366] text-white text-[8px] font-extrabold flex items-center justify-center border-2 border-white">
+                {chatsCount > 99 ? '99+' : chatsCount}
               </span>
             )}
           </div>
@@ -69,11 +69,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Profile Tab */}
         <button
           onClick={() => onTabChange('profile')}
-          className={`flex flex-col items-center gap-0.5 text-[11px] font-semibold transition-all duration-200 ${
-            activeTab === 'profile' ? 'text-[#FF3366] scale-105' : 'text-slate-400 hover:text-slate-600'
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
+            activeTab === 'profile' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
           }`}
         >
-          <User className={`w-5 h-5 ${activeTab === 'profile' ? 'stroke-[2.5px]' : ''}`} />
+          <User className={`w-[22px] h-[22px] ${activeTab === 'profile' ? 'stroke-[2.5px]' : ''}`} />
           <span>Profile</span>
         </button>
       </nav>
