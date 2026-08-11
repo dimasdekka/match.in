@@ -34,6 +34,8 @@ export const App: React.FC = () => {
   const [initialTelegramName, setInitialTelegramName] = useState<string>('');
   const [conversations, setConversations] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
+  const [realLikesCount, setRealLikesCount] = useState<number>(0);
+  const [realChatsCount, setRealChatsCount] = useState<number>(0);
 
   useEffect(() => {
     let tgName = '';
@@ -73,8 +75,16 @@ export const App: React.FC = () => {
       try {
         const recRes = await api.getRecommendations(10);
         setProfiles(recRes.profiles || []);
+
+        const matchesRes = await api.getMatches();
+        setRealLikesCount(matchesRes.matches?.length || 0);
+
+        const convsRes = await api.getConversations();
+        setConversations(convsRes.conversations || []);
+        const totalUnread = (convsRes.conversations || []).reduce((acc: number, c: any) => acc + (c.unread_count || 0), 0);
+        setRealChatsCount(totalUnread);
       } catch (e) {
-        console.error('Failed to load recommendations', e);
+        console.error('Failed to load recommendations/matches', e);
       } finally {
         setLoading(false);
       }
@@ -324,6 +334,8 @@ export const App: React.FC = () => {
         <Navbar
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab)}
+          likesCount={realLikesCount}
+          chatsCount={realChatsCount}
         />
       )}
     </div>

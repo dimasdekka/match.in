@@ -13,8 +13,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onTabChange,
-  likesCount = 12,
-  chatsCount = 2,
+  likesCount = 0,
+  chatsCount = 0,
 }) => {
   return (
     <div className="fixed bottom-5 left-0 right-0 z-40 px-6 pointer-events-none">
