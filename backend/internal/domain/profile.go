@@ -48,11 +48,11 @@ type ProfileRequest struct {
 	Age                int                `json:"age" binding:"required,gte=18,lte=100"`
 	Gender             Gender             `json:"gender" binding:"required,oneof=male female"`
 	TargetGender       Gender             `json:"target_gender" binding:"required,oneof=male female all"`
-	Bio                string             `json:"bio" binding:"max=1000"`
-	VoiceBioURL        string             `json:"voice_bio_url" binding:"omitempty,url"`
-	Country            string             `json:"country" binding:"required,max=100"`
-	City               string             `json:"city" binding:"required,max=100"`
-	TargetLocationMode LocationFilterMode `json:"target_location_mode" binding:"omitempty,oneof=same_city same_country global"`
+	Bio                string             `json:"bio"`
+	VoiceBioURL        string             `json:"voice_bio_url"`
+	Country            string             `json:"country"`
+	City               string             `json:"city"`
+	TargetLocationMode LocationFilterMode `json:"target_location_mode"`
 	MinAgePref         int                `json:"min_age_pref" binding:"omitempty,gte=18,lte=100"`
 	MaxAgePref         int                `json:"max_age_pref" binding:"omitempty,gte=18,lte=100"`
 	Photos             []string           `json:"photos" binding:"omitempty,max=10"`

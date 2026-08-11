@@ -114,8 +114,9 @@ export const App: React.FC = () => {
       const res = await api.saveProfile(formData);
       setUserProfile(res.profile);
       setShowOnboarding(false);
-    } catch (e) {
-      alert('Failed to save profile during registration');
+    } catch (e: any) {
+      console.error('Failed to save profile during registration', e);
+      alert(`Gagal menyimpan profil: ${e?.message || 'Terjadi kesalahan'}`);
     }
   };
 
