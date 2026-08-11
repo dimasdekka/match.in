@@ -23,6 +23,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
   const [bio, setBio] = useState('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoInput, setPhotoInput] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
 
   const totalSteps = 6;
 
@@ -52,7 +53,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
       min_age_pref: 18,
       max_age_pref: 35,
       photos: photoUrls,
-      interests: [],
+      interests: interests,
     };
     onComplete(formData);
   };
@@ -213,22 +214,50 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
           </div>
         )}
 
-        {/* Step 5: Bio */}
+        {/* Step 5: Bio & Minat */}
         {step === 5 && (
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-lg font-extrabold text-slate-900">Ceritakan tentang dirimu ✍️</h2>
-              <p className="text-xs text-slate-500 mt-1">Bio singkat ini akan dilihat oleh orang lain</p>
+              <h2 className="text-lg font-extrabold text-slate-900">Bio & Minat Kamu ✍️</h2>
+              <p className="text-xs text-slate-500 mt-1">Ceritakan tentang dirimu dan pilih minatmu</p>
             </div>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              rows={4}
+              rows={3}
               maxLength={200}
               placeholder="Suka ngobrol santai & kopi..."
-              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition resize-none leading-relaxed"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-300 transition resize-none leading-relaxed"
             />
-            <p className="text-right text-[10px] text-slate-400">{bio.length}/200</p>
+
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Pilih Minat (Opsional)</label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                {['Kopi', 'Musik', 'Travel', 'Design', 'Coding', 'Kuliner', 'Fotografi', 'Olahraga', 'Film', 'Gaming'].map((tag) => {
+                  const selected = interests.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (selected) {
+                          setInterests((prev) => prev.filter((t) => t !== tag));
+                        } else if (interests.length < 5) {
+                          setInterests((prev) => [...prev, tag]);
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition border ${
+                        selected
+                          ? 'match-gradient text-white border-transparent'
+                          : 'bg-pink-50 text-[#FF3366] border-pink-100 hover:bg-pink-100'
+                      }`}
+                    >
+                      {selected ? `✓ ${tag}` : tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
