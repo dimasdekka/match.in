@@ -56,6 +56,16 @@ export const App: React.FC = () => {
 
     const loadAppData = async () => {
       setLoading(true);
+
+      // Wait up to 500ms for Telegram WebApp SDK to populate initData
+      for (let i = 0; i < 10; i++) {
+        const currentData = getTelegramInitData();
+        if (currentData && !currentData.includes('100000001')) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
       try {
         const profRes = await api.getMyProfile();
         if (profRes.profile && profRes.profile.id > 0 && profRes.profile.name.trim() !== '') {
