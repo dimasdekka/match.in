@@ -342,7 +342,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
               className="flex-1 py-3.5 rounded-full match-gradient text-white font-bold text-xs flex items-center justify-center gap-2 match-shadow-btn disabled:opacity-40 active:scale-98 transition"
             >
               <CheckCircle className="w-4 h-4" />
-              <span>Selesai & Mulai Match!</span>
+              <span>Mulai Match!</span>
             </button>
           )}
         </div>
