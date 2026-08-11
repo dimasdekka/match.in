@@ -10,7 +10,7 @@ import { LikesPage } from './pages/MatchesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import type { ProfileFormData, Profile } from './types';
-import { api } from './services/api';
+import { api, getTelegramInitData } from './services/api';
 import { Heart, RefreshCw } from 'lucide-react';
 import './i18n';
 
