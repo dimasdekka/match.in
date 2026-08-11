@@ -76,6 +76,7 @@ func main() {
 	}
 
 	r := gin.Default()
+	r.MaxMultipartMemory = 10 << 20 // 10 MB limit
 
 	// Configure Rate Limiting Middleware (10 requests/sec with burst limit of 20)
 	r.Use(middleware.RateLimitMiddleware(rate.Limit(10), 20))

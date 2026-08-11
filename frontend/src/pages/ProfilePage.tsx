@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Camera, CheckCircle2, ChevronRight, RefreshCw, X, Edit3 } from 'lucide-react';
 import { api } from '../services/api';
 import type { Profile, Gender } from '../types';
+import { compressImageFile } from '../utils/imageCompressor';
 
 interface ProfilePageProps {
   onProfileUpdated?: (profile: Profile) => void;
@@ -190,40 +191,35 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated }) =>
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file && profile) {
-                  const reader = new FileReader();
-                  reader.onload = async (event) => {
-                    if (event.target?.result) {
-                      const newPhotoUrl = event.target.result as string;
-                      let existingPhotos: string[] = [];
-                      try {
-                        existingPhotos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
-                      } catch {
-                        existingPhotos = [];
-                      }
-                      const updatedPhotos = [newPhotoUrl, ...existingPhotos.slice(0, 2)];
-                      try {
-                        const res = await api.saveProfile({
-                          name: profile.name,
-                          age: profile.age,
-                          gender: profile.gender,
-                          target_gender: profile.target_gender,
-                          bio: profile.bio,
-                          voice_bio_url: profile.voice_bio_url || '',
-                          country: profile.country || 'Indonesia',
-                          city: profile.city || 'Jakarta',
-                          target_location_mode: profile.target_location_mode || 'same_city',
-                          min_age_pref: profile.min_age_pref || 18,
-                          max_age_pref: profile.max_age_pref || 99,
-                          photos: updatedPhotos,
-                          interests: typeof profile.interests === 'string' ? JSON.parse(profile.interests) : profile.interests || [],
-                        });
-                        setProfile(res.profile);
-                      } catch (err) {
-                        console.error('Failed to update photo', err);
-                      }
+                  try {
+                    const newPhotoUrl = await compressImageFile(file);
+                    let existingPhotos: string[] = [];
+                    try {
+                      existingPhotos = typeof profile.photos === 'string' ? JSON.parse(profile.photos) : profile.photos || [];
+                    } catch {
+                      existingPhotos = [];
                     }
-                  };
-                  reader.readAsDataURL(file);
+                    const updatedPhotos = [newPhotoUrl, ...existingPhotos.slice(0, 2)];
+                    const res = await api.saveProfile({
+                      name: profile.name,
+                      age: profile.age,
+                      gender: profile.gender,
+                      target_gender: profile.target_gender,
+                      bio: profile.bio,
+                      voice_bio_url: profile.voice_bio_url || '',
+                      country: profile.country || 'Indonesia',
+                      city: profile.city || 'Jakarta',
+                      target_location_mode: profile.target_location_mode || 'same_city',
+                      min_age_pref: profile.min_age_pref || 18,
+                      max_age_pref: profile.max_age_pref || 99,
+                      photos: updatedPhotos,
+                      interests: typeof profile.interests === 'string' ? JSON.parse(profile.interests) : profile.interests || [],
+                    });
+                    setProfile(res.profile);
+                  } catch (err) {
+                    console.error('Failed to update photo', err);
+                    alert('Gagal mengunggah foto. Coba gunakan foto lain.');
+                  }
                 }
               }}
             />

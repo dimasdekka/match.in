@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, ChevronRight, Camera, CheckCircle } from 'lucide-react';
 import type { ProfileFormData, Gender } from '../types';
+import { compressImageFile } from '../utils/imageCompressor';
 
 interface OnboardingWizardProps {
   initialName?: string;
@@ -293,16 +294,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ initialName 
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          if (event.target?.result) {
-                            setPhotoUrls((prev) => [...prev, event.target!.result as string]);
-                          }
-                        };
-                        reader.readAsDataURL(file);
+                        try {
+                          const compressedBase64 = await compressImageFile(file);
+                          setPhotoUrls((prev) => [...prev, compressedBase64]);
+                        } catch (err) {
+                          console.error('Failed to compress image', err);
+                        }
                       }
                     }}
                   />
