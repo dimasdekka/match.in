@@ -56,12 +56,13 @@ export const App: React.FC = () => {
       setLoading(true);
       try {
         const profRes = await api.getMyProfile();
-        if (profRes.profile) {
+        if (profRes.profile && profRes.profile.id > 0 && profRes.profile.name.trim() !== '') {
           setUserProfile(profRes.profile);
           setShowWelcome(false);
           setShowOnboarding(false);
         } else {
           setShowWelcome(true);
+          setShowOnboarding(false);
         }
 
         const recRes = await api.getRecommendations(10);

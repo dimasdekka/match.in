@@ -72,8 +72,12 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/profile/me`, { headers: getHeaders() });
     if (!res.ok) throw new Error(`Failed to fetch profile: ${res.statusText}`);
     const data = await res.json();
+    if (!data || !data.profile) return { profile: null };
     const parsed = getMyProfileResponseSchema.parse(data);
-    return { profile: (parsed.profile as Profile) || null };
+    if (!parsed.profile || !parsed.profile.id || parsed.profile.id === 0 || !parsed.profile.name) {
+      return { profile: null };
+    }
+    return { profile: parsed.profile as Profile };
   },
 
   async saveProfile(formData: ProfileFormData): Promise<{ profile: Profile }> {
