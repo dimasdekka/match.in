@@ -7,6 +7,18 @@
   color: var(--color-text);
   font-family: var(--font-rounded);
 }
+
+html.conversation-open,
+body.conversation-open {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.conversation-open .discover-shell {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 .discover-phone {
   width: 100%;
   max-width: 460px;

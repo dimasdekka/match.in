@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
@@ -9,22 +8,11 @@ interface Props {
   profiles: DiscoverProfile[];
   onDiscover: () => void;
   onProfile: () => void;
+  onOpenConversation: (profile: DiscoverProfile) => void;
 }
 
-export function MessagesPage({ profiles, onDiscover, onProfile }: Props) {
+export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversation }: Props) {
   const currentProfile = useCurrentProfile();
-  const [activeChat, setActiveChat] = useState<DiscoverProfile | null>(null);
-  const [draft, setDraft] = useState('');
-  const [sentMessages, setSentMessages] = useState<Record<number, string[]>>({});
-  const send = () => {
-    if (!draft.trim()) return;
-    if (!activeChat) return;
-    setSentMessages((current) => ({
-      ...current,
-      [activeChat.id]: [...(current[activeChat.id] ?? []), draft.trim()],
-    }));
-    setDraft('');
-  };
 
   return (
     <section className="app-page messages-page">
@@ -68,7 +56,7 @@ export function MessagesPage({ profiles, onDiscover, onProfile }: Props) {
             <motion.button
               type="button"
               key={profile.id}
-              onClick={() => setActiveChat(profile)}
+              onClick={() => onOpenConversation(profile)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -96,62 +84,6 @@ export function MessagesPage({ profiles, onDiscover, onProfile }: Props) {
       >
         <Icon icon="solar:pen-new-round-bold" />
       </motion.button>
-      <AnimatePresence>
-        {activeChat && (
-          <motion.div
-            className="chat-screen"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-          >
-            <header className="chat-header">
-              <button type="button" onClick={() => setActiveChat(null)}>
-                <Icon icon="solar:alt-arrow-left-linear" />
-              </button>
-              <img src={activeChat.image} alt="" />
-              <div>
-                <strong>{activeChat.name}</strong>
-                <small>Online now</small>
-              </div>
-              <button type="button">
-                <Icon icon="solar:menu-dots-bold" />
-              </button>
-            </header>
-            <div className="chat-messages">
-              <p className="chat-date">You matched today</p>
-              <div className="bubble incoming">Hi! Nice to meet you here 👋</div>
-              <div className="bubble incoming">What&apos;s your ideal weekend?</div>
-              {(sentMessages[activeChat.id] ?? []).map((message, index) => (
-                <motion.div
-                  className="bubble outgoing"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={`${message}-${index}`}
-                >
-                  {message}
-                </motion.div>
-              ))}
-            </div>
-            <form
-              className="chat-composer"
-              onSubmit={(event) => {
-                event.preventDefault();
-                send();
-              }}
-            >
-              <input
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder="Send a message..."
-              />
-              <button type="submit" disabled={!draft.trim()}>
-                <Icon icon="solar:plain-2-bold" />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

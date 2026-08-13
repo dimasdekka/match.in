@@ -7,7 +7,8 @@ import { DiscoverNavigation, type DiscoverNavId } from './DiscoverNavigation';
 import { MatchFeedback } from './MatchFeedback';
 import { useDiscoverDeck } from '../hooks/useDiscoverDeck';
 import { LikesPage } from '@/modules/likes';
-import { MessagesPage } from '@/modules/messages';
+import { ConversationPage, MessagesPage } from '@/modules/messages';
+import type { DiscoverProfile } from '../@types';
 import { ProfilePage, SettingsPage } from '@/modules/profile';
 import { DateNightPage } from '@/modules/date-night';
 import '@/modules/app-shell/styles.css';
@@ -19,23 +20,31 @@ type OverlayPage = 'profile' | 'settings' | 'date-night' | null;
 export function DiscoverPage() {
   const [activeNav, setActiveNav] = useState<DiscoverNavId>('discover');
   const [overlay, setOverlay] = useState<OverlayPage>(null);
+  const [conversation, setConversation] = useState<DiscoverProfile | null>(null);
   const deck = useDiscoverDeck();
 
   return (
     <main className="discover-shell">
       <div className="discover-phone">
         <AnimatePresence mode="wait">
-          {overlay === 'profile' && (
+          {conversation && (
+            <ConversationPage
+              key={`conversation-${conversation.id}`}
+              profile={conversation}
+              onBack={() => setConversation(null)}
+            />
+          )}
+          {!conversation && overlay === 'profile' && (
             <ProfilePage
               key="profile"
               onBack={() => setOverlay(null)}
               onSettings={() => setOverlay('settings')}
             />
           )}
-          {overlay === 'settings' && (
+          {!conversation && overlay === 'settings' && (
             <SettingsPage key="settings" onBack={() => setOverlay('profile')} />
           )}
-          {overlay === 'date-night' && (
+          {!conversation && overlay === 'date-night' && (
             <DateNightPage
               key="date-night"
               onBack={() => setOverlay(null)}
@@ -45,7 +54,7 @@ export function DiscoverPage() {
               }}
             />
           )}
-          {!overlay && activeNav === 'likes' && (
+          {!conversation && !overlay && activeNav === 'likes' && (
             <LikesPage
               key="likes"
               profiles={deck.likedProfiles}
@@ -53,15 +62,16 @@ export function DiscoverPage() {
               onDateNight={() => setOverlay('date-night')}
             />
           )}
-          {!overlay && activeNav === 'chats' && (
+          {!conversation && !overlay && activeNav === 'chats' && (
             <MessagesPage
               key="chats"
               profiles={deck.likedProfiles}
               onProfile={() => setOverlay('profile')}
               onDiscover={() => setActiveNav('discover')}
+              onOpenConversation={setConversation}
             />
           )}
-          {!overlay && activeNav === 'discover' && (
+          {!conversation && !overlay && activeNav === 'discover' && (
             <div className="discover-view" key="discover">
               <DiscoverHeader onProfile={() => setOverlay('profile')} />
               <div className="profile-deck">
@@ -83,7 +93,7 @@ export function DiscoverPage() {
             </div>
           )}
         </AnimatePresence>
-        {!overlay && <DiscoverNavigation active={activeNav} onChange={setActiveNav} />}
+        {!conversation && !overlay && <DiscoverNavigation active={activeNav} onChange={setActiveNav} />}
       </div>
       <MatchFeedback profile={deck.match} onClose={deck.closeMatch} />
     </main>
