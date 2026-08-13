@@ -553,16 +553,21 @@ html.conversation-open .discover-shell {
 /* Telegram's native chrome leaves less usable height than a normal mobile browser. */
 .telegram-mini-app .discover-phone {
   padding: calc(max(7px, env(safe-area-inset-top)) + 48px) 12px
-    calc(max(8px, env(safe-area-inset-bottom)) + 56px);
+    calc(max(10px, env(safe-area-inset-bottom)) + 72px);
   gap: 7px;
 }
 
 .telegram-mini-app .discover-view {
   gap: 7px;
+  justify-content: center;
 }
 
 .telegram-mini-app .profile-deck {
-  width: min(96%, 388px);
+  flex: 0 1 auto;
+  width: min(86vw, 340px);
+  height: min(56dvh, 500px);
+  min-height: 390px;
+  aspect-ratio: 0.72;
   margin-inline: auto;
 }
 
@@ -604,7 +609,7 @@ html.conversation-open .discover-shell {
 
 .telegram-mini-app .swipe-actions {
   gap: 17px;
-  padding-block: 0;
+  padding: 0 0 6px;
 }
 
 .telegram-mini-app .swipe-actions .discover-icon-button {
@@ -628,13 +633,21 @@ html.conversation-open .discover-shell {
 }
 
 .telegram-mini-app .discover-nav {
-  bottom: max(9px, calc(env(safe-area-inset-bottom) + 6px));
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
   width: 196px;
   height: 48px;
 }
 
 @media (max-height: 650px) {
-  .telegram-mini-app .profile-deck { width: min(92%, 360px); }
+  .telegram-mini-app .discover-phone {
+    padding-bottom: calc(max(8px, env(safe-area-inset-bottom)) + 68px);
+  }
+  .telegram-mini-app .profile-deck {
+    width: min(82vw, 320px);
+    height: min(52dvh, 390px);
+    min-height: 300px;
+  }
   .telegram-mini-app .profile-copy p { display: none; }
   .telegram-mini-app .profile-interests span { height: 25px; }
+  .telegram-mini-app .swipe-actions { padding-bottom: 4px; }
 }
