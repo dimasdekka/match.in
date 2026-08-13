@@ -111,6 +111,49 @@
   gap: 12px;
   padding-top: 4px;
 }
+
+.telegram-mini-app .likes-page {
+  padding-top: 20px;
+}
+
+.telegram-mini-app .likes-page .liked-grid {
+  padding-top: 8px;
+}
+
+.liked-grid article { cursor: pointer; }
+.liked-profile-detail { position: fixed; inset: 0; z-index: 70; width: min(100%, 460px); margin-inline: auto; overflow: hidden; background: #050505; color: #fff; }
+.liked-profile-header { height: calc(58px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 14px 0; display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(5,5,5,.96); }
+.liked-profile-header strong { overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
+.liked-profile-header button { width: 40px; height: 40px; display: grid; place-items: center; }
+.liked-profile-header svg { width: 24px; height: 24px; }
+.liked-profile-scroll { height: calc(100dvh - 58px - env(safe-area-inset-top)); overflow-y: auto; overscroll-behavior: contain; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+.liked-profile-overview { display: grid; grid-template-columns: 88px repeat(3, 1fr); align-items: center; gap: 8px; padding: 18px 16px 10px; text-align: center; }
+.liked-profile-overview > div:not(:first-child) { display: flex; flex-direction: column; }
+.liked-profile-overview strong { font-size: 18px; }
+.liked-profile-overview span { color: #999; font-size: 10px; font-weight: 700; }
+.liked-profile-avatar { position: relative; width: 82px; height: 82px; padding: 3px; border-radius: 50%; background: linear-gradient(145deg,#ff3b78,#ff9b48); }
+.liked-profile-avatar img { width: 100%; height: 100%; object-fit: cover; border: 3px solid #050505; border-radius: 50%; }
+.liked-profile-avatar i { position: absolute; right: 4px; bottom: 5px; width: 14px; height: 14px; border: 3px solid #050505; border-radius: 50%; background: #3ddd8e; }
+.liked-profile-copy { padding: 2px 16px 12px; }
+.liked-profile-copy h1 { display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: 900; }
+.liked-profile-copy h1 svg { width: 17px; color: var(--color-brand); }
+.liked-profile-copy span { display: flex; align-items: center; gap: 4px; margin-top: 2px; color: #aaa; font-size: 11px; font-weight: 700; }
+.liked-profile-copy span svg { width: 14px; }
+.liked-profile-copy p { margin-top: 7px; font-size: 13px; line-height: 1.4; }
+.liked-profile-actions { display: grid; grid-template-columns: 1fr 44px; gap: 8px; padding: 0 16px 15px; }
+.liked-profile-actions button { height: 40px; display: grid; place-items: center; border-radius: 10px; background: #29292c; font-size: 13px; font-weight: 900; }
+.liked-profile-actions button:first-child { background: var(--color-brand); }
+.liked-profile-actions svg { width: 20px; height: 20px; }
+.liked-profile-highlights { display: flex; gap: 14px; overflow-x: auto; padding: 0 16px 15px; scrollbar-width: none; }
+.liked-profile-highlights div { flex: 0 0 62px; display: grid; justify-items: center; gap: 5px; }
+.liked-profile-highlights span { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid #444; border-radius: 50%; background: #1d1d1f; color: var(--color-brand); }
+.liked-profile-highlights svg { width: 25px; height: 25px; }
+.liked-profile-highlights small { max-width: 62px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.liked-profile-tabs { height: 43px; display: grid; grid-template-columns: 1fr 1fr; place-items: center; border-top: 1px solid #252527; }
+.liked-profile-tabs svg { width: 21px; height: 21px; }
+.liked-profile-tabs svg:last-child { color: #777; }
+.liked-profile-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+.liked-profile-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; }
 .liked-grid article {
   position: relative;
   aspect-ratio: 0.76;

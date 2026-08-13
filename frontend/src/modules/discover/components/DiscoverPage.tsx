@@ -60,6 +60,7 @@ export function DiscoverPage() {
               profiles={deck.likedProfiles}
               onMenu={() => setOverlay('profile')}
               onDateNight={() => setOverlay('date-night')}
+              onOpenConversation={setConversation}
             />
           )}
           {!conversation && !overlay && activeNav === 'chats' && (
