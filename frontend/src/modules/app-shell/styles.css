@@ -1,0 +1,73 @@
+.app-page {
+  min-height: 100%;
+  padding: 2px 0 100px;
+  color: #fff;
+}
+.app-page-header {
+  position: fixed;
+  z-index: 52;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(calc(100% - 36px), 424px);
+  transform: translateX(-50%);
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  background: linear-gradient(180deg, #050505 62%, transparent);
+}
+.app-page-header > div {
+  display: grid;
+  place-items: center;
+}
+.app-page-header h1 {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 950;
+}
+.app-circle-button {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #242426, #171719);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.09);
+}
+.app-circle-button svg {
+  width: 24px;
+  height: 24px;
+}
+.app-menu-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #27272a, #1d1d1f);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.07);
+}
+.app-menu-card button {
+  width: 100%;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 28px 1fr 20px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  color: #fff;
+  text-align: left;
+  font-weight: 850;
+}
+.app-menu-card button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+.app-menu-card .menu-leading {
+  width: 21px;
+  height: 21px;
+}
+.app-menu-card .menu-arrow {
+  color: #8d8d90;
+}
+.app-menu-card button.danger {
+  color: var(--color-brand);
+}

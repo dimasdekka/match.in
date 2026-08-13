@@ -51,15 +51,21 @@ func (s *profileService) SaveProfile(ctx context.Context, userID uint, req *doma
 		UserID:             userID,
 		Name:               req.Name,
 		Age:                req.Age,
+		BirthDate:          req.BirthDate,
 		Gender:             req.Gender,
 		TargetGender:       req.TargetGender,
 		Bio:                req.Bio,
 		VoiceBioURL:        req.VoiceBioURL,
 		Country:            req.Country,
 		City:               req.City,
+		Latitude:           req.Latitude,
+		Longitude:          req.Longitude,
 		TargetLocationMode: locMode,
 		MinAgePref:         req.MinAgePref,
 		MaxAgePref:         req.MaxAgePref,
+		MaxDistanceKm:      req.MaxDistanceKm,
+		RelationshipGoal:   req.RelationshipGoal,
+		DatingIntention:    req.DatingIntention,
 		Photos:             string(photosJSON),
 		Interests:          string(interestsJSON),
 	}
@@ -69,6 +75,9 @@ func (s *profileService) SaveProfile(ctx context.Context, userID uint, req *doma
 	}
 	if profile.MaxAgePref == 0 {
 		profile.MaxAgePref = 50
+	}
+	if profile.MaxDistanceKm == 0 {
+		profile.MaxDistanceKm = 50
 	}
 
 	if err := s.profileRepo.Upsert(ctx, profile); err != nil {
