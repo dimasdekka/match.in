@@ -49,6 +49,12 @@ export interface ProfileFormData {
   max_age_pref: number;
   photos: string[];
   interests: string[];
+  birth_date?: string;
+  latitude?: number;
+  longitude?: number;
+  relationship_goal?: 'long_term' | 'casual' | 'friendship';
+  dating_intention?: 'serious' | 'explore' | 'friends';
+  max_distance_km?: number;
 }
 
 export interface MatchDetail {
