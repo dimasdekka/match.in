@@ -102,11 +102,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
       <MenuCard
         items={[
           { icon: 'solar:heart-bold', label: 'match.in v2.0' },
-          { icon: 'mdi:instagram', label: 'Instagram @matchin.app' },
-          { icon: 'solar:share-bold', label: 'Share match.in' },
-          { icon: 'solar:star-bold', label: 'Rate match.in' },
-          { icon: 'solar:document-text-bold', label: 'Terms of Service' },
-          { icon: 'solar:lock-keyhole-bold', label: 'Privacy Policy' },
+          { icon: 'mdi:instagram', label: 'Instagram @matchin.app', onClick: () => window.open('https://instagram.com/matchin.app', '_blank') },
+          { icon: 'solar:share-bold', label: 'Share match.in', onClick: () => navigator.share?.({ title: 'match.in', text: 'Find your match!', url: 'https://matchin.app' }).catch(() => {}) },
+          { icon: 'solar:star-bold', label: 'Rate match.in', onClick: () => window.open('https://t.me/matchin_app', '_blank') },
+          { icon: 'solar:document-text-bold', label: 'Terms of Service', onClick: () => window.open('https://matchin.app/terms', '_blank') },
+          { icon: 'solar:lock-keyhole-bold', label: 'Privacy Policy', onClick: () => window.open('https://matchin.app/privacy', '_blank') },
         ]}
       />
 
@@ -117,8 +117,13 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             icon: 'solar:trash-bin-trash-bold',
             label: 'Delete account',
             tone: 'danger',
-            onClick: () => {
-              if (confirm('Apakah Anda yakin ingin menghapus akun? Semua data match & chat akan dihapus.')) {
+            onClick: async () => {
+              if (confirm('Apakah Anda yakin ingin menghapus akun? Semua data match & chat akan dihapus permanen.')) {
+                try {
+                  await api.deleteAccount();
+                } catch (e) {
+                  console.error('Failed to delete account on server', e);
+                }
                 window.localStorage.clear();
                 window.location.reload();
               }

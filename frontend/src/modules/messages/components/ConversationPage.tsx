@@ -6,6 +6,7 @@ import { useMockChat } from '../hooks/useMockChat';
 import { ChatMediaPicker } from './ChatMediaPicker';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { api } from '@/utils/api';
 
 interface Props { profile: DiscoverProfile; onBack: () => void }
 
@@ -111,9 +112,9 @@ export function ConversationPage({ profile, onBack }: Props) {
           <button type="button" onClick={() => setMenuOpen(false)}><Icon icon="solar:user-circle-linear" /><span><strong>Lihat profil</strong><small>Lihat detail pengguna</small></span></button>
           <button type="button" onClick={() => { setMenuOpen(false); setPicker('gif'); }}><Icon icon="solar:gallery-wide-linear" /><span><strong>Media</strong><small>Lihat dan kirim media</small></span></button>
           <button type="button" onClick={() => { localStorage.setItem(`matchin:muted:${profile.id}`, 'true'); setMenuOpen(false); }}><Icon icon="solar:bell-off-linear" /><span><strong>Bisukan notifikasi</strong><small>Matikan notifikasi percakapan</small></span></button>
-          <button type="button" onClick={() => { if (confirm('Hapus semua isi chat?')) { chat.clear(); setMenuOpen(false); } }}><Icon icon="solar:trash-bin-minimalistic-linear" /><span><strong>Hapus isi chat</strong><small>Hapus pesan dari perangkat ini</small></span></button>
-          <button type="button" className="danger" onClick={() => { if (confirm(`Laporkan ${profile.name}?`)) { localStorage.setItem(`matchin:reported:${profile.id}`, 'true'); setMenuOpen(false); } }}><Icon icon="solar:danger-triangle-linear" /><span><strong>Laporkan</strong><small>Laporkan pengguna ini</small></span></button>
-          <button type="button" className="danger" onClick={() => { if (confirm(`Batalkan match dengan ${profile.name}?`)) { localStorage.setItem(`matchin:unmatched:${profile.id}`, 'true'); setMenuOpen(false); onBack(); } }}><Icon icon="solar:heart-broken-linear" /><span><strong>Batalkan match</strong><small>Akhiri koneksi ini</small></span></button>
+          <button type="button" onClick={async () => { if (confirm('Hapus semua isi chat?')) { try { await api.clearChat(profile.id); } catch {} chat.clear(); setMenuOpen(false); } }}><Icon icon="solar:trash-bin-minimalistic-linear" /><span><strong>Hapus isi chat</strong><small>Hapus pesan dari perangkat ini</small></span></button>
+          <button type="button" className="danger" onClick={async () => { if (confirm(`Laporkan ${profile.name}?`)) { try { await api.reportUser(profile.id, 0, 'Reported from conversation'); } catch {} setMenuOpen(false); } }}><Icon icon="solar:danger-triangle-linear" /><span><strong>Laporkan</strong><small>Laporkan pengguna ini</small></span></button>
+          <button type="button" className="danger" onClick={async () => { if (confirm(`Batalkan match dengan ${profile.name}?`)) { try { await api.unmatch(profile.id); } catch {} setMenuOpen(false); onBack(); } }}><Icon icon="solar:heart-broken-linear" /><span><strong>Batalkan match</strong><small>Akhiri koneksi ini</small></span></button>
         </div>
       </BottomSheet>
     </motion.section>

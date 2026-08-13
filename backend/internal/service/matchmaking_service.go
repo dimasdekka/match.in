@@ -13,6 +13,7 @@ type MatchmakingService interface {
 	ProcessSwipe(ctx context.Context, swiperID uint, req *domain.SwipeRequest) (*domain.SwipeResponse, error)
 	GetMatches(ctx context.Context, userID uint) ([]*domain.MatchDetail, error)
 	ResetSwipes(ctx context.Context, userID uint) error
+	Unmatch(ctx context.Context, userID uint, matchID uint) error
 }
 
 type matchmakingService struct {
@@ -177,3 +178,11 @@ func (s *matchmakingService) ResetSwipes(ctx context.Context, userID uint) error
 	}
 	return nil
 }
+
+func (s *matchmakingService) Unmatch(ctx context.Context, userID uint, matchID uint) error {
+	if err := s.matchRepo.UnmatchByID(ctx, matchID, userID); err != nil {
+		return fmt.Errorf("failed to unmatch: %w", err)
+	}
+	return nil
+}
+

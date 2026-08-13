@@ -13,6 +13,7 @@ type ChatService interface {
 	SendMessage(ctx context.Context, senderID uint, matchID uint, content string, imageURL string) (*domain.ChatMessage, error)
 	GetMessages(ctx context.Context, userID uint, matchID uint) ([]*domain.ChatMessage, error)
 	GetConversations(ctx context.Context, userID uint) ([]*domain.Conversation, error)
+	ClearChat(ctx context.Context, userID uint, matchID uint) error
 }
 
 type chatService struct {
@@ -127,3 +128,18 @@ func (s *chatService) GetConversations(ctx context.Context, userID uint) ([]*dom
 
 	return conversations, nil
 }
+
+func (s *chatService) ClearChat(ctx context.Context, userID uint, matchID uint) error {
+	match, err := s.matchRepo.GetByID(ctx, matchID)
+	if err != nil || match == nil {
+		return fmt.Errorf("match not found")
+	}
+	if match.User1ID != userID && match.User2ID != userID {
+		return fmt.Errorf("access denied")
+	}
+	if err := s.chatRepo.DeleteMessagesByMatchID(ctx, matchID); err != nil {
+		return fmt.Errorf("failed to clear chat: %w", err)
+	}
+	return nil
+}
+

@@ -94,3 +94,26 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": msg})
 }
+
+func (h *ChatHandler) ClearChat(c *gin.Context) {
+	user, exists := middleware.GetCurrentUser(c)
+	if !exists || user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	matchIDParam := c.Param("match_id")
+	matchID, err := strconv.ParseUint(matchIDParam, 10, 64)
+	if err != nil || matchID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid match_id"})
+		return
+	}
+
+	if err := h.chatService.ClearChat(c.Request.Context(), user.ID, uint(matchID)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear chat: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Chat cleared successfully"})
+}
+

@@ -43,7 +43,7 @@ func main() {
 		log.Fatalf("Failed to connect to database at %s: %v", dbPath, err)
 	}
 
-	err = db.AutoMigrate(&domain.User{}, &domain.Profile{}, &domain.Swipe{}, &domain.Match{}, &domain.ChatMessage{})
+	err = db.AutoMigrate(&domain.User{}, &domain.Profile{}, &domain.Swipe{}, &domain.Match{}, &domain.ChatMessage{}, &domain.Report{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}
@@ -53,6 +53,7 @@ func main() {
 	swipeRepo := repository.NewSwipeRepository(db)
 	matchRepo := repository.NewMatchRepository(db)
 	chatRepo := repository.NewChatRepository(db)
+	reportRepo := repository.NewReportRepository(db)
 
 	webAppURL := os.Getenv("WEB_APP_URL")
 
@@ -62,6 +63,8 @@ func main() {
 	chatService := service.NewChatService(chatRepo, matchRepo, userRepo, profileRepo)
 	botService := service.NewBotService(botToken, webAppURL, userService, profileService)
 	matchmakingService := service.NewMatchmakingService(swipeRepo, matchRepo, profileRepo, userRepo, botService)
+	reportService := service.NewReportService(reportRepo)
+	accountService := service.NewAccountService(userRepo, profileRepo)
 
 	botService.SetMatchmakingService(matchmakingService)
 
@@ -70,6 +73,8 @@ func main() {
 	matchHandler := handler.NewMatchHandler(matchmakingService)
 	chatHandler := handler.NewChatHandler(chatService)
 	botHandler := handler.NewBotHandler(botService)
+	reportHandler := handler.NewReportHandler(reportService)
+	accountHandler := handler.NewAccountHandler(accountService)
 
 	if os.Getenv("ENABLE_BOT_POLLING") == "true" {
 		go botService.StartPolling(context.Background())
@@ -113,6 +118,7 @@ func main() {
 	api.Use(middleware.TelegramAuthMiddleware(authService))
 	{
 		api.GET("/me", authHandler.GetMe)
+		api.DELETE("/me", accountHandler.DeleteAccount)
 		api.POST("/me/language", authHandler.UpdateLanguage)
 
 		api.GET("/profile/me", profileHandler.GetMyProfile)
@@ -121,10 +127,14 @@ func main() {
 
 		api.POST("/swipe", matchHandler.Swipe)
 		api.GET("/matches", matchHandler.GetMatches)
+		api.DELETE("/matches/:match_id", matchHandler.Unmatch)
 
 		api.GET("/chats", chatHandler.GetConversations)
 		api.GET("/chats/:match_id/messages", chatHandler.GetMessages)
 		api.POST("/chats/:match_id/messages", chatHandler.SendMessage)
+		api.DELETE("/chats/:match_id/messages", chatHandler.ClearChat)
+
+		api.POST("/reports", reportHandler.CreateReport)
 	}
 
 	fmt.Printf("🚀 Match.in / Ketemu.in Backend API running on port %s...\n", port)

@@ -13,6 +13,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id uint) (*domain.User, error)
 	CreateOrUpdate(ctx context.Context, user *domain.User) error
 	UpdateLanguage(ctx context.Context, userID uint, lang string) error
+	DeleteByID(ctx context.Context, userID uint) error
 }
 
 type userRepository struct {
@@ -81,6 +82,13 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User) 
 func (r *userRepository) UpdateLanguage(ctx context.Context, userID uint, lang string) error {
 	if err := r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("language_code", lang).Error; err != nil {
 		return fmt.Errorf("failed to update language for user %d: %w", userID, err)
+	}
+	return nil
+}
+
+func (r *userRepository) DeleteByID(ctx context.Context, userID uint) error {
+	if err := r.db.WithContext(ctx).Delete(&domain.User{}, userID).Error; err != nil {
+		return fmt.Errorf("failed to delete user %d: %w", userID, err)
 	}
 	return nil
 }

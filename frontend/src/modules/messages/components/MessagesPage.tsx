@@ -1,8 +1,10 @@
 import { Icon } from '@iconify/react';
 import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
+import { api } from '@/utils/api';
 
 interface Props {
   profiles: DiscoverProfile[];
@@ -13,6 +15,46 @@ interface Props {
 
 export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversation }: Props) {
   const currentProfile = useCurrentProfile();
+  const [displayProfiles, setDisplayProfiles] = useState<DiscoverProfile[]>(profiles);
+
+  useEffect(() => {
+    let mounted = true;
+    api.getConversations()
+      .then(({ conversations }) => {
+        if (!mounted) return;
+        if (conversations && conversations.length > 0) {
+          const mapped: DiscoverProfile[] = conversations.map((c) => {
+            const name = c.matched_profile?.name || c.matched_user?.first_name || 'User';
+            let image = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80`;
+            if (c.matched_profile?.photos) {
+              try {
+                const photos = typeof c.matched_profile.photos === 'string' ? JSON.parse(c.matched_profile.photos) : c.matched_profile.photos;
+                if (Array.isArray(photos) && photos.length > 0 && photos[0]) {
+                  image = photos[0];
+                }
+              } catch {}
+            }
+
+            return {
+              id: c.match_id,
+              name,
+              age: c.matched_profile?.age || 22,
+              city: c.matched_profile?.city || 'Jakarta',
+              bio: c.matched_profile?.bio || '',
+              interests: [],
+              image,
+              distance: 3,
+              verified: c.matched_profile?.is_verified ?? true,
+            };
+          });
+          setDisplayProfiles(mapped);
+        }
+      })
+      .catch(() => {
+        // Fallback already handled by initial state
+      });
+    return () => { mounted = false; };
+  }, [profiles]);
 
   return (
     <section className="app-page messages-page">
@@ -27,7 +69,7 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
           )}
         </button>
       </header>
-      {profiles.length === 0 ? (
+      {displayProfiles.length === 0 ? (
         <LoveReactionSurface>
           <div className="empty-state messages-empty">
             <div className="message-heart-icon">
@@ -52,7 +94,7 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
         </LoveReactionSurface>
       ) : (
         <div className="conversation-list">
-          {profiles.map((profile, index) => (
+          {displayProfiles.map((profile, index) => (
             <motion.button
               type="button"
               key={profile.id}

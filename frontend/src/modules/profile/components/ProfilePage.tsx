@@ -2,11 +2,7 @@ import { Icon } from '@iconify/react';
 import { MenuCard } from '@/modules/app-shell/components/MenuCard';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
 
-const actions = [
-  ['solar:user-bold', 'Edit Profile'],
-  ['solar:link-circle-bold', 'Copy Link'],
-  ['solar:upload-bold', 'Share Profile'],
-] as const;
+
 
 export function ProfilePage({
   onBack,
@@ -46,14 +42,18 @@ export function ProfilePage({
       </div>
       {profile.bio && <p className="profile-bio">{profile.bio}</p>}
       <div className="profile-actions">
-        {actions.map(([icon, label]) => (
-          <button type="button" key={label}>
-            <span>
-              <Icon icon={icon} />
-            </span>
-            <b>{label}</b>
-          </button>
-        ))}
+        <button type="button" onClick={() => alert('Fitur edit profil segera hadir!')}>
+          <span><Icon icon="solar:user-bold" /></span>
+          <b>Edit Profile</b>
+        </button>
+        <button type="button" onClick={() => navigator.clipboard.writeText('https://matchin.app/' + (profile.username || 'user')).then(() => alert('Link berhasil disalin!'))}>
+          <span><Icon icon="solar:link-circle-bold" /></span>
+          <b>Copy Link</b>
+        </button>
+        <button type="button" onClick={() => navigator.share?.({ title: profile.name + ' on match.in', url: 'https://matchin.app/' + (profile.username || 'user') }).catch(() => {})}>
+          <span><Icon icon="solar:upload-bold" /></span>
+          <b>Share Profile</b>
+        </button>
       </div>
       <button type="button" className="plus-card">
         <span>
