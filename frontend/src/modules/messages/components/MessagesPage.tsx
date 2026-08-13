@@ -22,17 +22,32 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
     api.getConversations()
       .then(({ conversations }) => {
         if (!mounted) return;
-        if (conversations.length > 0) {
-          setDisplayProfiles(conversations.map(c => ({
-            id: c.match_id,
-            name: c.partner_name || 'User',
-            age: 0,
-            bio: '',
-            interests: [],
-            image: c.partner_image_url || `https://api.dicebear.com/9.x/notionists/svg?seed=${c.match_id}`,
-            distance: '0 km',
-            gallery: []
-          })));
+        if (conversations && conversations.length > 0) {
+          const mapped: DiscoverProfile[] = conversations.map((c) => {
+            const name = c.matched_profile?.name || c.matched_user?.first_name || 'User';
+            let image = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80`;
+            if (c.matched_profile?.photos) {
+              try {
+                const photos = typeof c.matched_profile.photos === 'string' ? JSON.parse(c.matched_profile.photos) : c.matched_profile.photos;
+                if (Array.isArray(photos) && photos.length > 0 && photos[0]) {
+                  image = photos[0];
+                }
+              } catch {}
+            }
+
+            return {
+              id: c.match_id,
+              name,
+              age: c.matched_profile?.age || 22,
+              city: c.matched_profile?.city || 'Jakarta',
+              bio: c.matched_profile?.bio || '',
+              interests: [],
+              image,
+              distance: 3,
+              verified: c.matched_profile?.is_verified ?? true,
+            };
+          });
+          setDisplayProfiles(mapped);
         }
       })
       .catch(() => {
