@@ -2,7 +2,9 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  overflow-y: auto;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
   background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-rounded);
@@ -19,37 +21,54 @@ html.conversation-open .discover-shell {
   overflow: hidden;
   overscroll-behavior: none;
 }
+
 .discover-phone {
   width: 100%;
-  max-width: 460px;
-  min-height: 100dvh;
+  max-width: 440px;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: auto;
-  padding: calc(max(22px, env(safe-area-inset-top)) + 64px) 18px
-    calc(max(18px, env(safe-area-inset-bottom)) + 74px);
+  padding: calc(max(10px, env(safe-area-inset-top)) + 52px) 14px
+    calc(max(12px, env(safe-area-inset-bottom)) + 64px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 10px;
+  overflow: hidden;
   background:
     radial-gradient(circle at 50% 28%, rgba(255, 54, 117, 0.045), transparent 34%), #050505;
 }
+
+.discover-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  gap: 10px;
+}
+
 .discover-header {
   position: fixed;
   z-index: 48;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(10px, env(safe-area-inset-top));
   left: 50%;
-  width: min(calc(100% - 36px), 424px);
+  width: min(calc(100% - 28px), 412px);
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: 48px 1fr 48px;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
-  gap: 11px;
-  padding-bottom: 8px;
-  background: linear-gradient(180deg, #050505 58%, transparent);
+  gap: 10px;
+  padding-bottom: 6px;
+  background: linear-gradient(180deg, #050505 60%, transparent);
 }
+
 .discover-icon-button,
 .profile-monogram {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -61,71 +80,84 @@ html.conversation-open .discover-shell {
     inset 0 -4px 8px rgba(0, 0, 0, 0.28),
     0 8px 22px rgba(0, 0, 0, 0.25);
 }
+
 .discover-icon-button svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
+
 .profile-monogram {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 900;
   overflow: hidden;
 }
+
 .profile-monogram img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .feed-selector {
-  height: 48px;
+  height: 44px;
   justify-self: center;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 20px;
+  gap: 8px;
+  padding: 0 18px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-pill);
   background: linear-gradient(145deg, #242426, #171719);
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.08),
     inset 0 -5px 10px rgba(0, 0, 0, 0.24),
     0 8px 22px rgba(0, 0, 0, 0.22);
 }
+
 .feed-selector svg {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
 }
+
 .profile-deck {
   position: relative;
+  flex: 1;
   min-height: 0;
-  aspect-ratio: 0.69;
+  width: 100%;
+  height: 100%;
   isolation: isolate;
+  overflow: hidden;
 }
+
 .discover-profile-card {
   position: relative;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  aspect-ratio: 0.69;
-  border-radius: 28px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: #171719;
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4);
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
 }
+
 .profile-card-clip {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 27px;
+  border-radius: 23px;
   background: #171719;
-  clip-path: inset(0 round 27px);
+  clip-path: inset(0 round 23px);
   transform: translateZ(0);
   backface-visibility: hidden;
   contain: paint;
 }
+
 .profile-deck .discover-profile-card {
   position: absolute;
   inset: 0;
@@ -133,41 +165,48 @@ html.conversation-open .discover-shell {
   height: 100%;
   aspect-ratio: auto;
 }
+
 .profile-deck .discover-profile-card[data-background] {
   z-index: 0;
   transform: scale(0.975);
   opacity: 0.82;
   pointer-events: none;
 }
+
 .profile-deck .discover-profile-card:not([data-background]) {
   z-index: 1;
 }
+
 .discover-profile-card:active {
   cursor: grabbing;
 }
+
 .swipe-stamp {
   position: absolute;
   z-index: 4;
-  top: 30px;
-  padding: 7px 13px;
+  top: 24px;
+  padding: 6px 12px;
   border: 3px solid;
   border-radius: 10px;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 950;
   letter-spacing: 2px;
   transform: rotate(-10deg);
 }
+
 .like-stamp {
-  left: 24px;
+  left: 20px;
   color: #48e697;
   border-color: #48e697;
 }
+
 .pass-stamp {
-  right: 24px;
+  right: 20px;
   color: #ff647f;
   border-color: #ff647f;
   transform: rotate(10deg);
 }
+
 .profile-card-clip > img {
   position: absolute;
   inset: 0;
@@ -175,82 +214,97 @@ html.conversation-open .discover-shell {
   height: 100%;
   object-fit: cover;
 }
+
 .profile-shade {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    transparent 42%,
-    rgba(2, 2, 3, 0.18) 55%,
-    rgba(2, 2, 3, 0.96) 92%
+    transparent 38%,
+    rgba(2, 2, 3, 0.25) 52%,
+    rgba(2, 2, 3, 0.96) 90%
   );
 }
+
 .profile-copy {
   position: absolute;
-  left: 24px;
-  right: 18px;
-  bottom: 22px;
+  left: 20px;
+  right: 16px;
+  bottom: 16px;
 }
+
 .profile-copy h1 {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 34px;
+  gap: 8px;
+  font-size: 28px;
   font-weight: 950;
-  line-height: 1;
+  line-height: 1.1;
 }
+
 .profile-copy h1 span {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
   color: var(--color-brand);
 }
+
 .profile-copy h1 svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
+
 .profile-copy h2 {
-  margin-top: 10px;
+  margin-top: 6px;
   color: #aaa7ab;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
 }
+
 .profile-copy p {
-  margin-top: 13px;
-  font-size: 16px;
+  margin-top: 8px;
+  font-size: 14px;
   font-weight: 650;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
+
 .profile-interests {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 6px;
+  margin-top: 10px;
 }
+
 .profile-interests span {
-  height: 38px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 13px;
-  border-radius: 13px;
+  gap: 6px;
+  padding: 0 11px;
+  border-radius: 11px;
   background: rgba(35, 35, 38, 0.84);
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 850;
-
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
 }
+
 .profile-interests svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
+
 .profile-info {
   position: absolute;
-  right: 17px;
-  bottom: 20px;
-  width: 38px;
-  height: 38px;
+  right: 15px;
+  bottom: 16px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -258,57 +312,68 @@ html.conversation-open .discover-shell {
   color: #fff;
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
 }
+
 .profile-info svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
+
 .swipe-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 27px;
+  gap: 20px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
+
 .swipe-actions .discover-icon-button {
-  width: 68px;
-  height: 68px;
+  width: 58px;
+  height: 58px;
 }
+
 .swipe-actions .discover-icon-button svg {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
 }
+
 .swipe-actions .like-action {
-  width: 86px;
-  height: 86px;
-  border: 4px solid #fc4380;
+  width: 72px;
+  height: 72px;
+  border: 3px solid #fc4380;
   background: radial-gradient(circle at 48% 38%, #e54779, #8f1745);
   color: #ff538b;
   box-shadow:
     inset 0 2px 3px rgba(255, 255, 255, 0.18),
-    inset 0 -8px 14px rgba(75, 0, 25, 0.35),
-    0 0 0 4px #080808,
-    0 0 0 7px #ff4b86;
+    inset 0 -6px 12px rgba(75, 0, 25, 0.35),
+    0 0 0 3px #080808,
+    0 0 0 6px #ff4b86;
 }
+
 .swipe-actions .like-action svg {
-  width: 45px;
-  height: 45px;
+  width: 38px;
+  height: 38px;
 }
+
 .swipe-actions .super-action {
   color: var(--color-brand);
 }
+
 .discover-nav {
   position: fixed;
   z-index: 48;
   left: 50%;
-  bottom: max(30px, calc(env(safe-area-inset-bottom) + 16px));
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
   transform: translateX(-50%);
-  width: 224px;
-  height: 58px;
+  width: 210px;
+  height: 52px;
   align-self: center;
   margin-top: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-pill);
   background: linear-gradient(145deg, rgba(35, 35, 38, 0.96), rgba(19, 19, 21, 0.96));
@@ -318,11 +383,12 @@ html.conversation-open .discover-shell {
   isolation: isolate;
   contain: layout paint;
 }
+
 .discover-nav button {
   position: relative;
   z-index: 1;
-  width: 66px;
-  height: 46px;
+  width: 60px;
+  height: 42px;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -330,25 +396,28 @@ html.conversation-open .discover-shell {
   color: #89898b;
   transition: color 140ms ease;
 }
+
 .discover-nav-icon {
   position: absolute;
   z-index: 2;
   top: 50%;
   left: 50%;
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   transform: translate(-50%, -50%);
 }
+
 .discover-nav button.active {
   color: #fff;
 }
+
 .discover-nav-indicator {
   position: absolute;
   z-index: 0;
-  top: 5px;
-  left: 12px;
-  width: 66px;
-  height: 46px;
+  top: 4px;
+  left: 10px;
+  width: 60px;
+  height: 42px;
   border-radius: var(--radius-pill);
   background: linear-gradient(145deg, #747674, #555856);
   box-shadow:
@@ -360,50 +429,56 @@ html.conversation-open .discover-shell {
   backface-visibility: hidden;
   contain: layout paint;
 }
+
 .match-feedback {
   position: fixed;
   inset: 0;
   z-index: 80;
   display: grid;
   place-items: center;
-  padding: 22px;
-  background: rgba(0, 0, 0, 0.78);
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.82);
 }
+
 .match-feedback-card {
   position: relative;
-  width: min(100%, 340px);
+  width: min(100%, 330px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 24px 22px;
+  padding: 24px 20px 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 30px;
+  border-radius: 28px;
   background: linear-gradient(145deg, #27272a, #151517);
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
   text-align: center;
 }
+
 .match-feedback-card img {
-  width: 116px;
-  height: 116px;
+  width: 108px;
+  height: 108px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid var(--color-brand);
   box-shadow: 0 0 30px rgba(255, 54, 117, 0.28);
 }
+
 .match-feedback-card h2 {
-  margin-top: 17px;
-  font-size: 29px;
+  margin-top: 15px;
+  font-size: 26px;
   font-weight: 950;
 }
+
 .match-feedback-card p {
-  margin-top: 5px;
+  margin-top: 4px;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 13px;
 }
+
 .match-feedback-card button {
   width: 100%;
-  height: 50px;
-  margin-top: 20px;
+  height: 48px;
+  margin-top: 18px;
   border-radius: var(--radius-pill);
   background: linear-gradient(105deg, var(--color-brand), var(--color-brand-strong));
   color: #fff;
@@ -412,105 +487,65 @@ html.conversation-open .discover-shell {
     inset 0 2px 2px rgba(255, 255, 255, 0.28),
     inset 0 -6px 11px rgba(142, 0, 48, 0.3);
 }
+
 .match-spark {
   position: absolute;
-  right: 36px;
-  top: 24px;
-  width: 33px;
-  height: 33px;
+  right: 32px;
+  top: 20px;
+  width: 30px;
+  height: 30px;
   color: var(--color-brand);
 }
-@media (max-height: 780px) {
+
+@media (max-height: 720px) {
   .discover-phone {
-    gap: 10px;
-    padding-top: calc(max(12px, env(safe-area-inset-top)) + 58px);
-    padding-bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
+    gap: 8px;
+    padding-top: calc(max(8px, env(safe-area-inset-top)) + 48px);
+    padding-bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px);
   }
   .discover-header {
-    grid-template-columns: 48px 1fr 48px;
+    grid-template-columns: 40px 1fr 40px;
+    top: max(6px, env(safe-area-inset-top));
   }
   .discover-icon-button,
   .profile-monogram {
-    width: 46px;
-    height: 46px;
-  }
-  .feed-selector {
-    height: 46px;
-    font-size: 17px;
-  }
-  .discover-profile-card {
-    aspect-ratio: 0.79;
-  }
-  .profile-deck {
-    aspect-ratio: 0.79;
-  }
-  .profile-card-clip {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    border-radius: 27px;
-    background: #171719;
-    clip-path: inset(0 round 27px);
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    contain: paint;
-  }
-  .profile-deck .discover-profile-card {
-    aspect-ratio: auto;
-  }
-  .profile-copy {
-    left: 18px;
-    bottom: 16px;
-  }
-  .profile-copy h1 {
-    font-size: 28px;
-  }
-  .profile-copy h2,
-  .profile-copy p {
-    font-size: 13px;
-    margin-top: 7px;
-  }
-  .profile-interests {
-    margin-top: 10px;
-  }
-  .profile-interests span {
-    height: 32px;
-  }
-  .swipe-actions .discover-icon-button {
-    width: 58px;
-    height: 58px;
-  }
-  .swipe-actions .like-action {
-    width: 72px;
-    height: 72px;
-  }
-  .discover-nav {
-    width: 205px;
-    height: 54px;
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
-  }
-  .discover-nav button {
     width: 40px;
     height: 40px;
   }
-}
-@media (max-width: 340px) {
-  .discover-phone {
-    padding-inline: 12px;
-  }
-  .discover-profile-card {
-    border-radius: 24px;
-  }
-  .profile-copy {
-    left: 15px;
+  .feed-selector {
+    height: 40px;
+    font-size: 15px;
   }
   .profile-copy h1 {
-    font-size: 26px;
+    font-size: 24px;
+  }
+  .profile-copy h2,
+  .profile-copy p {
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  .profile-interests {
+    margin-top: 8px;
   }
   .profile-interests span {
-    padding-inline: 9px;
+    height: 28px;
+    font-size: 11px;
   }
-  .swipe-actions {
-    gap: 19px;
+  .swipe-actions .discover-icon-button {
+    width: 52px;
+    height: 52px;
+  }
+  .swipe-actions .like-action {
+    width: 64px;
+    height: 64px;
+  }
+  .discover-nav {
+    width: 195px;
+    height: 48px;
+    bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
+  }
+  .discover-nav button {
+    width: 36px;
+    height: 36px;
   }
 }
