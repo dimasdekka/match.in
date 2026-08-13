@@ -14,6 +14,7 @@ export default function App() {
 
   useEffect(() => {
     const telegram = (window as any).Telegram?.WebApp;
+    document.documentElement.classList.toggle('telegram-mini-app', Boolean(telegram));
     telegram?.ready();
     telegram?.expand();
     setInitialTelegramName(telegram?.initDataUnsafe?.user?.first_name ?? '');

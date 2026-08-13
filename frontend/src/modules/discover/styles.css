@@ -549,3 +549,92 @@ html.conversation-open .discover-shell {
     height: 36px;
   }
 }
+
+/* Telegram's native chrome leaves less usable height than a normal mobile browser. */
+.telegram-mini-app .discover-phone {
+  padding: calc(max(7px, env(safe-area-inset-top)) + 48px) 12px
+    calc(max(8px, env(safe-area-inset-bottom)) + 56px);
+  gap: 7px;
+}
+
+.telegram-mini-app .discover-view {
+  gap: 7px;
+}
+
+.telegram-mini-app .profile-deck {
+  width: min(96%, 388px);
+  margin-inline: auto;
+}
+
+.telegram-mini-app .discover-profile-card {
+  border-radius: 21px;
+}
+
+.telegram-mini-app .profile-card-clip {
+  border-radius: 20px;
+  clip-path: inset(0 round 20px);
+}
+
+.telegram-mini-app .profile-copy {
+  left: 16px;
+  right: 14px;
+  bottom: 13px;
+}
+
+.telegram-mini-app .profile-copy h1 {
+  font-size: clamp(22px, 6.4vw, 27px);
+}
+
+.telegram-mini-app .profile-copy h2,
+.telegram-mini-app .profile-copy p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.telegram-mini-app .profile-interests {
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.telegram-mini-app .profile-interests span {
+  height: 28px;
+  padding-inline: 9px;
+  font-size: 11px;
+}
+
+.telegram-mini-app .swipe-actions {
+  gap: 17px;
+  padding-block: 0;
+}
+
+.telegram-mini-app .swipe-actions .discover-icon-button {
+  width: 50px;
+  height: 50px;
+}
+
+.telegram-mini-app .swipe-actions .like-action {
+  width: 62px;
+  height: 62px;
+}
+
+.telegram-mini-app .swipe-actions .discover-icon-button svg {
+  width: 25px;
+  height: 25px;
+}
+
+.telegram-mini-app .swipe-actions .like-action svg {
+  width: 33px;
+  height: 33px;
+}
+
+.telegram-mini-app .discover-nav {
+  bottom: max(9px, calc(env(safe-area-inset-bottom) + 6px));
+  width: 196px;
+  height: 48px;
+}
+
+@media (max-height: 650px) {
+  .telegram-mini-app .profile-deck { width: min(92%, 360px); }
+  .telegram-mini-app .profile-copy p { display: none; }
+  .telegram-mini-app .profile-interests span { height: 25px; }
+}
