@@ -1,9 +1,9 @@
 import { IconButton } from './IconButton';
-import type { SwipeDecision } from '../hooks/useDiscoverDeck';
+import type { SwipeDecision } from '../@types';
 export function SwipeActions({ onSwipe }: { onSwipe: (decision: SwipeDecision) => void }) {
   return (
     <div className="swipe-actions">
-      <IconButton icon="solar:close-circle-linear" label="Pass" onClick={() => onSwipe('pass')} />
+      <IconButton icon="mingcute:close-line" label="Pass" onClick={() => onSwipe('pass')} />
       <IconButton
         icon="solar:heart-bold"
         label="Like"

@@ -1,18 +1,6 @@
 import man from '@/assets/man.png';
 import women from '@/assets/women.png';
-
-export interface DiscoverProfile {
-  id: number;
-  name: string;
-  age: number;
-  city: string;
-  distance: number;
-  bio: string;
-  image: string;
-  verified: boolean;
-  willMatch?: boolean;
-  interests: Array<{ label: string; icon: string }>;
-}
+import type { DiscoverProfile } from '../@types';
 
 export const DISCOVER_PROFILES: DiscoverProfile[] = [
   {

@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import type { Gender } from '@/types';
+import type { Gender } from '@/@types';
 
 const OPTIONS: Array<{ value: Extract<Gender, 'male' | 'female'>; label: string; icon: string }> = [
   { value: 'male', label: 'Man', icon: 'fluent-emoji-flat:man-light' },

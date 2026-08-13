@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
-import { DISCOVER_PROFILES, type DiscoverProfile } from '../constants/profile';
-
-export type SwipeDecision = 'pass' | 'like' | 'superlike';
+import { DISCOVER_PROFILES } from '../constants/profile';
+import type { DiscoverProfile, SwipeDecision } from '../@types';
 
 export function useDiscoverDeck() {
   const [index, setIndex] = useState(0);
@@ -26,7 +25,7 @@ export function useDiscoverDeck() {
     setIndex((current) => current + 1);
     window.setTimeout(() => {
       transitionLocked.current = false;
-    }, 260);
+    }, 210);
   };
 
   return {

@@ -19,7 +19,7 @@ export function ProfilePage({
   return (
     <section className="app-page profile-page">
       <button type="button" className="profile-back" onClick={onBack} aria-label="Close profile">
-        <Icon icon="solar:close-circle-linear" />
+        <Icon icon="mingcute:close-line" />
       </button>
       <button type="button" className="profile-settings" onClick={onSettings} aria-label="Settings">
         <Icon icon="solar:settings-bold" />

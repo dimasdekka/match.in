@@ -1,4 +1,4 @@
-import type { Gender } from '@/types';
+import type { Gender } from '@/@types';
 export const CITIES = [
   'Jakarta',
   'Bandung',

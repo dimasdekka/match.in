@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import type { Gender, ProfileFormData } from '@/types';
+import type { Gender } from '@/@types';
+import type { ProfileFormData } from '../@types';
 export type Draft = ProfileFormData & {
   birth_date: string;
   relationship_goal: 'long_term' | 'casual' | 'friendship';

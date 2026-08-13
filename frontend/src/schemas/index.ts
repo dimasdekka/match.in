@@ -36,34 +36,38 @@ export const profileSchema = z.object({
   user: userSchema.optional(),
 });
 
-export const profileFormSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi').max(100),
-  age: z.number().min(18, 'Usia minimal 18 tahun').max(100, 'Usia tidak valid'),
-  gender: genderSchema,
-  target_gender: genderSchema,
-  bio: z.string().max(500, 'Bio terlalu panjang').default(''),
-  voice_bio_url: z.string().url('URL audio tidak valid').or(z.literal('')).default(''),
-  country: z.string().min(1, 'Negara wajib diisi'),
-  city: z.string().min(1, 'Kota wajib diisi'),
-  target_location_mode: locationFilterModeSchema.default('same_city'),
-  min_age_pref: z.number().min(18, 'Minimal 18 tahun').max(99, 'Maksimal 99 tahun'),
-  max_age_pref: z.number().min(18, 'Minimal 18 tahun').max(99, 'Maksimal 99 tahun'),
-  photos: z.array(z.string()),
-  interests: z.array(z.string()),
-}).refine((data) => data.min_age_pref <= data.max_age_pref, {
-  message: 'Usia minimal tidak boleh lebih besar dari usia maksimal',
-  path: ['min_age_pref'],
-});
+export const profileFormSchema = z
+  .object({
+    name: z.string().min(1, 'Nama wajib diisi').max(100),
+    age: z.number().min(18, 'Usia minimal 18 tahun').max(100, 'Usia tidak valid'),
+    gender: genderSchema,
+    target_gender: genderSchema,
+    bio: z.string().max(500, 'Bio terlalu panjang').default(''),
+    voice_bio_url: z.string().url('URL audio tidak valid').or(z.literal('')).default(''),
+    country: z.string().min(1, 'Negara wajib diisi'),
+    city: z.string().min(1, 'Kota wajib diisi'),
+    target_location_mode: locationFilterModeSchema.default('same_city'),
+    min_age_pref: z.number().min(18, 'Minimal 18 tahun').max(99, 'Maksimal 99 tahun'),
+    max_age_pref: z.number().min(18, 'Minimal 18 tahun').max(99, 'Maksimal 99 tahun'),
+    photos: z.array(z.string()),
+    interests: z.array(z.string()),
+  })
+  .refine((data) => data.min_age_pref <= data.max_age_pref, {
+    message: 'Usia minimal tidak boleh lebih besar dari usia maksimal',
+    path: ['min_age_pref'],
+  });
 
-export const filterSchema = z.object({
-  target_location_mode: locationFilterModeSchema,
-  target_gender: genderSchema,
-  min_age_pref: z.number().min(18).max(99),
-  max_age_pref: z.number().min(18).max(99),
-}).refine((data) => data.min_age_pref <= data.max_age_pref, {
-  message: 'Usia minimal tidak boleh lebih besar dari usia maksimal',
-  path: ['min_age_pref'],
-});
+export const filterSchema = z
+  .object({
+    target_location_mode: locationFilterModeSchema,
+    target_gender: genderSchema,
+    min_age_pref: z.number().min(18).max(99),
+    max_age_pref: z.number().min(18).max(99),
+  })
+  .refine((data) => data.min_age_pref <= data.max_age_pref, {
+    message: 'Usia minimal tidak boleh lebih besar dari usia maksimal',
+    path: ['min_age_pref'],
+  });
 
 export const matchDetailSchema = z.object({
   match_id: z.number().catch(0),

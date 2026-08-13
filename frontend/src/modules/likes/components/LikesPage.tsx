@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react';
 import { motion } from 'motion/react';
-import type { DiscoverProfile } from '@/modules/discover/constants/profile';
+import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 
 export function LikesPage({

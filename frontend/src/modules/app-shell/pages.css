@@ -56,7 +56,6 @@
 }
 .love-reaction {
   position: absolute;
-  bottom: max(76px, calc(env(safe-area-inset-bottom) + 70px));
   display: block;
   contain: layout paint;
   backface-visibility: hidden;
@@ -691,3 +690,25 @@
     min-height: 50px;
   }
 }
+
+.love-reaction {
+  animation: love-reaction-rise var(--reaction-duration) cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@keyframes love-reaction-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.55);
+  }
+  18% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--reaction-drift), calc(-1 * var(--reaction-rise)), 0)
+      rotate(var(--reaction-rotate)) scale(0.9);
+  }
+}
+

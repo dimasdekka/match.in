@@ -1,4 +1,7 @@
-import type { Profile, ProfileFormData, SwipeAction, SwipeResponse, MatchDetail, User } from '../types';
+import { getTelegramInitData } from './telegram';
+import type { ChatMessage, Conversation, Profile, MatchDetail, User } from '@/@types';
+import type { ProfileFormData } from '@/modules/onboarding/@types';
+import type { SwipeAction, SwipeResponse } from '@/modules/discover/@types';
 import {
   getMeResponseSchema,
   getMyProfileResponseSchema,
@@ -8,59 +11,9 @@ import {
   profileSchema,
   profileFormSchema,
   swipeRequestSchema,
-} from '../schemas';
-
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData?: string;
-        initDataUnsafe?: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name?: string;
-            username?: string;
-            language_code?: string;
-            photo_url?: string;
-          };
-        };
-        expand?: () => void;
-        close?: () => void;
-        ready?: () => void;
-      };
-    };
-  }
-}
+} from '@/schemas';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-export const getTelegramInitData = (): string => {
-  if (typeof window !== 'undefined') {
-    // 1. Direct Telegram WebApp SDK object
-    if (window.Telegram?.WebApp?.initData) {
-      return window.Telegram.WebApp.initData;
-    }
-
-    // 2. URL hash parameter (tgWebAppInitData)
-    if (window.location.hash) {
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const initDataFromHash = hashParams.get('tgWebAppInitData');
-      if (initDataFromHash) return initDataFromHash;
-    }
-
-    // 3. URL search parameter
-    if (window.location.search) {
-      const searchParams = new URLSearchParams(window.location.search);
-      const initDataFromQuery = searchParams.get('tgWebAppInitData') || searchParams.get('initData');
-      if (initDataFromQuery) return initDataFromQuery;
-    }
-  }
-
-  // 4. Dev fallback ONLY when testing in standalone browser
-  const now = Math.floor(Date.now() / 1000);
-  return `user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22User%22%2C%22username%22%3A%22user_demo%22%2C%22language_code%22%3A%22id%22%7D&hash=mock_dev_hash&auth_date=${now}`;
-};
 
 const getHeaders = (): Record<string, string> => ({
   'Content-Type': 'application/json',
@@ -114,7 +67,9 @@ export const api = {
   },
 
   async getRecommendations(limit = 10): Promise<{ profiles: Profile[] }> {
-    const res = await fetch(`${API_BASE_URL}/recommendations?limit=${limit}`, { headers: getHeaders() });
+    const res = await fetch(`${API_BASE_URL}/recommendations?limit=${limit}`, {
+      headers: getHeaders(),
+    });
     if (!res.ok) throw new Error(`Failed to fetch profile recommendations: ${res.statusText}`);
     const data = await res.json();
     const parsed = getRecommendationsResponseSchema.parse(data);
@@ -142,21 +97,25 @@ export const api = {
     return { matches: parsed.matches as MatchDetail[] };
   },
 
-  async getConversations(): Promise<{ conversations: any[] }> {
+  async getConversations(): Promise<{ conversations: Conversation[] }> {
     const res = await fetch(`${API_BASE_URL}/chats`, { headers: getHeaders() });
     if (!res.ok) throw new Error(`Failed to fetch conversations: ${res.statusText}`);
     const data = await res.json();
     return { conversations: data.conversations || [] };
   },
 
-  async getChatMessages(matchId: number): Promise<{ messages: any[] }> {
+  async getChatMessages(matchId: number): Promise<{ messages: ChatMessage[] }> {
     const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, { headers: getHeaders() });
     if (!res.ok) throw new Error(`Failed to fetch messages: ${res.statusText}`);
     const data = await res.json();
     return { messages: data.messages || [] };
   },
 
-  async sendChatMessage(matchId: number, content: string, imageUrl?: string): Promise<{ message: any }> {
+  async sendChatMessage(
+    matchId: number,
+    content: string,
+    imageUrl?: string,
+  ): Promise<{ message: ChatMessage }> {
     const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, {
       method: 'POST',
       headers: getHeaders(),
@@ -167,3 +126,5 @@ export const api = {
     return { message: data.message };
   },
 };
+
+export { getTelegramInitData } from './telegram';

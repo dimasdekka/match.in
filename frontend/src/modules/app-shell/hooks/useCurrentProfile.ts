@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
-import type { ProfileFormData } from '@/types';
+import { readJson } from '@/utils/storage';
+import { getTelegramUser } from '@/utils/telegram';
+import type { ProfileFormData } from '@/modules/onboarding/@types';
 
 const FALLBACK_PROFILE: ProfileFormData = {
   name: 'Alex',
@@ -19,15 +21,9 @@ const FALLBACK_PROFILE: ProfileFormData = {
 
 export function useCurrentProfile() {
   return useMemo(() => {
-    let profile = FALLBACK_PROFILE;
-    try {
-      const stored = window.localStorage.getItem('matchin:onboarding-profile');
-      if (stored) profile = { ...FALLBACK_PROFILE, ...JSON.parse(stored) };
-    } catch {
-      profile = FALLBACK_PROFILE;
-    }
+    const profile = readJson('matchin:onboarding-profile', FALLBACK_PROFILE);
 
-    const telegramUsername = window.Telegram?.WebApp?.initDataUnsafe?.user?.username;
+    const telegramUsername = getTelegramUser()?.username;
     const username = telegramUsername || 'telegram_user';
     const initials =
       profile.name

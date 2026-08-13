@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'motion/react';
-import type { DiscoverProfile } from '@/modules/discover/constants/profile';
+import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
 

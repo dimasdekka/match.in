@@ -96,13 +96,23 @@
   min-height: 0;
   aspect-ratio: 0.69;
   border-radius: 28px;
-  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: #171719;
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.4);
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
+}
+.profile-card-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 27px;
+  background: #171719;
+  clip-path: inset(0 round 27px);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: paint;
 }
 .profile-deck .discover-profile-card {
   position: absolute;
@@ -114,7 +124,7 @@
 .profile-deck .discover-profile-card[data-background] {
   z-index: 0;
   transform: scale(0.975);
-  filter: brightness(0.82);
+  opacity: 0.82;
   pointer-events: none;
 }
 .profile-deck .discover-profile-card:not([data-background]) {
@@ -146,7 +156,7 @@
   border-color: #ff647f;
   transform: rotate(10deg);
 }
-.discover-profile-card > img {
+.profile-card-clip > img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -216,7 +226,7 @@
   color: #fff;
   font-size: 13px;
   font-weight: 850;
-  backdrop-filter: blur(14px);
+
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
 }
 .profile-interests svg {
@@ -293,31 +303,50 @@
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.08),
     0 12px 35px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(20px);
+  isolation: isolate;
+  contain: layout paint;
 }
 .discover-nav button {
   position: relative;
-  width: 46px;
+  z-index: 1;
+  width: 66px;
   height: 46px;
   justify-self: center;
   display: grid;
   place-items: center;
   border-radius: 50%;
   color: #89898b;
+  transition: color 140ms ease;
 }
-.discover-nav button svg {
+.discover-nav-icon {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
   width: 20px;
   height: 20px;
+  transform: translate(-50%, -50%);
 }
 .discover-nav button.active {
-  width: 64px;
-  border-radius: var(--radius-pill);
   color: #fff;
+}
+.discover-nav-indicator {
+  position: absolute;
+  z-index: 0;
+  top: 5px;
+  left: 12px;
+  width: 66px;
+  height: 46px;
+  border-radius: var(--radius-pill);
   background: linear-gradient(145deg, #747674, #555856);
   box-shadow:
     inset 0 2px 2px rgba(255, 255, 255, 0.2),
     inset 0 -4px 8px rgba(0, 0, 0, 0.24),
     0 4px 10px rgba(0, 0, 0, 0.26);
+  pointer-events: none;
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: layout paint;
 }
 .match-feedback {
   position: fixed;
@@ -327,7 +356,6 @@
   place-items: center;
   padding: 22px;
   background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(12px);
 }
 .match-feedback-card {
   position: relative;
@@ -403,6 +431,17 @@
   }
   .profile-deck {
     aspect-ratio: 0.79;
+  }
+  .profile-card-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 27px;
+    background: #171719;
+    clip-path: inset(0 round 27px);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: paint;
   }
   .profile-deck .discover-profile-card {
     aspect-ratio: auto;

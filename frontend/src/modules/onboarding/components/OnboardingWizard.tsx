@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { compressImageFile } from '@/utils/imageCompressor';
-import type { ProfileFormData } from '@/types';
+import type { ProfileFormData } from '../@types';
 import { INTERESTS, MAX_PHOTOS, TARGETS } from '../constants/options';
 import { OnboardingProvider, useOnboarding } from '../context/OnboardingContext';
 import { useLocation } from '../hooks/useLocation';

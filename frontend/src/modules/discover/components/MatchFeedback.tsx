@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'motion/react';
-import type { DiscoverProfile } from '../constants/profile';
+import type { DiscoverProfile } from '../@types';
 
 export function MatchFeedback({
   profile,

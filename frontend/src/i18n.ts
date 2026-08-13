@@ -4,7 +4,17 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   id: {
     translation: {
-      welcome: { title: 'Temukan seseorang yang memahamimu', subtitle: 'Bangun koneksi bermakna dengan aman dan alami.', private: 'Privat', real: 'Match nyata', easy: 'Masuk mudah', continue: 'Lanjut dengan Telegram', agree: 'Dengan melanjutkan, kamu menyetujui', terms: 'Ketentuan', privacy: 'Kebijakan Privasi' },
+      welcome: {
+        title: 'Temukan seseorang yang memahamimu',
+        subtitle: 'Bangun koneksi bermakna dengan aman dan alami.',
+        private: 'Privat',
+        real: 'Match nyata',
+        easy: 'Masuk mudah',
+        continue: 'Lanjut dengan Telegram',
+        agree: 'Dengan melanjutkan, kamu menyetujui',
+        terms: 'Ketentuan',
+        privacy: 'Kebijakan Privasi',
+      },
       appName: 'Ketemu.in',
       tagline: 'Cari Pasangan, Teman & Matchmaking',
       tabDiscover: 'Temukan',
@@ -47,7 +57,17 @@ const resources = {
   },
   en: {
     translation: {
-      welcome: { title: 'Meet someone who gets you', subtitle: 'Discover meaningful connections, safely and naturally.', private: 'Private', real: 'Real matches', easy: 'Easy sign in', continue: 'Continue with Telegram', agree: 'By continuing, you agree to our', terms: 'Terms', privacy: 'Privacy Policy' },
+      welcome: {
+        title: 'Meet someone who gets you',
+        subtitle: 'Discover meaningful connections, safely and naturally.',
+        private: 'Private',
+        real: 'Real matches',
+        easy: 'Easy sign in',
+        continue: 'Continue with Telegram',
+        agree: 'By continuing, you agree to our',
+        terms: 'Terms',
+        privacy: 'Privacy Policy',
+      },
       appName: 'Match.in',
       tagline: 'Dating, Find Friends & Matchmaking',
       tabDiscover: 'Discover',
