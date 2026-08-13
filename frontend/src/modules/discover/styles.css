@@ -564,8 +564,8 @@ html.conversation-open .discover-shell {
 
 .telegram-mini-app .profile-deck {
   flex: 0 1 auto;
-  width: min(86vw, 340px);
-  height: min(56dvh, 500px);
+  width: min(90vw, 356px);
+  height: min(58dvh, 520px);
   min-height: 390px;
   aspect-ratio: 0.72;
   margin-inline: auto;
@@ -609,6 +609,7 @@ html.conversation-open .discover-shell {
 
 .telegram-mini-app .swipe-actions {
   gap: 17px;
+  margin-top: 9px;
   padding: 0 0 6px;
 }
 
@@ -633,9 +634,9 @@ html.conversation-open .discover-shell {
 }
 
 .telegram-mini-app .discover-nav {
-  bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
-  width: 196px;
-  height: 48px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  width: 210px;
+  height: 52px;
 }
 
 @media (max-height: 650px) {
@@ -643,11 +644,14 @@ html.conversation-open .discover-shell {
     padding-bottom: calc(max(8px, env(safe-area-inset-bottom)) + 68px);
   }
   .telegram-mini-app .profile-deck {
-    width: min(82vw, 320px);
-    height: min(52dvh, 390px);
+    width: min(87vw, 336px);
+    height: min(54dvh, 410px);
     min-height: 300px;
   }
   .telegram-mini-app .profile-copy p { display: none; }
   .telegram-mini-app .profile-interests span { height: 25px; }
-  .telegram-mini-app .swipe-actions { padding-bottom: 4px; }
+  .telegram-mini-app .swipe-actions {
+    margin-top: 6px;
+    padding-bottom: 4px;
+  }
 }
