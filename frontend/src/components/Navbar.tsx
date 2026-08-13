@@ -17,28 +17,28 @@ export const Navbar: React.FC<NavbarProps> = ({
   chatsCount = 0,
 }) => {
   return (
-    <div className="fixed bottom-5 left-0 right-0 z-40 px-6 pointer-events-none">
-      <nav className="max-w-sm mx-auto bg-white/95 backdrop-blur-xl rounded-full flex items-center justify-around px-6 py-2.5 shadow-[0_4px_30px_rgba(0,0,0,0.1)] border border-slate-100/80 pointer-events-auto">
+    <div className="mini-navbar-wrap fixed left-0 right-0 z-40 pointer-events-none">
+      <nav className="mini-navbar pointer-events-auto" aria-label="Navigasi utama">
         {/* Discover Tab */}
         <button
           onClick={() => onTabChange('discover')}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
-            activeTab === 'discover' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
+          className={`mini-nav-button ${
+            activeTab === 'discover' ? 'mini-nav-button--active' : ''
           }`}
         >
-          <Compass className={`w-[22px] h-[22px] ${activeTab === 'discover' ? 'stroke-[2.5px]' : ''}`} />
+          <Compass className="mini-nav-icon" />
           <span>Discover</span>
         </button>
 
         {/* Likes Tab */}
         <button
           onClick={() => onTabChange('likes')}
-          className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
-            activeTab === 'likes' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
+          className={`mini-nav-button relative ${
+            activeTab === 'likes' ? 'mini-nav-button--active' : ''
           }`}
         >
           <div className="relative">
-            <Heart className={`w-[22px] h-[22px] ${activeTab === 'likes' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            <Heart className={`mini-nav-icon ${activeTab === 'likes' ? 'fill-current' : ''}`} />
             {likesCount > 0 && (
               <span className="absolute -top-1.5 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-[#FF3366] text-white text-[8px] font-extrabold flex items-center justify-center border-2 border-white">
                 {likesCount > 99 ? '99+' : likesCount}
@@ -51,12 +51,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Chats Tab */}
         <button
           onClick={() => onTabChange('chats')}
-          className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
-            activeTab === 'chats' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
+          className={`mini-nav-button relative ${
+            activeTab === 'chats' ? 'mini-nav-button--active' : ''
           }`}
         >
           <div className="relative">
-            <MessageSquare className={`w-[22px] h-[22px] ${activeTab === 'chats' ? 'fill-[#FF3366] stroke-[#FF3366]' : ''}`} />
+            <MessageSquare className={`mini-nav-icon ${activeTab === 'chats' ? 'fill-current' : ''}`} />
             {chatsCount > 0 && (
               <span className="absolute -top-1.5 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-[#FF3366] text-white text-[8px] font-extrabold flex items-center justify-center border-2 border-white">
                 {chatsCount > 99 ? '99+' : chatsCount}
@@ -69,11 +69,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Profile Tab */}
         <button
           onClick={() => onTabChange('profile')}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold transition-all duration-200 ${
-            activeTab === 'profile' ? 'text-[#FF3366]' : 'text-slate-400 hover:text-slate-600'
+          className={`mini-nav-button ${
+            activeTab === 'profile' ? 'mini-nav-button--active' : ''
           }`}
         >
-          <User className={`w-[22px] h-[22px] ${activeTab === 'profile' ? 'stroke-[2.5px]' : ''}`} />
+          <User className="mini-nav-icon" />
           <span>Profile</span>
         </button>
       </nav>

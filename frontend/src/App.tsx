@@ -158,7 +158,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
+    <div className="app-shell bg-white text-slate-900 flex flex-col font-sans selection:bg-pink-500 selection:text-white">
       {/* Screen 1: Welcome / Landing Screen */}
       {showWelcome && (
         <WelcomeScreen
@@ -187,7 +187,7 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       {!isFullscreenOverlay && (
-      <main className="flex-1 flex flex-col relative overflow-y-auto pb-20">
+      <main className="app-main flex-1 flex flex-col relative overflow-y-auto">
         {/* Screen 2: Discover / Swipe Tab */}
         {activeTab === 'discover' && (
           loading ? (
@@ -196,7 +196,7 @@ export const App: React.FC = () => {
               <p className="text-xs font-semibold">Finding matches nearby...</p>
             </div>
           ) : currentCandidate ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-4">
+            <div className="discover-page flex-1 flex flex-col items-center justify-center">
               <DiscoverCard profile={currentCandidate} onSwipe={handleSwipe} />
             </div>
           ) : (

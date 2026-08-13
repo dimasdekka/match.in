@@ -90,7 +90,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
   };
 
   return (
-    <div className="w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-3 px-2 select-none touch-none">
+    <div className="discover-stack select-none touch-none">
       {/* ── Swipeable Container Card ── */}
       <div
         style={cardStyle}
@@ -101,7 +101,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
         onTouchStart={(e) => handleTouchStart(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchMove={(e) => handleTouchMove(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full bg-white rounded-[24px] overflow-hidden shadow-[0_6px_25px_rgba(0,0,0,0.08)] border border-slate-100 transition-shadow active:shadow-2xl"
+        className="discover-card relative w-full bg-white overflow-hidden transition-shadow active:shadow-2xl"
       >
         {/* Swipe Badge Indicators (LIKE / NOPE Overlay) */}
         {swipingDirection === 'like' && (
@@ -116,7 +116,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
         )}
 
         {/* ── Compact Photo Section ── */}
-        <div className="relative w-full h-[290px] sm:h-[320px] overflow-hidden bg-slate-100">
+        <div className="discover-photo relative w-full overflow-hidden bg-slate-100">
           <img
             src={currentPhoto}
             alt={profile.name}
@@ -161,7 +161,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
         </div>
 
         {/* ── Compact Info Section (No Scroll Required) ── */}
-        <div className="px-4 py-3 space-y-2">
+        <div className="discover-info px-4 py-3 space-y-2">
           {/* Name + Age + Verified */}
           <div>
             <div className="flex items-center gap-1.5">
@@ -207,14 +207,14 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
       </div>
 
       {/* ── Action Buttons (Below Card) ── */}
-      <div className="flex items-center justify-center gap-4 pt-1">
+      <div className="discover-actions">
         {/* Pass (X) */}
         <button
           onClick={() => {
             setSwipingDirection('pass');
             setTimeout(() => onSwipe('pass'), 150);
           }}
-          className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-500 flex items-center justify-center shadow-sm hover:border-rose-200 hover:text-rose-500 active:scale-90 transition cursor-pointer"
+          className="discover-action discover-action--side bg-white border border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500"
         >
           <X className="w-5 h-5 stroke-[2.5]" />
         </button>
@@ -225,7 +225,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
             setSwipingDirection('like');
             setTimeout(() => onSwipe('like'), 150);
           }}
-          className="w-14 h-14 rounded-full match-gradient text-white flex items-center justify-center shadow-lg match-shadow-btn hover:scale-105 active:scale-90 transition cursor-pointer"
+          className="discover-action discover-action--like match-gradient text-white match-shadow-btn hover:scale-105"
         >
           <Heart className="w-7 h-7 fill-white" />
         </button>
@@ -236,7 +236,7 @@ export const DiscoverCard: React.FC<DiscoverCardProps> = ({ profile, onSwipe }) 
             setSwipingDirection('superlike');
             setTimeout(() => onSwipe('superlike'), 150);
           }}
-          className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-500 flex items-center justify-center shadow-sm hover:border-amber-200 hover:text-amber-500 active:scale-90 transition cursor-pointer"
+          className="discover-action discover-action--side bg-white border border-slate-200 text-slate-500 hover:border-amber-200 hover:text-amber-500"
         >
           <Star className="w-5 h-5 stroke-[2]" />
         </button>
