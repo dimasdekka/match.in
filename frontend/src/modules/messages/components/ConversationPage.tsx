@@ -7,6 +7,7 @@ import { ChatMediaPicker } from './ChatMediaPicker';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { api } from '@/utils/api';
+import { MatchedProfileDetail } from '@/modules/app-shell/components/MatchedProfileDetail';
 
 interface Props { profile: DiscoverProfile; onBack: () => void }
 
@@ -20,6 +21,7 @@ export function ConversationPage({ profile, onBack }: Props) {
   const recordingStartedAt = useRef(0);
   const [isRecording, setIsRecording] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -86,8 +88,8 @@ export function ConversationPage({ profile, onBack }: Props) {
     <motion.section className="chat-screen" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 320 }}>
       <header className="chat-header">
         <button type="button" onClick={onBack} aria-label="Back to messages"><Icon icon="solar:alt-arrow-left-linear" /></button>
-        <img src={profile.image} alt="" />
-        <div><strong>{profile.name}</strong><small>Online</small></div>
+        <button type="button" className="chat-profile-avatar" onClick={() => setProfileOpen(true)} aria-label={`View ${profile.name} profile`}><img src={profile.image} alt="" /></button>
+        <button type="button" className="chat-profile-copy" onClick={() => setProfileOpen(true)}><strong>{profile.name}</strong><small>Online</small></button>
         <button type="button" aria-label="Conversation menu" onClick={() => setMenuOpen(true)}><Icon icon="solar:menu-dots-bold" /></button>
       </header>
       <div className="chat-messages" ref={messagesRef}>
@@ -109,7 +111,7 @@ export function ConversationPage({ profile, onBack }: Props) {
       </form>
       <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title={profile.name} description="Conversation settings">
         <div className="conversation-menu-list">
-          <button type="button" onClick={() => setMenuOpen(false)}><Icon icon="solar:user-circle-linear" /><span><strong>Lihat profil</strong><small>Lihat detail pengguna</small></span></button>
+          <button type="button" onClick={() => { setMenuOpen(false); setProfileOpen(true); }}><Icon icon="solar:user-circle-linear" /><span><strong>Lihat profil</strong><small>Lihat detail pengguna</small></span></button>
           <button type="button" onClick={() => { setMenuOpen(false); setPicker('gif'); }}><Icon icon="solar:gallery-wide-linear" /><span><strong>Media</strong><small>Lihat dan kirim media</small></span></button>
           <button type="button" onClick={() => { localStorage.setItem(`matchin:muted:${profile.id}`, 'true'); setMenuOpen(false); }}><Icon icon="solar:bell-off-linear" /><span><strong>Bisukan notifikasi</strong><small>Matikan notifikasi percakapan</small></span></button>
           <button type="button" onClick={async () => { if (confirm('Hapus semua isi chat?')) { try { await api.clearChat(profile.id); } catch {} chat.clear(); setMenuOpen(false); } }}><Icon icon="solar:trash-bin-minimalistic-linear" /><span><strong>Hapus isi chat</strong><small>Hapus pesan dari perangkat ini</small></span></button>
@@ -117,6 +119,7 @@ export function ConversationPage({ profile, onBack }: Props) {
           <button type="button" className="danger" onClick={async () => { if (confirm(`Batalkan match dengan ${profile.name}?`)) { try { await api.unmatch(profile.id); } catch {} setMenuOpen(false); onBack(); } }}><Icon icon="solar:heart-broken-linear" /><span><strong>Batalkan match</strong><small>Akhiri koneksi ini</small></span></button>
         </div>
       </BottomSheet>
+      {profileOpen && <MatchedProfileDetail profile={profile} onBack={() => setProfileOpen(false)} />}
     </motion.section>
   );
 }

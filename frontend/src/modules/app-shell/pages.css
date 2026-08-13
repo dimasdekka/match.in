@@ -1125,6 +1125,8 @@
 .chat-header button { width: 34px; height: 34px; }
 .chat-header button svg { width: 21px; height: 21px; }
 .chat-header img { width: 34px; height: 34px; }
+.chat-header .chat-profile-avatar { width: 34px; height: 34px; padding: 0; overflow: hidden; border-radius: 50%; }
+.chat-header .chat-profile-copy { width: auto; height: auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; place-items: initial; text-align: left; border-radius: 0; }
 .chat-header div { min-width: 0; gap: 0; line-height: 1.15; }
 .chat-header strong {
   overflow: hidden;
