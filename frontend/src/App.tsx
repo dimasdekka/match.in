@@ -42,8 +42,14 @@ export default function App() {
     void loadProfile();
   }, []);
 
-  const completeOnboarding = (profile: ProfileFormData) => {
-    window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(profile));
+  const completeOnboarding = async (profile: ProfileFormData) => {
+    try {
+      await api.saveProfile(profile);
+      window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(profile));
+    } catch (e) {
+      console.error('Failed to save profile to backend', e);
+      window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(profile));
+    }
     setScreen('app');
   };
 

@@ -22,19 +22,25 @@ type Profile struct {
 	ID                 uint               `json:"id" gorm:"primaryKey"`
 	UserID             uint               `json:"user_id" gorm:"uniqueIndex;not null"`
 	User               *User              `json:"user,omitempty" gorm:"foreignKey:UserID"`
-	Name               string             `json:"name" binding:"required"`
-	Age                int                `json:"age" binding:"required,gte=18,lte=100"`
-	Gender             Gender             `json:"gender" binding:"required"`
-	TargetGender       Gender             `json:"target_gender" binding:"required"`
+	Name               string             `json:"name"`
+	Age                int                `json:"age"`
+	BirthDate          string             `json:"birth_date"`
+	Gender             Gender             `json:"gender"`
+	TargetGender       Gender             `json:"target_gender"`
 	Bio                string             `json:"bio"`
-	VoiceBioURL        string             `json:"voice_bio_url"` // URL or Base64 voice intro
-	Country            string             `json:"country" binding:"required"`
-	City               string             `json:"city" binding:"required"`
+	VoiceBioURL        string             `json:"voice_bio_url"`
+	Country            string             `json:"country"`
+	City               string             `json:"city"`
+	Latitude           float64            `json:"latitude"`
+	Longitude          float64            `json:"longitude"`
 	TargetLocationMode LocationFilterMode `json:"target_location_mode" gorm:"default:'same_city'"`
 	MinAgePref         int                `json:"min_age_pref" gorm:"default:18"`
 	MaxAgePref         int                `json:"max_age_pref" gorm:"default:50"`
-	Photos             string             `json:"photos" gorm:"type:text"`    // JSON Array of image URLs
-	Interests          string             `json:"interests" gorm:"type:text"` // JSON Array of interest tags
+	MaxDistanceKm      int                `json:"max_distance_km" gorm:"default:50"`
+	RelationshipGoal   string             `json:"relationship_goal"`
+	DatingIntention    string             `json:"dating_intention"`
+	Photos             string             `json:"photos" gorm:"type:text"`
+	Interests          string             `json:"interests" gorm:"type:text"`
 	IsVerified         bool               `json:"is_verified" gorm:"default:false"`
 	IsPremium          bool               `json:"is_premium" gorm:"default:false"`
 	IsBoosted          bool               `json:"is_boosted" gorm:"default:false"`
@@ -44,17 +50,23 @@ type Profile struct {
 }
 
 type ProfileRequest struct {
-	Name               string             `json:"name" binding:"required,min=2,max=100"`
-	Age                int                `json:"age" binding:"required,gte=18,lte=100"`
-	Gender             Gender             `json:"gender" binding:"required,oneof=male female"`
-	TargetGender       Gender             `json:"target_gender" binding:"required,oneof=male female all"`
+	Name               string             `json:"name"`
+	Age                int                `json:"age"`
+	BirthDate          string             `json:"birth_date"`
+	Gender             Gender             `json:"gender"`
+	TargetGender       Gender             `json:"target_gender"`
 	Bio                string             `json:"bio"`
 	VoiceBioURL        string             `json:"voice_bio_url"`
 	Country            string             `json:"country"`
 	City               string             `json:"city"`
+	Latitude           float64            `json:"latitude"`
+	Longitude          float64            `json:"longitude"`
 	TargetLocationMode LocationFilterMode `json:"target_location_mode"`
-	MinAgePref         int                `json:"min_age_pref" binding:"omitempty,gte=18,lte=100"`
-	MaxAgePref         int                `json:"max_age_pref" binding:"omitempty,gte=18,lte=100"`
-	Photos             []string           `json:"photos" binding:"omitempty,max=10"`
-	Interests          []string           `json:"interests" binding:"omitempty,max=20"`
+	MinAgePref         int                `json:"min_age_pref"`
+	MaxAgePref         int                `json:"max_age_pref"`
+	MaxDistanceKm      int                `json:"max_distance_km"`
+	RelationshipGoal   string             `json:"relationship_goal"`
+	DatingIntention    string             `json:"dating_intention"`
+	Photos             []string           `json:"photos"`
+	Interests          []string           `json:"interests"`
 }
