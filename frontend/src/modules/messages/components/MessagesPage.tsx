@@ -1,8 +1,10 @@
 import { Icon } from '@iconify/react';
 import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
+import { api } from '@/utils/api';
 
 interface Props {
   profiles: DiscoverProfile[];
@@ -13,6 +15,31 @@ interface Props {
 
 export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversation }: Props) {
   const currentProfile = useCurrentProfile();
+  const [displayProfiles, setDisplayProfiles] = useState<DiscoverProfile[]>(profiles);
+
+  useEffect(() => {
+    let mounted = true;
+    api.getConversations()
+      .then(({ conversations }) => {
+        if (!mounted) return;
+        if (conversations.length > 0) {
+          setDisplayProfiles(conversations.map(c => ({
+            id: c.match_id,
+            name: c.partner_name || 'User',
+            age: 0,
+            bio: '',
+            interests: [],
+            image: c.partner_image_url || `https://api.dicebear.com/9.x/notionists/svg?seed=${c.match_id}`,
+            distance: '0 km',
+            gallery: []
+          })));
+        }
+      })
+      .catch(() => {
+        // Fallback already handled by initial state
+      });
+    return () => { mounted = false; };
+  }, [profiles]);
 
   return (
     <section className="app-page messages-page">
@@ -27,7 +54,7 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
           )}
         </button>
       </header>
-      {profiles.length === 0 ? (
+      {displayProfiles.length === 0 ? (
         <LoveReactionSurface>
           <div className="empty-state messages-empty">
             <div className="message-heart-icon">
@@ -52,7 +79,7 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
         </LoveReactionSurface>
       ) : (
         <div className="conversation-list">
-          {profiles.map((profile, index) => (
+          {displayProfiles.map((profile, index) => (
             <motion.button
               type="button"
               key={profile.id}

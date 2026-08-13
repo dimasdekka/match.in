@@ -125,6 +125,43 @@ export const api = {
     const data = await res.json();
     return { message: data.message };
   },
+
+  async deleteAccount(): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE_URL}/me`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to delete account: ${res.statusText}`);
+    return res.json();
+  },
+
+  async unmatch(matchId: number): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE_URL}/matches/${matchId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to unmatch: ${res.statusText}`);
+    return res.json();
+  },
+
+  async clearChat(matchId: number): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to clear chat: ${res.statusText}`);
+    return res.json();
+  },
+
+  async reportUser(reportedId: number, matchId: number, reason: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE_URL}/reports`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ reported_id: reportedId, match_id: matchId, reason }),
+    });
+    if (!res.ok) throw new Error(`Failed to report user: ${res.statusText}`);
+    return res.json();
+  },
 };
 
 export { getTelegramInitData } from './telegram';

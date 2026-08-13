@@ -57,6 +57,7 @@ type MatchRepository interface {
 	CreateMatch(ctx context.Context, user1ID, user2ID uint) (*domain.Match, error)
 	GetMatchesForUser(ctx context.Context, userID uint) ([]*domain.Match, error)
 	GetByID(ctx context.Context, matchID uint) (*domain.Match, error)
+	UnmatchByID(ctx context.Context, matchID uint, userID uint) error
 }
 
 func NewMatchRepository(db *gorm.DB) MatchRepository {
@@ -103,4 +104,15 @@ func (r *matchRepository) GetByID(ctx context.Context, matchID uint) (*domain.Ma
 		return nil, fmt.Errorf("failed to fetch match %d: %w", matchID, err)
 	}
 	return &match, nil
+}
+
+func (r *matchRepository) UnmatchByID(ctx context.Context, matchID uint, userID uint) error {
+	result := r.db.WithContext(ctx).Model(&domain.Match{}).Where("id = ? AND (user1_id = ? OR user2_id = ?)", matchID, userID, userID).Update("is_active", false)
+	if result.Error != nil {
+		return fmt.Errorf("failed to unmatch %d: %w", matchID, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("match %d not found or not authorized", matchID)
+	}
+	return nil
 }

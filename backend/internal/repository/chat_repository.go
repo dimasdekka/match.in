@@ -15,6 +15,7 @@ type ChatRepository interface {
 	GetLastMessageByMatchID(ctx context.Context, matchID uint) (*domain.ChatMessage, error)
 	GetUnreadCount(ctx context.Context, matchID uint, receiverID uint) (int64, error)
 	MarkAsRead(ctx context.Context, matchID uint, receiverID uint) error
+	DeleteMessagesByMatchID(ctx context.Context, matchID uint) error
 }
 
 type chatRepository struct {
@@ -80,6 +81,13 @@ func (r *chatRepository) MarkAsRead(ctx context.Context, matchID uint, receiverI
 		Update("is_read", true).Error
 	if err != nil {
 		return fmt.Errorf("failed to mark messages as read: %w", err)
+	}
+	return nil
+}
+
+func (r *chatRepository) DeleteMessagesByMatchID(ctx context.Context, matchID uint) error {
+	if err := r.db.WithContext(ctx).Where("match_id = ?", matchID).Delete(&domain.ChatMessage{}).Error; err != nil {
+		return fmt.Errorf("failed to delete messages for match %d: %w", matchID, err)
 	}
 	return nil
 }

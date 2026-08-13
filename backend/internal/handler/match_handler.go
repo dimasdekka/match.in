@@ -2,10 +2,12 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"matchin-backend/internal/domain"
 	"matchin-backend/internal/middleware"
 	"matchin-backend/internal/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,4 +55,26 @@ func (h *MatchHandler) GetMatches(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"matches": matches})
+}
+
+func (h *MatchHandler) Unmatch(c *gin.Context) {
+	user, exists := middleware.GetCurrentUser(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	matchIDParam := c.Param("match_id")
+	matchID, err := strconv.ParseUint(matchIDParam, 10, 64)
+	if err != nil || matchID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid match_id"})
+		return
+	}
+
+	if err := h.matchmakingService.Unmatch(c.Request.Context(), user.ID, uint(matchID)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to unmatch: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Unmatched successfully"})
 }

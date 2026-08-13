@@ -12,6 +12,7 @@ type ProfileRepository interface {
 	GetByUserID(ctx context.Context, userID uint) (*domain.Profile, error)
 	Upsert(ctx context.Context, profile *domain.Profile) error
 	GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int) ([]*domain.Profile, error)
+	DeleteByUserID(ctx context.Context, userID uint) error
 }
 
 type profileRepository struct {
@@ -103,4 +104,11 @@ func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserI
 	}
 
 	return profiles, nil
+}
+
+func (r *profileRepository) DeleteByUserID(ctx context.Context, userID uint) error {
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&domain.Profile{}).Error; err != nil {
+		return fmt.Errorf("failed to delete profile for user %d: %w", userID, err)
+	}
+	return nil
 }
