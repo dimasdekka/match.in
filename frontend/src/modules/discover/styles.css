@@ -634,7 +634,7 @@ html.conversation-open .discover-shell {
 }
 
 .telegram-mini-app .discover-nav {
-  bottom: max(22px, calc(env(safe-area-inset-bottom) + 16px));
+  bottom: max(34px, calc(env(safe-area-inset-bottom) + 20px));
   width: 210px;
   height: 52px;
 }
