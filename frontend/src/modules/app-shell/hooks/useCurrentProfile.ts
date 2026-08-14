@@ -29,7 +29,12 @@ export function useCurrentProfile() {
     let mounted = true;
     api.getMyProfile()
       .then(({ profile: realProfile }) => {
-        if (!mounted || !realProfile) return;
+        if (!mounted) return;
+        if (!realProfile || !realProfile.id) {
+          window.localStorage.removeItem('matchin:onboarding-profile');
+          setProfile(FALLBACK_PROFILE);
+          return;
+        }
         let photos: string[] = [];
         try {
           photos = typeof realProfile.photos === 'string' ? JSON.parse(realProfile.photos) : realProfile.photos || [];
@@ -66,7 +71,11 @@ export function useCurrentProfile() {
         setProfile(mapped);
         writeJson('matchin:onboarding-profile', mapped);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (mounted) {
+          window.localStorage.removeItem('matchin:onboarding-profile');
+        }
+      });
 
     return () => { mounted = false; };
   }, []);

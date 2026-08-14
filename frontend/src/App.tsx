@@ -19,11 +19,6 @@ export default function App() {
     telegram?.expand();
     setInitialTelegramName(telegram?.initDataUnsafe?.user?.first_name ?? '');
 
-    if (window.localStorage.getItem('matchin:onboarding-profile')) {
-      setScreen('app');
-      return;
-    }
-
     const loadProfile = async () => {
       for (let attempt = 0; attempt < 10; attempt += 1) {
         const initData = getTelegramInitData();
@@ -32,10 +27,17 @@ export default function App() {
       }
 
       try {
-        const { profile } = await api.getMyProfile();
-        setScreen(profile?.id && profile.name.trim() ? 'app' : 'welcome');
+        const res = await api.getMyProfile();
+        if (res?.profile && res.profile.id && res.profile.name?.trim()) {
+          window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(res.profile));
+          setScreen('app');
+        } else {
+          window.localStorage.removeItem('matchin:onboarding-profile');
+          setScreen('welcome');
+        }
       } catch (error) {
-        console.error('Failed to load profile', error);
+        console.error('Profile not found on backend or account reset', error);
+        window.localStorage.removeItem('matchin:onboarding-profile');
         setScreen('welcome');
       }
     };
