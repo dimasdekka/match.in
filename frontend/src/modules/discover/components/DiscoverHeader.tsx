@@ -30,7 +30,7 @@ export function DiscoverHeader({
         left={<IconButton icon="solar:tuning-2-bold" label="Filters" onClick={onFilterClick} />}
         center={
           <button
-            className="feed-selector flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900/90 border border-white/10 text-xs font-black text-white hover:bg-neutral-800 transition shadow-sm"
+            className="feed-selector"
             type="button"
             onClick={() => setSheetOpen(true)}
           >

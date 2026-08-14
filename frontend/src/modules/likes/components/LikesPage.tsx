@@ -81,26 +81,18 @@ export function LikesPage({
           </button>
         }
         center={
-          <div className="flex bg-neutral-900/90 p-1 rounded-full border border-white/10 text-xs font-bold w-full max-w-[260px] justify-between">
+          <div className="header-segmented-pill">
             <button
               type="button"
               onClick={() => setTab('received')}
-              className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
-                tab === 'received'
-                  ? 'bg-pink-600 text-white shadow-sm font-extrabold'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
+              className={tab === 'received' ? 'active' : ''}
             >
               Menyukai ({receivedLikes.length})
             </button>
             <button
               type="button"
               onClick={() => setTab('sent')}
-              className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
-                tab === 'sent'
-                  ? 'bg-pink-600 text-white shadow-sm font-extrabold'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
+              className={tab === 'sent' ? 'active' : ''}
             >
               Disukai ({sentLikes.length})
             </button>
