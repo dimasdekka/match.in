@@ -1,59 +1,199 @@
-import { useEffect, useState } from 'react';
-import type { MessageReaction, MockChatMessage, MockSticker } from '../@types';
-
-const INITIAL: MockChatMessage[] = [
-  { id: '1', type: 'text', direction: 'incoming', content: 'Hi! Nice to meet you here 👋', createdAt: new Date().toISOString() },
-  { id: '2', type: 'text', direction: 'incoming', content: "What's your ideal weekend?", createdAt: new Date().toISOString() },
-];
-
-const createMessageId = () =>
-  globalThis.crypto?.randomUUID?.() ?? `message-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const normalizeMessages = (value: unknown): MockChatMessage[] => {
-  if (!Array.isArray(value)) return INITIAL;
-  return value
-    .filter((item): item is Partial<MockChatMessage> => Boolean(item && typeof item === 'object'))
-    .map((item, index) => ({
-      id: item.id ?? `legacy-${index}`,
-      type: item.type ?? 'text',
-      direction: item.direction ?? 'incoming',
-      content: item.content,
-      mediaUrl: item.mediaUrl,
-      duration: item.duration,
-      stickerEmoji: item.stickerEmoji,
-      reaction: item.reaction,
-      createdAt: item.createdAt && !Number.isNaN(Date.parse(item.createdAt))
-        ? item.createdAt
-        : new Date().toISOString(),
-      status: item.status,
-    }));
-};
+import { useEffect, useState, useCallback, useRef } from 'react';
+import type { MessageReaction, MockChatMessage, MockSticker, MockMessageType } from '../@types';
+import { api } from '@/utils/api';
+import type { ChatMessage } from '@/@types';
 
 export function useMockChat(conversationId: string) {
-  const storageKey = `matchin:mock-chat:${conversationId}`;
-  const [messages, setMessages] = useState<MockChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? normalizeMessages(JSON.parse(saved)) : INITIAL;
-    }
-    catch { return INITIAL; }
-  });
+  const matchId = Number(conversationId) || 0;
+  const [messages, setMessages] = useState<MockChatMessage[]>([]);
+  const currentUserIdRef = useRef<number>(0);
 
+  // Fetch current user ID to accurately determine incoming vs outgoing direction
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(messages)); } catch { /* quota exceeded */ }
-  }, [messages, storageKey]);
+    api.getMe()
+      .then(({ user }) => {
+        if (user && user.id) {
+          currentUserIdRef.current = user.id;
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const append = (message: Omit<MockChatMessage, 'id' | 'direction' | 'createdAt' | 'status'>) =>
-    setMessages((items) => [...items, { ...message, id: createMessageId(), direction: 'outgoing', createdAt: new Date().toISOString(), status: 'read' }]);
+  const mapBackendMessage = useCallback((msg: ChatMessage): MockChatMessage => {
+    const isOutgoing = msg.sender_id === currentUserIdRef.current || currentUserIdRef.current === 0;
+    const msgType: MockMessageType = (msg.message_type as MockMessageType) || (msg.image_url ? 'image' : 'text');
+
+    return {
+      id: String(msg.id),
+      type: msgType,
+      direction: isOutgoing ? 'outgoing' : 'incoming',
+      content: msg.content,
+      mediaUrl: msg.image_url,
+      reaction: msg.reaction as MessageReaction | undefined,
+      createdAt: msg.created_at,
+      status: msg.is_read ? 'read' : 'delivered',
+    };
+  }, []);
+
+  const fetchRealMessages = useCallback(async () => {
+    if (!matchId) return;
+    try {
+      const res = await api.getChatMessages(matchId);
+      if (res.messages) {
+        setMessages(res.messages.map(mapBackendMessage));
+      }
+    } catch {
+      // Fallback silently if offline
+    }
+  }, [matchId, mapBackendMessage]);
+
+  // Initial load + Real-time polling every 2.5 seconds
+  useEffect(() => {
+    void fetchRealMessages();
+    const interval = setInterval(fetchRealMessages, 2500);
+    return () => clearInterval(interval);
+  }, [fetchRealMessages]);
+
+  const sendText = async (content: string) => {
+    const optimisticMsg: MockChatMessage = {
+      id: `temp-${Date.now()}`,
+      type: 'text',
+      direction: 'outgoing',
+      content,
+      createdAt: new Date().toISOString(),
+      status: 'sent',
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const { message } = await api.sendChatMessage(matchId, content, undefined, 'text');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMsg.id ? mapBackendMessage(message) : m)),
+      );
+    } catch (err) {
+      console.error('Failed to send text message', err);
+    }
+  };
+
+  const sendImage = async (mediaUrl: string) => {
+    const optimisticMsg: MockChatMessage = {
+      id: `temp-${Date.now()}`,
+      type: 'image',
+      direction: 'outgoing',
+      mediaUrl,
+      createdAt: new Date().toISOString(),
+      status: 'sent',
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const { message } = await api.sendChatMessage(matchId, '[Foto]', mediaUrl, 'image');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMsg.id ? mapBackendMessage(message) : m)),
+      );
+    } catch (err) {
+      console.error('Failed to send image message', err);
+    }
+  };
+
+  const sendGif = async (mediaUrl: string) => {
+    const optimisticMsg: MockChatMessage = {
+      id: `temp-${Date.now()}`,
+      type: 'gif',
+      direction: 'outgoing',
+      mediaUrl,
+      createdAt: new Date().toISOString(),
+      status: 'sent',
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const { message } = await api.sendChatMessage(matchId, '[GIF]', mediaUrl, 'gif');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMsg.id ? mapBackendMessage(message) : m)),
+      );
+    } catch (err) {
+      console.error('Failed to send gif message', err);
+    }
+  };
+
+  const sendVoice = async (mediaUrl: string, duration: number) => {
+    const optimisticMsg: MockChatMessage = {
+      id: `temp-${Date.now()}`,
+      type: 'voice',
+      direction: 'outgoing',
+      mediaUrl,
+      duration,
+      createdAt: new Date().toISOString(),
+      status: 'sent',
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const { message } = await api.sendChatMessage(matchId, '[Voice Note]', mediaUrl, 'voice');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMsg.id ? mapBackendMessage(message) : m)),
+      );
+    } catch (err) {
+      console.error('Failed to send voice message', err);
+    }
+  };
+
+  const sendSticker = async (sticker: MockSticker) => {
+    const optimisticMsg: MockChatMessage = {
+      id: `temp-${Date.now()}`,
+      type: 'sticker',
+      direction: 'outgoing',
+      mediaUrl: sticker.previewUrl,
+      stickerEmoji: sticker.emoji,
+      createdAt: new Date().toISOString(),
+      status: 'sent',
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const { message } = await api.sendChatMessage(matchId, sticker.emoji, sticker.previewUrl, 'sticker');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMsg.id ? mapBackendMessage(message) : m)),
+      );
+    } catch (err) {
+      console.error('Failed to send sticker message', err);
+    }
+  };
+
+  const react = async (id: string, reaction: MessageReaction) => {
+    setMessages((items) =>
+      items.map((item) => (item.id === id ? { ...item, reaction } : item)),
+    );
+    const numId = Number(id);
+    if (numId) {
+      try {
+        await api.reactMessage(numId, reaction);
+      } catch (err) {
+        console.error('Failed to save message reaction', err);
+      }
+    }
+  };
+
+  const clear = async () => {
+    setMessages([]);
+    if (matchId) {
+      try {
+        await api.clearChat(matchId);
+      } catch (err) {
+        console.error('Failed to clear chat on server', err);
+      }
+    }
+  };
 
   return {
     messages,
-    clear: () => setMessages([]),
-    sendText: (content: string) => append({ type: 'text', content }),
-    sendImage: (mediaUrl: string) => append({ type: 'image', mediaUrl }),
-    sendGif: (mediaUrl: string) => append({ type: 'gif', mediaUrl }),
-    sendVoice: (mediaUrl: string, duration: number) => append({ type: 'voice', mediaUrl, duration }),
-    sendSticker: (sticker: MockSticker) => append({ type: 'sticker', mediaUrl: sticker.previewUrl, stickerEmoji: sticker.emoji }),
-    react: (id: string, reaction: MessageReaction) => setMessages((items) => items.map((item) => item.id === id ? { ...item, reaction } : item)),
+    clear,
+    sendText,
+    sendImage,
+    sendGif,
+    sendVoice,
+    sendSticker,
+    react,
   };
 }

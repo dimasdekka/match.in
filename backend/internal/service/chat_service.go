@@ -10,10 +10,11 @@ import (
 )
 
 type ChatService interface {
-	SendMessage(ctx context.Context, senderID uint, matchID uint, content string, imageURL string) (*domain.ChatMessage, error)
+	SendMessage(ctx context.Context, senderID uint, matchID uint, content string, imageURL string, messageType string) (*domain.ChatMessage, error)
 	GetMessages(ctx context.Context, userID uint, matchID uint) ([]*domain.ChatMessage, error)
 	GetConversations(ctx context.Context, userID uint) ([]*domain.Conversation, error)
 	ClearChat(ctx context.Context, userID uint, matchID uint) error
+	ReactMessage(ctx context.Context, userID uint, messageID uint, reaction string) error
 }
 
 type chatService struct {
@@ -37,7 +38,7 @@ func NewChatService(
 	}
 }
 
-func (s *chatService) SendMessage(ctx context.Context, senderID uint, matchID uint, content string, imageURL string) (*domain.ChatMessage, error) {
+func (s *chatService) SendMessage(ctx context.Context, senderID uint, matchID uint, content string, imageURL string, messageType string) (*domain.ChatMessage, error) {
 	match, err := s.matchRepo.GetByID(ctx, matchID)
 	if err != nil || match == nil {
 		return nil, fmt.Errorf("match not found or access denied")
@@ -52,13 +53,22 @@ func (s *chatService) SendMessage(ctx context.Context, senderID uint, matchID ui
 		return nil, fmt.Errorf("user is not part of this match")
 	}
 
+	if messageType == "" {
+		if imageURL != "" {
+			messageType = "image"
+		} else {
+			messageType = "text"
+		}
+	}
+
 	msg := &domain.ChatMessage{
-		MatchID:    matchID,
-		SenderID:   senderID,
-		ReceiverID: receiverID,
-		Content:    content,
-		ImageURL:   imageURL,
-		IsRead:     false,
+		MatchID:     matchID,
+		SenderID:    senderID,
+		ReceiverID:  receiverID,
+		Content:     content,
+		ImageURL:    imageURL,
+		MessageType: messageType,
+		IsRead:      false,
 	}
 
 	if err := s.chatRepo.CreateMessage(ctx, msg); err != nil {
@@ -143,3 +153,6 @@ func (s *chatService) ClearChat(ctx context.Context, userID uint, matchID uint) 
 	return nil
 }
 
+func (s *chatService) ReactMessage(ctx context.Context, userID uint, messageID uint, reaction string) error {
+	return s.chatRepo.ReactMessage(ctx, messageID, reaction)
+}

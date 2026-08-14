@@ -54,7 +54,51 @@ func (h *MatchHandler) GetMatches(c *gin.Context) {
 		return
 	}
 
+	if matches == nil {
+		matches = []*domain.MatchDetail{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"matches": matches})
+}
+
+func (h *MatchHandler) GetLikesReceived(c *gin.Context) {
+	user, exists := middleware.GetCurrentUser(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	profiles, err := h.matchmakingService.GetLikesReceived(c.Request.Context(), user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch incoming likes: " + err.Error()})
+		return
+	}
+
+	if profiles == nil {
+		profiles = []*domain.Profile{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"profiles": profiles})
+}
+
+func (h *MatchHandler) GetLikesSent(c *gin.Context) {
+	user, exists := middleware.GetCurrentUser(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	profiles, err := h.matchmakingService.GetLikesSent(c.Request.Context(), user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch sent likes: " + err.Error()})
+		return
+	}
+
+	if profiles == nil {
+		profiles = []*domain.Profile{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"profiles": profiles})
 }
 
 func (h *MatchHandler) Unmatch(c *gin.Context) {

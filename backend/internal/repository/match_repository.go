@@ -12,6 +12,8 @@ type SwipeRepository interface {
 	RecordSwipe(ctx context.Context, swipe *domain.Swipe) error
 	HasLikedBack(ctx context.Context, targetID uint, swiperID uint) (bool, error)
 	ResetSwipes(ctx context.Context, swiperID uint) error
+	GetLikesReceived(ctx context.Context, userID uint) ([]uint, error)
+	GetLikesSent(ctx context.Context, userID uint) ([]uint, error)
 }
 
 type matchRepository struct {
@@ -51,6 +53,30 @@ func (r *SwipeRepositoryImpl) ResetSwipes(ctx context.Context, swiperID uint) er
 		return fmt.Errorf("failed to reset swipes for user %d: %w", swiperID, err)
 	}
 	return nil
+}
+
+func (r *SwipeRepositoryImpl) GetLikesReceived(ctx context.Context, userID uint) ([]uint, error) {
+	var swiperIDs []uint
+	err := r.db.WithContext(ctx).Model(&domain.Swipe{}).
+		Where("target_id = ? AND action IN ('like', 'superlike')", userID).
+		Order("created_at DESC").
+		Pluck("swiper_id", &swiperIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get incoming likes: %w", err)
+	}
+	return swiperIDs, nil
+}
+
+func (r *SwipeRepositoryImpl) GetLikesSent(ctx context.Context, userID uint) ([]uint, error) {
+	var targetIDs []uint
+	err := r.db.WithContext(ctx).Model(&domain.Swipe{}).
+		Where("swiper_id = ? AND action IN ('like', 'superlike')", userID).
+		Order("created_at DESC").
+		Pluck("target_id", &targetIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sent likes: %w", err)
+	}
+	return targetIDs, nil
 }
 
 type MatchRepository interface {

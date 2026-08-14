@@ -1,62 +1,71 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { api } from '@/utils/api';
 import { DISCOVER_PROFILES } from '../constants/profile';
 import type { DiscoverProfile, SwipeDecision } from '../@types';
 
 export function useDiscoverDeck() {
-  const [deckProfiles, setDeckProfiles] = useState<DiscoverProfile[]>(DISCOVER_PROFILES);
+  const [deckProfiles, setDeckProfiles] = useState<DiscoverProfile[]>([]);
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [match, setMatch] = useState<DiscoverProfile | null>(null);
   const [likedProfiles, setLikedProfiles] = useState<DiscoverProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const transitionLocked = useRef(false);
 
-  useEffect(() => {
-    const loadRealRecommendations = async () => {
-      try {
-        const res = await api.getRecommendations(15);
-        if (res.profiles && res.profiles.length > 0) {
-          const mapped: DiscoverProfile[] = res.profiles.map((p) => {
-            let photos: string[] = [];
-            try {
-              photos = typeof p.photos === 'string' ? JSON.parse(p.photos) : p.photos || [];
-            } catch {
-              photos = [];
-            }
-            const img = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+  const loadRealRecommendations = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.getRecommendations(20);
+      if (res.profiles && res.profiles.length > 0) {
+        const mapped: DiscoverProfile[] = res.profiles.map((p) => {
+          let photos: string[] = [];
+          try {
+            photos = typeof p.photos === 'string' ? JSON.parse(p.photos) : p.photos || [];
+          } catch {
+            photos = [];
+          }
+          const img = photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
-            let interestsArr: Array<{ label: string; icon: string }> = [];
-            try {
-              const rawInts = typeof p.interests === 'string' ? JSON.parse(p.interests) : p.interests || [];
-              interestsArr = rawInts.map((tag: string) => ({ label: tag, icon: 'ph:heart' }));
-            } catch {
-              interestsArr = [{ label: 'Travel', icon: 'ph:airplane' }];
-            }
+          let interestsArr: Array<{ label: string; icon: string }> = [];
+          try {
+            const rawInts = typeof p.interests === 'string' ? JSON.parse(p.interests) : p.interests || [];
+            interestsArr = rawInts.map((tag: string) => ({ label: tag, icon: 'ph:heart' }));
+          } catch {
+            interestsArr = [{ label: 'Travel', icon: 'ph:airplane' }];
+          }
 
-            return {
-              id: p.user_id || p.id,
-              name: p.name,
-              age: p.age,
-              city: p.city || 'Jakarta',
-              distance: 3,
-              bio: p.bio || 'Product Designer & Travel Enthusiast',
-              image: img,
-              verified: p.is_verified || true,
-              interests: interestsArr.length > 0 ? interestsArr : [{ label: 'Coffee', icon: 'ph:coffee' }],
-            };
-          });
-          setDeckProfiles(mapped);
-        }
-      } catch (err) {
-        console.error('Failed to load backend recommendations, using fallback deck', err);
+          return {
+            id: p.user_id || p.id,
+            name: p.name,
+            age: p.age,
+            city: p.city || 'Jakarta',
+            distance: 3,
+            bio: p.bio || '',
+            image: img,
+            verified: p.is_verified ?? true,
+            interests: interestsArr.length > 0 ? interestsArr : [{ label: 'Travel', icon: 'ph:airplane' }],
+          };
+        });
+        setDeckProfiles(mapped);
+      } else {
+        // Fallback to sample profiles if fresh empty database
+        setDeckProfiles(DISCOVER_PROFILES);
       }
-    };
-
-    loadRealRecommendations();
+    } catch (err) {
+      console.error('Failed to load backend recommendations, using fallback deck', err);
+      setDeckProfiles(DISCOVER_PROFILES);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const profile = deckProfiles[index % deckProfiles.length];
-  const nextProfile = deckProfiles[(index + 1) % deckProfiles.length];
+  useEffect(() => {
+    void loadRealRecommendations();
+  }, [loadRealRecommendations]);
+
+  const activeProfiles = deckProfiles.length > 0 ? deckProfiles : DISCOVER_PROFILES;
+  const profile = activeProfiles[index % activeProfiles.length];
+  const nextProfile = activeProfiles[(index + 1) % activeProfiles.length];
 
   const decide = async (decision: SwipeDecision) => {
     if (transitionLocked.current) return;
@@ -78,11 +87,18 @@ export function useDiscoverDeck() {
       } else if (liked && profile.willMatch) {
         setMatch(profile);
       }
-    } catch (e) {
+    } catch {
       if (liked && profile.willMatch) setMatch(profile);
     }
 
-    setIndex((current) => current + 1);
+    const nextIndex = index + 1;
+    if (nextIndex >= activeProfiles.length) {
+      void loadRealRecommendations();
+      setIndex(0);
+    } else {
+      setIndex(nextIndex);
+    }
+
     window.setTimeout(() => {
       transitionLocked.current = false;
     }, 210);
@@ -94,7 +110,9 @@ export function useDiscoverDeck() {
     direction,
     match,
     likedProfiles,
+    loading,
     decide,
+    reload: loadRealRecommendations,
     closeMatch: () => setMatch(null),
   };
 }

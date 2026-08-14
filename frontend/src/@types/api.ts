@@ -56,6 +56,8 @@ export interface ChatMessage {
   receiver_id: number;
   content: string;
   image_url?: string;
+  message_type?: string;
+  reaction?: string;
   is_read: boolean;
   created_at: string;
 }

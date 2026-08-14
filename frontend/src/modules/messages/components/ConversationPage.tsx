@@ -8,6 +8,7 @@ import { ChatMessageBubble } from './ChatMessageBubble';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { api } from '@/utils/api';
 import { MatchedProfileDetail } from '@/modules/app-shell/components/MatchedProfileDetail';
+import { compressImageFile } from '@/utils/imageCompressor';
 
 interface Props { profile: DiscoverProfile; onBack: () => void }
 
@@ -104,7 +105,24 @@ export function ConversationPage({ profile, onBack }: Props) {
           <button type="button" onClick={() => imageInput.current?.click()} aria-label="Attach image"><Icon icon="solar:paperclip-2-linear" /></button>
           <button type="button" onClick={() => setPicker(picker === 'gif' ? null : 'gif')} aria-label="GIF"><b>GIF</b></button>
         </div>
-        <input ref={imageInput} type="file" accept="image/*" hidden onChange={async (event) => { const file = event.target.files?.[0]; if (file) chat.sendImage(await readAsDataUrl(file)); event.target.value = ''; }} />
+        <input
+          ref={imageInput}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              try {
+                const compressed = await compressImageFile(file, 800, 0.75);
+                chat.sendImage(compressed);
+              } catch {
+                chat.sendImage(await readAsDataUrl(file));
+              }
+            }
+            event.target.value = '';
+          }}
+        />
         {draft.trim()
           ? <button className="chat-primary-action" type="submit" aria-label="Send"><Icon icon="solar:plain-2-bold" /></button>
           : <button className={`chat-primary-action ${isRecording ? 'recording' : ''}`} type="button" onClick={toggleRecording} aria-label={isRecording ? 'Stop and send voice note' : 'Record voice note'}><Icon icon={isRecording ? 'solar:stop-bold' : 'solar:microphone-3-bold'} /></button>}

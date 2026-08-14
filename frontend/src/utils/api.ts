@@ -97,6 +97,20 @@ export const api = {
     return { matches: parsed.matches as MatchDetail[] };
   },
 
+  async getLikesReceived(): Promise<{ profiles: Profile[] }> {
+    const res = await fetch(`${API_BASE_URL}/likes/received`, { headers: getHeaders() });
+    if (!res.ok) throw new Error(`Failed to fetch received likes: ${res.statusText}`);
+    const data = await res.json();
+    return { profiles: data.profiles || [] };
+  },
+
+  async getLikesSent(): Promise<{ profiles: Profile[] }> {
+    const res = await fetch(`${API_BASE_URL}/likes/sent`, { headers: getHeaders() });
+    if (!res.ok) throw new Error(`Failed to fetch sent likes: ${res.statusText}`);
+    const data = await res.json();
+    return { profiles: data.profiles || [] };
+  },
+
   async getConversations(): Promise<{ conversations: Conversation[] }> {
     const res = await fetch(`${API_BASE_URL}/chats`, { headers: getHeaders() });
     if (!res.ok) throw new Error(`Failed to fetch conversations: ${res.statusText}`);
@@ -115,15 +129,25 @@ export const api = {
     matchId: number,
     content: string,
     imageUrl?: string,
+    messageType?: string,
   ): Promise<{ message: ChatMessage }> {
     const res = await fetch(`${API_BASE_URL}/chats/${matchId}/messages`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ content, image_url: imageUrl }),
+      body: JSON.stringify({ content, image_url: imageUrl, message_type: messageType }),
     });
     if (!res.ok) throw new Error(`Failed to send message: ${res.statusText}`);
     const data = await res.json();
     return { message: data.message };
+  },
+
+  async reactMessage(messageId: number, reaction: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/chats/messages/${messageId}/react`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ reaction }),
+    });
+    if (!res.ok) throw new Error(`Failed to react to message: ${res.statusText}`);
   },
 
   async deleteAccount(): Promise<{ message: string }> {

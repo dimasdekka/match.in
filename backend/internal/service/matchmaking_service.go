@@ -12,6 +12,8 @@ import (
 type MatchmakingService interface {
 	ProcessSwipe(ctx context.Context, swiperID uint, req *domain.SwipeRequest) (*domain.SwipeResponse, error)
 	GetMatches(ctx context.Context, userID uint) ([]*domain.MatchDetail, error)
+	GetLikesReceived(ctx context.Context, userID uint) ([]*domain.Profile, error)
+	GetLikesSent(ctx context.Context, userID uint) ([]*domain.Profile, error)
 	ResetSwipes(ctx context.Context, userID uint) error
 	Unmatch(ctx context.Context, userID uint, matchID uint) error
 }
@@ -55,46 +57,28 @@ func (s *matchmakingService) ProcessSwipe(ctx context.Context, swiperID uint, re
 		return nil, fmt.Errorf("failed to record swipe: %w", err)
 	}
 
-	if req.Action == domain.ActionLike || req.Action == domain.ActionSuperlike {
-		likedBack, err := s.swipeRepo.HasLikedBack(ctx, req.TargetID, swiperID)
+	if req.Action == domain.ActionPass {
+		return &domain.SwipeResponse{IsMatch: false}, nil
+	}
+
+	hasLikedBack, err := s.swipeRepo.HasLikedBack(ctx, req.TargetID, swiperID)
+	if err != nil {
+		log.Printf("Error checking if target %d liked back %d: %v\n", req.TargetID, swiperID, err)
+	}
+
+	if hasLikedBack {
+		match, err := s.matchRepo.CreateMatch(ctx, swiperID, req.TargetID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to check like back status: %w", err)
-		}
+			log.Printf("Error creating match: %v\n", err)
+		} else {
+			swiperProfile, _ := s.profileRepo.GetByUserID(ctx, swiperID)
+			targetProfile, _ := s.profileRepo.GetByUserID(ctx, req.TargetID)
+			swiperUser, _ := s.userRepo.GetByID(ctx, swiperID)
+			targetUser, _ := s.userRepo.GetByID(ctx, req.TargetID)
 
-		if likedBack {
-			match, err := s.matchRepo.CreateMatch(ctx, swiperID, req.TargetID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create match: %w", err)
-			}
-
-			swiperUser, err := s.userRepo.GetByID(ctx, swiperID)
-			if err != nil {
-				log.Printf("Warning: failed to fetch swiper user %d for notification: %v\n", swiperID, err)
-			}
-
-			targetUser, err := s.userRepo.GetByID(ctx, req.TargetID)
-			if err != nil {
-				log.Printf("Warning: failed to fetch target user %d for notification: %v\n", req.TargetID, err)
-			}
-
-			targetProfile, err := s.profileRepo.GetByUserID(ctx, req.TargetID)
-			if err != nil {
-				log.Printf("Warning: failed to fetch target profile %d for notification: %v\n", req.TargetID, err)
-			}
-
-			if swiperUser != nil && targetUser != nil && targetProfile != nil {
-				if notifErr := s.botService.SendMatchNotification(ctx, swiperUser.TelegramID, targetProfile.Name, targetUser.Username, swiperUser.LanguageCode); notifErr != nil {
-					log.Printf("Warning: failed to send match notification to swiper %d: %v\n", swiperUser.TelegramID, notifErr)
-				}
-
-				swiperProfile, sProfErr := s.profileRepo.GetByUserID(ctx, swiperID)
-				if sProfErr != nil {
-					log.Printf("Warning: failed to fetch swiper profile %d for notification: %v\n", swiperID, sProfErr)
-				} else if swiperProfile != nil {
-					if notifErr := s.botService.SendMatchNotification(ctx, targetUser.TelegramID, swiperProfile.Name, swiperUser.Username, targetUser.LanguageCode); notifErr != nil {
-						log.Printf("Warning: failed to send match notification to target %d: %v\n", targetUser.TelegramID, notifErr)
-					}
-				}
+			if s.botService != nil && swiperUser != nil && targetUser != nil && swiperProfile != nil && targetProfile != nil {
+				go s.botService.SendMatchNotification(context.Background(), swiperUser.TelegramID, targetProfile.Name, targetUser.Username, swiperUser.LanguageCode)
+				go s.botService.SendMatchNotification(context.Background(), targetUser.TelegramID, swiperProfile.Name, swiperUser.Username, targetUser.LanguageCode)
 			}
 
 			return &domain.SwipeResponse{
@@ -102,31 +86,24 @@ func (s *matchmakingService) ProcessSwipe(ctx context.Context, swiperID uint, re
 				Match:   match,
 				Profile: targetProfile,
 			}, nil
-		} else {
-			// Single like (not mutual yet) -> Notify target user on Telegram!
-			targetUser, tErr := s.userRepo.GetByID(ctx, req.TargetID)
-			swiperProfile, sProfErr := s.profileRepo.GetByUserID(ctx, swiperID)
-			if tErr == nil && targetUser != nil && sProfErr == nil && swiperProfile != nil {
-				swiperName := swiperProfile.Name
-				if swiperName == "" {
-					swiperName = "Seseorang"
-				}
-				if notifErr := s.botService.SendSingleLikeNotification(ctx, targetUser.TelegramID, swiperID, swiperName, targetUser.LanguageCode); notifErr != nil {
-					log.Printf("Warning: failed to send single like notification to user %d: %v\n", targetUser.TelegramID, notifErr)
-				}
+		}
+	} else {
+		if s.botService != nil {
+			swiperProfile, _ := s.profileRepo.GetByUserID(ctx, swiperID)
+			targetUser, _ := s.userRepo.GetByID(ctx, req.TargetID)
+			if targetUser != nil && swiperProfile != nil {
+				go s.botService.SendSingleLikeNotification(context.Background(), targetUser.TelegramID, swiperID, swiperProfile.Name, targetUser.LanguageCode)
 			}
 		}
 	}
 
-	return &domain.SwipeResponse{
-		IsMatch: false,
-	}, nil
+	return &domain.SwipeResponse{IsMatch: false}, nil
 }
 
 func (s *matchmakingService) GetMatches(ctx context.Context, userID uint) ([]*domain.MatchDetail, error) {
 	matches, err := s.matchRepo.GetMatchesForUser(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get matches: %w", err)
+		return nil, fmt.Errorf("failed to fetch user matches: %w", err)
 	}
 
 	var details []*domain.MatchDetail
@@ -172,6 +149,38 @@ func (s *matchmakingService) GetMatches(ctx context.Context, userID uint) ([]*do
 	return details, nil
 }
 
+func (s *matchmakingService) GetLikesReceived(ctx context.Context, userID uint) ([]*domain.Profile, error) {
+	swiperIDs, err := s.swipeRepo.GetLikesReceived(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var profiles []*domain.Profile
+	for _, swiperID := range swiperIDs {
+		p, err := s.profileRepo.GetByUserID(ctx, swiperID)
+		if err == nil && p != nil {
+			profiles = append(profiles, p)
+		}
+	}
+	return profiles, nil
+}
+
+func (s *matchmakingService) GetLikesSent(ctx context.Context, userID uint) ([]*domain.Profile, error) {
+	targetIDs, err := s.swipeRepo.GetLikesSent(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var profiles []*domain.Profile
+	for _, targetID := range targetIDs {
+		p, err := s.profileRepo.GetByUserID(ctx, targetID)
+		if err == nil && p != nil {
+			profiles = append(profiles, p)
+		}
+	}
+	return profiles, nil
+}
+
 func (s *matchmakingService) ResetSwipes(ctx context.Context, userID uint) error {
 	if err := s.swipeRepo.ResetSwipes(ctx, userID); err != nil {
 		return fmt.Errorf("failed to reset swipes for user %d: %w", userID, err)
@@ -185,4 +194,3 @@ func (s *matchmakingService) Unmatch(ctx context.Context, userID uint, matchID u
 	}
 	return nil
 }
-

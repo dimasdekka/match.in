@@ -86,7 +86,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	msg, err := h.chatService.SendMessage(c.Request.Context(), user.ID, uint(matchID), req.Content, req.ImageURL)
+	msg, err := h.chatService.SendMessage(c.Request.Context(), user.ID, uint(matchID), req.Content, req.ImageURL, req.MessageType)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -117,3 +117,32 @@ func (h *ChatHandler) ClearChat(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Chat cleared successfully"})
 }
 
+func (h *ChatHandler) ReactMessage(c *gin.Context) {
+	user, exists := middleware.GetCurrentUser(c)
+	if !exists || user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	messageIDParam := c.Param("message_id")
+	messageID, err := strconv.ParseUint(messageIDParam, 10, 64)
+	if err != nil || messageID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message_id"})
+		return
+	}
+
+	var req struct {
+		Reaction string `json:"reaction" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reaction payload"})
+		return
+	}
+
+	if err := h.chatService.ReactMessage(c.Request.Context(), user.ID, uint(messageID), req.Reaction); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to react: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Reaction updated"})
+}

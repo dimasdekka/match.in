@@ -16,6 +16,7 @@ type ChatRepository interface {
 	GetUnreadCount(ctx context.Context, matchID uint, receiverID uint) (int64, error)
 	MarkAsRead(ctx context.Context, matchID uint, receiverID uint) error
 	DeleteMessagesByMatchID(ctx context.Context, matchID uint) error
+	ReactMessage(ctx context.Context, messageID uint, reaction string) error
 }
 
 type chatRepository struct {
@@ -88,6 +89,13 @@ func (r *chatRepository) MarkAsRead(ctx context.Context, matchID uint, receiverI
 func (r *chatRepository) DeleteMessagesByMatchID(ctx context.Context, matchID uint) error {
 	if err := r.db.WithContext(ctx).Where("match_id = ?", matchID).Delete(&domain.ChatMessage{}).Error; err != nil {
 		return fmt.Errorf("failed to delete messages for match %d: %w", matchID, err)
+	}
+	return nil
+}
+
+func (r *chatRepository) ReactMessage(ctx context.Context, messageID uint, reaction string) error {
+	if err := r.db.WithContext(ctx).Model(&domain.ChatMessage{}).Where("id = ?", messageID).Update("reaction", reaction).Error; err != nil {
+		return fmt.Errorf("failed to update message reaction: %w", err)
 	}
 	return nil
 }

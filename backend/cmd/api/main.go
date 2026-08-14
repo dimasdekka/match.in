@@ -127,12 +127,15 @@ func main() {
 
 		api.POST("/swipe", matchHandler.Swipe)
 		api.GET("/matches", matchHandler.GetMatches)
+		api.GET("/likes/received", matchHandler.GetLikesReceived)
+		api.GET("/likes/sent", matchHandler.GetLikesSent)
 		api.DELETE("/matches/:match_id", matchHandler.Unmatch)
 
 		api.GET("/chats", chatHandler.GetConversations)
 		api.GET("/chats/:match_id/messages", chatHandler.GetMessages)
 		api.POST("/chats/:match_id/messages", chatHandler.SendMessage)
 		api.DELETE("/chats/:match_id/messages", chatHandler.ClearChat)
+		api.POST("/chats/messages/:message_id/react", chatHandler.ReactMessage)
 
 		api.POST("/reports", reportHandler.CreateReport)
 	}
