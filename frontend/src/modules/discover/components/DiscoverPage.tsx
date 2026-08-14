@@ -11,17 +11,32 @@ import { ConversationPage, MessagesPage } from '@/modules/messages';
 import type { DiscoverProfile } from '../@types';
 import { ProfilePage, SettingsPage } from '@/modules/profile';
 import { DateNightPage } from '@/modules/date-night';
+import { OnboardingWizard } from '@/modules/onboarding';
+import type { ProfileFormData } from '@/modules/onboarding/@types';
+import { api } from '@/utils/api';
+import { readJson } from '@/utils/storage';
 import '@/modules/app-shell/styles.css';
 import '@/modules/app-shell/pages.css';
 import '../styles.css';
 
-type OverlayPage = 'profile' | 'settings' | 'date-night' | null;
+type OverlayPage = 'profile' | 'edit-profile' | 'settings' | 'date-night' | null;
 
 export function DiscoverPage() {
   const [activeNav, setActiveNav] = useState<DiscoverNavId>('discover');
   const [overlay, setOverlay] = useState<OverlayPage>(null);
   const [conversation, setConversation] = useState<DiscoverProfile | null>(null);
   const deck = useDiscoverDeck();
+  const storedProfile = readJson<ProfileFormData | null>('matchin:onboarding-profile', null);
+
+  const saveEditedProfile = async (profile: ProfileFormData) => {
+    try {
+      await api.saveProfile(profile);
+    } catch (error) {
+      console.error('Failed to save edited profile to backend', error);
+    }
+    window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(profile));
+    setOverlay('profile');
+  };
 
   return (
     <main className="discover-shell">
@@ -39,6 +54,16 @@ export function DiscoverPage() {
               key="profile"
               onBack={() => setOverlay(null)}
               onSettings={() => setOverlay('settings')}
+              onEdit={() => setOverlay('edit-profile')}
+            />
+          )}
+          {!conversation && overlay === 'edit-profile' && (
+            <OnboardingWizard
+              key="edit-profile"
+              mode="edit"
+              initialData={storedProfile ?? undefined}
+              onCancel={() => setOverlay('profile')}
+              onComplete={saveEditedProfile}
             />
           )}
           {!conversation && overlay === 'settings' && (

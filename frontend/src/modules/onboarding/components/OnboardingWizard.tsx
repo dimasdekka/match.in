@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { compressImageFile } from '@/utils/imageCompressor';
-import type { ProfileFormData } from '../@types';
+import type { OnboardingDraft, ProfileFormData } from '../@types';
 import { INTERESTS, MAX_PHOTOS, TARGETS } from '../constants/options';
 import { OnboardingProvider, useOnboarding } from '../context/OnboardingContext';
 import { useLocation } from '../hooks/useLocation';
@@ -20,7 +20,15 @@ import { BirthDatePickerSheet } from './BirthDatePickerSheet';
 import { BrandedRangeSlider, BrandedSlider } from './BrandedSlider';
 import { RelationshipGoalSheet, relationshipGoalLabel } from './RelationshipGoalSheet';
 
-function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) {
+function Shell({
+  onComplete,
+  onCancel,
+  editing = false,
+}: {
+  onComplete: (data: ProfileFormData) => void | Promise<void>;
+  onCancel?: () => void;
+  editing?: boolean;
+}) {
   const { step, setStep, draft, patch } = useOnboarding();
   const [busy, setBusy] = useState(false);
   const [attempted, setAttempted] = useState(false);
@@ -65,14 +73,17 @@ function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) 
     setAttempted(false);
     setStep(Math.min(4, step + 1));
   };
-  const submit = () => {
+  const submit = async () => {
     if (!valid || busy) {
       setAttempted(true);
       return;
     }
     setBusy(true);
-    onComplete({ ...draft, age: ageFromBirthDate(draft.birth_date) });
-    setTimeout(() => setBusy(false), 900);
+    try {
+      await onComplete({ ...draft, age: ageFromBirthDate(draft.birth_date) });
+    } finally {
+      setBusy(false);
+    }
   };
   const upload = async (files: FileList | null) => {
     if (!files) return;
@@ -125,7 +136,10 @@ function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) 
   return (
     <main className="match-shell">
       <div className={`match-phone onboarding onboarding-step-${step}`}>
-        <OnboardingHeader step={step} onBack={step > 1 ? () => setStep(step - 1) : undefined} />
+        <OnboardingHeader
+          step={step}
+          onBack={step > 1 ? () => setStep(step - 1) : onCancel}
+        />
         <AnimatePresence mode="wait">
           <motion.section
             key={step}
@@ -138,7 +152,7 @@ function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) 
             {step === 1 && (
               <>
                 <div className="step-title">
-                  <h1>Create your profile</h1>
+                  <h1>{editing ? 'Edit your profile' : 'Create your profile'}</h1>
                   <p>Tell us who you are so we can find your best matches.</p>
                 </div>
                 <button
@@ -446,7 +460,7 @@ function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) 
             {busy ? (
               <Icon icon="svg-spinners:ring-resize" />
             ) : step === 4 ? (
-              'Complete profile'
+              editing ? 'Save changes' : 'Complete profile'
             ) : (
               'Continue'
             )}
@@ -458,14 +472,20 @@ function Shell({ onComplete }: { onComplete: (data: ProfileFormData) => void }) 
 }
 export function OnboardingWizard({
   initialName,
+  initialData,
   onComplete,
+  onCancel,
+  mode = 'create',
 }: {
   initialName?: string;
-  onComplete: (data: ProfileFormData) => void;
+  initialData?: Partial<OnboardingDraft>;
+  onComplete: (data: ProfileFormData) => void | Promise<void>;
+  onCancel?: () => void;
+  mode?: 'create' | 'edit';
 }) {
   return (
-    <OnboardingProvider initialName={initialName}>
-      <Shell onComplete={onComplete} />
+    <OnboardingProvider initialName={initialName} initialData={initialData}>
+      <Shell onComplete={onComplete} onCancel={onCancel} editing={mode === 'edit'} />
     </OnboardingProvider>
   );
 }

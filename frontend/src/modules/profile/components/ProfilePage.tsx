@@ -7,9 +7,11 @@ import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
 export function ProfilePage({
   onBack,
   onSettings,
+  onEdit,
 }: {
   onBack: () => void;
   onSettings: () => void;
+  onEdit: () => void;
 }) {
   const profile = useCurrentProfile();
   return (
@@ -42,7 +44,7 @@ export function ProfilePage({
       </div>
       {profile.bio && <p className="profile-bio">{profile.bio}</p>}
       <div className="profile-actions">
-        <button type="button" onClick={() => alert('Fitur edit profil segera hadir!')}>
+        <button type="button" onClick={onEdit}>
           <span><Icon icon="solar:user-bold" /></span>
           <b>Edit Profile</b>
         </button>

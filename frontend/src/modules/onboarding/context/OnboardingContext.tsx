@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { Gender } from '@/@types';
-import type { ProfileFormData } from '../@types';
+import type { OnboardingDraft, ProfileFormData } from '../@types';
 export type Draft = ProfileFormData & {
   birth_date: string;
   relationship_goal: 'long_term' | 'casual' | 'friendship';
@@ -18,13 +18,15 @@ type Value = {
 const Context = createContext<Value | null>(null);
 export function OnboardingProvider({
   initialName = '',
+  initialData,
   children,
 }: {
   initialName?: string;
+  initialData?: Partial<OnboardingDraft>;
   children: ReactNode;
 }) {
   const [step, setStep] = useState(1);
-  const [draft, setDraft] = useState<Draft>({
+  const [draft, setDraft] = useState<Draft>(() => ({
     name: initialName,
     age: 18,
     gender: 'male' as Gender,
@@ -42,7 +44,8 @@ export function OnboardingProvider({
     relationship_goal: 'long_term',
     dating_intention: 'serious',
     max_distance_km: 25,
-  });
+    ...initialData,
+  }));
   return (
     <Context.Provider
       value={{ step, setStep, draft, patch: (v) => setDraft((d) => ({ ...d, ...v })) }}
