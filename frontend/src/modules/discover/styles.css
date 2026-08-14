@@ -183,28 +183,49 @@ html.conversation-open .discover-shell {
 
 .swipe-stamp {
   position: absolute;
-  z-index: 4;
+  z-index: 10;
   top: 24px;
-  padding: 6px 12px;
-  border: 3px solid;
-  border-radius: 10px;
-  font-size: 22px;
-  font-weight: 950;
-  letter-spacing: 2px;
-  transform: rotate(-10deg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: none;
+  contain: layout paint;
+  will-change: transform, opacity;
 }
 
-.like-stamp {
+.swipe-stamp .stamp-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.modern-like-stamp {
   left: 20px;
-  color: #48e697;
-  border-color: #48e697;
+  transform: rotate(-12deg);
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.35);
 }
 
-.pass-stamp {
+.modern-pass-stamp {
   right: 20px;
-  color: #ff647f;
-  border-color: #ff647f;
-  transform: rotate(10deg);
+  transform: rotate(12deg);
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.95), rgba(225, 29, 72, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 0 24px rgba(244, 63, 94, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.35);
 }
 
 .profile-card-clip > img {
