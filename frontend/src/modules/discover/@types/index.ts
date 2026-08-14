@@ -16,6 +16,10 @@ export interface DiscoverProfile {
 
 export interface SwipeResponse {
   is_match: boolean;
-  match?: unknown;
+  match?: {
+    id: number;
+    user1_id?: number;
+    user2_id?: number;
+  };
   profile?: import('@/@types').Profile;
 }

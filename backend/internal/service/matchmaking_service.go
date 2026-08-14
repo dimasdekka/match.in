@@ -154,15 +154,10 @@ func (s *matchmakingService) GetLikesReceived(ctx context.Context, userID uint) 
 	if err != nil {
 		return nil, err
 	}
-
-	var profiles []*domain.Profile
-	for _, swiperID := range swiperIDs {
-		p, err := s.profileRepo.GetByUserID(ctx, swiperID)
-		if err == nil && p != nil {
-			profiles = append(profiles, p)
-		}
+	if len(swiperIDs) == 0 {
+		return []*domain.Profile{}, nil
 	}
-	return profiles, nil
+	return s.profileRepo.GetByUserIDs(ctx, swiperIDs)
 }
 
 func (s *matchmakingService) GetLikesSent(ctx context.Context, userID uint) ([]*domain.Profile, error) {
@@ -170,15 +165,10 @@ func (s *matchmakingService) GetLikesSent(ctx context.Context, userID uint) ([]*
 	if err != nil {
 		return nil, err
 	}
-
-	var profiles []*domain.Profile
-	for _, targetID := range targetIDs {
-		p, err := s.profileRepo.GetByUserID(ctx, targetID)
-		if err == nil && p != nil {
-			profiles = append(profiles, p)
-		}
+	if len(targetIDs) == 0 {
+		return []*domain.Profile{}, nil
 	}
-	return profiles, nil
+	return s.profileRepo.GetByUserIDs(ctx, targetIDs)
 }
 
 func (s *matchmakingService) ResetSwipes(ctx context.Context, userID uint) error {

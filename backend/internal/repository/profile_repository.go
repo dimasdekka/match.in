@@ -10,6 +10,7 @@ import (
 
 type ProfileRepository interface {
 	GetByUserID(ctx context.Context, userID uint) (*domain.Profile, error)
+	GetByUserIDs(ctx context.Context, userIDs []uint) ([]*domain.Profile, error)
 	Upsert(ctx context.Context, profile *domain.Profile) error
 	GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int, feedType string) ([]*domain.Profile, error)
 	DeleteByUserID(ctx context.Context, userID uint) error
@@ -33,6 +34,18 @@ func (r *profileRepository) GetByUserID(ctx context.Context, userID uint) (*doma
 		return nil, fmt.Errorf("failed to get profile for user %d: %w", userID, err)
 	}
 	return &profile, nil
+}
+
+func (r *profileRepository) GetByUserIDs(ctx context.Context, userIDs []uint) ([]*domain.Profile, error) {
+	if len(userIDs) == 0 {
+		return []*domain.Profile{}, nil
+	}
+	var profiles []*domain.Profile
+	err := r.db.WithContext(ctx).Preload("User").Where("user_id IN (?)", userIDs).Find(&profiles).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get profiles for user ids: %w", err)
+	}
+	return profiles, nil
 }
 
 func (r *profileRepository) Upsert(ctx context.Context, profile *domain.Profile) error {

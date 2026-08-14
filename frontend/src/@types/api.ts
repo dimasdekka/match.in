@@ -70,3 +70,13 @@ export interface Conversation {
   unread_count: number;
   matched_at: string;
 }
+
+export interface SwipeResponse {
+  is_match: boolean;
+  match?: {
+    id: number;
+    user1_id: number;
+    user2_id: number;
+  };
+  profile?: Profile;
+}

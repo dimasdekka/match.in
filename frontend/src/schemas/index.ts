@@ -95,9 +95,15 @@ export const swipeRequestSchema = z.object({
   action: swipeActionSchema,
 });
 
+export const matchModelSchema = z.object({
+  id: z.number(),
+  user1_id: z.number().optional(),
+  user2_id: z.number().optional(),
+});
+
 export const swipeResponseSchema = z.object({
   is_match: z.boolean(),
-  match: matchDetailSchema.optional(),
+  match: matchModelSchema.optional(),
   profile: profileSchema.optional(),
 });
 

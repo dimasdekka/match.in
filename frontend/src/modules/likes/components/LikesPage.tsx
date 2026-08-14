@@ -49,28 +49,58 @@ export function LikesPage({
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
 
-    Promise.allSettled([
-      api.getLikesReceived(),
-      api.getLikesSent(),
-    ]).then(([recRes, sentRes]) => {
-      if (!mounted) return;
-      if (recRes.status === 'fulfilled' && recRes.value.profiles) {
-        setReceivedLikes(recRes.value.profiles.map(mapProfile));
+    const loadLikes = async () => {
+      try {
+        const [recRes, sentRes] = await Promise.all([
+          api.getLikesReceived(),
+          api.getLikesSent(),
+        ]);
+        if (!mounted) return;
+        if (recRes?.profiles) {
+          setReceivedLikes(recRes.profiles.map(mapProfile));
+        }
+        if (sentRes?.profiles) {
+          setSentLikes(sentRes.profiles.map(mapProfile));
+        }
+      } catch (err) {
+        console.error('Failed to load likes', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      if (sentRes.status === 'fulfilled' && sentRes.value.profiles) {
-        setSentLikes(sentRes.value.profiles.map(mapProfile));
-      }
-      setLoading(false);
-    });
+    };
 
+    void loadLikes();
     return () => {
       mounted = false;
     };
   }, []);
 
   const currentList = tab === 'received' ? receivedLikes : sentLikes;
+
+  const handleLikeBack = async (target: DiscoverProfile) => {
+    try {
+      const res = await api.swipe(target.id, 'like');
+      if (res.is_match && res.match?.id) {
+        alert(`🎉 It's a match! Anda dan ${target.name} saling menyukai.`);
+        setSelectedProfile(null);
+        if (onOpenConversation) {
+          onOpenConversation({
+            ...target,
+            id: res.match.id, // Match ID for chat
+          });
+        }
+      } else {
+        alert(`Anda telah menyukai balik ${target.name}!`);
+        setSelectedProfile(null);
+      }
+      // Remove from received and add to sent
+      setReceivedLikes((prev) => prev.filter((p) => p.id !== target.id));
+      setSentLikes((prev) => (prev.some((p) => p.id === target.id) ? prev : [...prev, target]));
+    } catch {
+      alert('Gagal mengirim like balik. Coba lagi nanti.');
+    }
+  };
 
   return (
     <section className="app-page likes-page">
@@ -111,8 +141,8 @@ export function LikesPage({
         }
       />
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64 text-neutral-400">
+      {loading && currentList.length === 0 ? (
+        <div className="flex items-center justify-center h-48 text-neutral-400">
           <Icon icon="svg-spinners:ring-resize" className="w-8 h-8 text-pink-500 animate-spin" />
         </div>
       ) : currentList.length > 0 ? (
@@ -121,7 +151,7 @@ export function LikesPage({
             <motion.article
               key={`${tab}-${profile.id}`}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               role="button"
               tabIndex={0}
@@ -192,30 +222,19 @@ export function LikesPage({
               <p>{selectedProfile.bio || 'Katakan halo dan saling mengenal lebih dekat.'}</p>
             </div>
             <div className="liked-profile-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  if (onOpenConversation) {
-                    onOpenConversation(selectedProfile);
-                  }
-                }}
-              >
-                Kirim Pesan
-              </button>
-              <button
-                type="button"
-                aria-label="Like back"
-                onClick={async () => {
-                  try {
-                    await api.swipe(selectedProfile.id, 'like');
-                    alert(`Anda telah menyukai ${selectedProfile.name}!`);
-                  } catch {
-                    alert('Gagal mengirim like');
-                  }
-                }}
-              >
-                <Icon icon="solar:heart-bold" />
-              </button>
+              {tab === 'received' ? (
+                <button
+                  type="button"
+                  className="w-full py-3 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 text-white font-extrabold text-sm shadow-lg shadow-pink-600/30 flex items-center justify-center gap-2"
+                  onClick={() => handleLikeBack(selectedProfile)}
+                >
+                  <Icon icon="solar:heart-bold" className="text-lg" /> Suka Balik & Cocokkan
+                </button>
+              ) : (
+                <div className="w-full py-2.5 rounded-full bg-neutral-800 text-neutral-400 font-bold text-xs text-center border border-white/5">
+                  ⏳ Menunggu Respon dari {selectedProfile.name}
+                </div>
+              )}
             </div>
             {selectedProfile.interests && selectedProfile.interests.length > 0 && (
               <div className="liked-profile-highlights">
