@@ -10,29 +10,29 @@ interface DiscoverNavigationProps {
 }
 
 export function DiscoverNavigation({ active, onChange }: DiscoverNavigationProps) {
-  const activeIndex = Math.max(0, DISCOVER_NAV.findIndex((item) => item.id === active));
-
   return (
     <nav className="discover-nav" aria-label="Main navigation">
-      <motion.span
-        className="discover-nav-indicator"
-        aria-hidden="true"
-        initial={false}
-        animate={{ x: `${activeIndex * 100}%` }}
-        transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-      />
-      {DISCOVER_NAV.map((item) => (
-        <motion.button
-          type="button"
-          aria-label={item.id}
-          className={item.id === active ? 'active' : ''}
-          onClick={() => onChange(item.id)}
-          whileTap={{ scale: 0.96 }}
-          key={item.id}
-        >
-          <Icon className="discover-nav-icon" icon={item.icon} />
-        </motion.button>
-      ))}
+      {DISCOVER_NAV.map((item) => {
+        const isActive = item.id === active;
+        return (
+          <button
+            type="button"
+            aria-label={item.id}
+            className={`discover-nav-item ${isActive ? 'active' : ''}`}
+            onClick={() => onChange(item.id)}
+            key={item.id}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="activeDockIndicator"
+                className="discover-nav-indicator"
+                transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+              />
+            )}
+            <Icon className="discover-nav-icon" icon={item.icon} />
+          </button>
+        );
+      })}
     </nav>
   );
 }

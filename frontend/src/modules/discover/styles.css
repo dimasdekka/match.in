@@ -387,68 +387,67 @@ html.conversation-open .discover-shell {
   left: 50%;
   bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
   transform: translateX(-50%);
-  width: min(92vw, 270px);
+  width: min(92vw, 276px);
   height: 52px;
   align-self: center;
   margin-top: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   align-items: center;
+  justify-content: space-around;
   padding: 4px 6px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-pill);
   background: linear-gradient(145deg, rgba(35, 35, 38, 0.96), rgba(19, 19, 21, 0.96));
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.08),
-    0 12px 35px rgba(0, 0, 0, 0.32);
+    inset 0 1px rgba(255, 255, 255, 0.09),
+    0 12px 35px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   isolation: isolate;
   contain: layout paint;
 }
 
-.discover-nav button {
+.discover-nav button,
+.discover-nav .discover-nav-item {
   position: relative;
-  z-index: 1;
-  width: 100%;
+  flex: 1;
   height: 42px;
-  justify-self: center;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-pill);
   color: #89898b;
   transition: color 140ms ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
-.discover-nav-icon {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  width: 19px;
-  height: 19px;
-  transform: translate(-50%, -50%);
-}
-
-.discover-nav button.active {
-  color: #fff;
+.discover-nav button.active,
+.discover-nav .discover-nav-item.active {
+  color: #ffffff;
 }
 
 .discover-nav-indicator {
   position: absolute;
-  z-index: 0;
-  top: 4px;
-  left: 6px;
-  width: calc((100% - 12px) / 4);
-  height: 42px;
+  inset: 0;
   border-radius: var(--radius-pill);
-  background: linear-gradient(145deg, #747674, #555856);
+  background: linear-gradient(145deg, #6c6e6c, #484b49);
   box-shadow:
-    inset 0 2px 2px rgba(255, 255, 255, 0.2),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.24),
-    0 4px 10px rgba(0, 0, 0, 0.26);
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.22),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.28),
+    0 3px 8px rgba(0, 0, 0, 0.3);
+  z-index: 0;
   pointer-events: none;
-  will-change: transform;
-  backface-visibility: hidden;
   contain: layout paint;
+}
+
+.discover-nav-icon {
+  position: relative;
+  z-index: 2;
+  width: 21px;
+  height: 21px;
+  display: block;
 }
 
 .match-feedback {
