@@ -22,6 +22,7 @@ type BotService interface {
 	SendMessage(ctx context.Context, payload *TelegramSendMessagePayload) error
 	StartPolling(ctx context.Context)
 	SetMatchmakingService(matchmakingService MatchmakingService)
+	SetAccountService(accountService AccountService)
 	RegisterBotCommands(ctx context.Context) error
 }
 
@@ -32,6 +33,7 @@ type botService struct {
 	userService        UserService
 	profileService     ProfileService
 	matchmakingService MatchmakingService
+	accountService     AccountService
 }
 
 func NewBotService(
@@ -51,6 +53,10 @@ func NewBotService(
 
 func (s *botService) SetMatchmakingService(matchmakingService MatchmakingService) {
 	s.matchmakingService = matchmakingService
+}
+
+func (s *botService) SetAccountService(accountService AccountService) {
+	s.accountService = accountService
 }
 
 type TelegramSendMessagePayload struct {
@@ -764,21 +770,45 @@ func (s *botService) handleMatchesCommand(ctx context.Context, chatID int64, use
 }
 
 func (s *botService) handleResetCommand(ctx context.Context, chatID int64, user *domain.User) error {
-	dict := i18n.GetDict(user.LanguageCode)
-
-	if s.matchmakingService == nil {
-		return fmt.Errorf("matchmaking service is not configured")
+	if s.accountService != nil {
+		if err := s.accountService.DeleteAccount(ctx, user.ID); err != nil {
+			return fmt.Errorf("failed to reset account for user %d: %w", user.ID, err)
+		}
+	} else if s.matchmakingService != nil {
+		_ = s.matchmakingService.ResetSwipes(ctx, user.ID)
 	}
 
-	if err := s.matchmakingService.ResetSwipes(ctx, user.ID); err != nil {
-		return fmt.Errorf("failed to reset swipe history for user %d: %w", user.ID, err)
+	appURL := s.webAppURL
+	if appURL == "" {
+		appURL = "https://t.me/matchin_bot/app"
+	}
+
+	text := "🔄 <b>Akun Berhasil Direset Total!</b>\n\n" +
+		"Seluruh profil, foto, riwayat swipe/like, daftar match, dan obrolan Anda telah dihapus secara permanen.\n\n" +
+		"Ketik <b>/start</b> atau klik tombol di bawah untuk mendaftar ulang dan mulai baru dari awal! ✨"
+
+	if user.LanguageCode == "en" {
+		text = "🔄 <b>Account Successfully Reset!</b>\n\n" +
+			"All your profile data, photos, swipe/like history, matches, and chat conversations have been permanently wiped.\n\n" +
+			"Type <b>/start</b> or tap the button below to register fresh and create a new profile! ✨"
+	}
+
+	replyMarkup := map[string]interface{}{
+		"inline_keyboard": [][]map[string]interface{}{
+			{
+				{
+					"text":    "🚀 Buka Match.in & Mulai Baru",
+					"web_app": map[string]string{"url": appURL},
+				},
+			},
+		},
 	}
 
 	return s.SendMessage(ctx, &TelegramSendMessagePayload{
 		ChatID:      chatID,
-		Text:        dict.BotResetSuccess,
+		Text:        text,
 		ParseMode:   "HTML",
-		ReplyMarkup: s.getPersistentKeyboard(),
+		ReplyMarkup: replyMarkup,
 	})
 }
 

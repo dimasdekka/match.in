@@ -64,9 +64,10 @@ func main() {
 	botService := service.NewBotService(botToken, webAppURL, userService, profileService)
 	matchmakingService := service.NewMatchmakingService(swipeRepo, matchRepo, profileRepo, userRepo, botService)
 	reportService := service.NewReportService(reportRepo)
-	accountService := service.NewAccountService(userRepo, profileRepo)
+	accountService := service.NewAccountService(userRepo, profileRepo, swipeRepo, matchRepo, chatRepo)
 
 	botService.SetMatchmakingService(matchmakingService)
+	botService.SetAccountService(accountService)
 
 	authHandler := handler.NewAuthHandler(userService)
 	profileHandler := handler.NewProfileHandler(profileService)

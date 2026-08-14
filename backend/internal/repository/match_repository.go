@@ -12,6 +12,7 @@ type SwipeRepository interface {
 	RecordSwipe(ctx context.Context, swipe *domain.Swipe) error
 	HasLikedBack(ctx context.Context, targetID uint, swiperID uint) (bool, error)
 	ResetSwipes(ctx context.Context, swiperID uint) error
+	DeleteAllSwipesForUser(ctx context.Context, userID uint) error
 	GetLikesReceived(ctx context.Context, userID uint) ([]uint, error)
 	GetLikesSent(ctx context.Context, userID uint) ([]uint, error)
 }
@@ -55,6 +56,14 @@ func (r *SwipeRepositoryImpl) ResetSwipes(ctx context.Context, swiperID uint) er
 	return nil
 }
 
+func (r *SwipeRepositoryImpl) DeleteAllSwipesForUser(ctx context.Context, userID uint) error {
+	err := r.db.WithContext(ctx).Where("swiper_id = ? OR target_id = ?", userID, userID).Delete(&domain.Swipe{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete all swipes for user %d: %w", userID, err)
+	}
+	return nil
+}
+
 func (r *SwipeRepositoryImpl) GetLikesReceived(ctx context.Context, userID uint) ([]uint, error) {
 	var swiperIDs []uint
 	err := r.db.WithContext(ctx).Model(&domain.Swipe{}).
@@ -84,6 +93,7 @@ type MatchRepository interface {
 	GetMatchesForUser(ctx context.Context, userID uint) ([]*domain.Match, error)
 	GetByID(ctx context.Context, matchID uint) (*domain.Match, error)
 	UnmatchByID(ctx context.Context, matchID uint, userID uint) error
+	DeleteAllMatchesForUser(ctx context.Context, userID uint) error
 }
 
 func NewMatchRepository(db *gorm.DB) MatchRepository {
@@ -139,6 +149,13 @@ func (r *matchRepository) UnmatchByID(ctx context.Context, matchID uint, userID 
 	}
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("match %d not found or not authorized", matchID)
+	}
+	return nil
+}
+
+func (r *matchRepository) DeleteAllMatchesForUser(ctx context.Context, userID uint) error {
+	if err := r.db.WithContext(ctx).Where("user1_id = ? OR user2_id = ?", userID, userID).Delete(&domain.Match{}).Error; err != nil {
+		return fmt.Errorf("failed to delete matches for user %d: %w", userID, err)
 	}
 	return nil
 }
