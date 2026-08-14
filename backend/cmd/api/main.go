@@ -13,6 +13,7 @@ import (
 	"matchin-backend/internal/middleware"
 	"matchin-backend/internal/repository"
 	"matchin-backend/internal/service"
+	wsPkg "matchin-backend/internal/websocket"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -69,6 +70,9 @@ func main() {
 	botService.SetMatchmakingService(matchmakingService)
 	botService.SetAccountService(accountService)
 
+	wsHub := wsPkg.NewHub()
+	go wsHub.Run(context.Background())
+
 	authHandler := handler.NewAuthHandler(userService)
 	profileHandler := handler.NewProfileHandler(profileService)
 	matchHandler := handler.NewMatchHandler(matchmakingService)
@@ -76,6 +80,7 @@ func main() {
 	botHandler := handler.NewBotHandler(botService)
 	reportHandler := handler.NewReportHandler(reportService)
 	accountHandler := handler.NewAccountHandler(accountService)
+	wsHandler := handler.NewWebSocketHandler(wsHub, authService, chatService, matchRepo, userRepo)
 
 	if os.Getenv("ENABLE_BOT_POLLING") == "true" {
 		go botService.StartPolling(context.Background())
@@ -111,6 +116,10 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "app": "Match.in / Ketemu.in Backend"})
 	})
+
+	// Realtime WebSocket Chat endpoints
+	r.GET("/ws/chat", wsHandler.HandleWS)
+	r.GET("/api/ws/chat", wsHandler.HandleWS)
 
 	// Public Telegram Bot Webhook endpoint (POST /api/bot/webhook)
 	r.POST("/api/bot/webhook", botHandler.HandleWebhook)

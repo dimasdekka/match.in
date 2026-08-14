@@ -90,7 +90,12 @@ export function ConversationPage({ profile, onBack }: Props) {
       <header className="chat-header">
         <button type="button" onClick={onBack} aria-label="Back to messages"><Icon icon="solar:alt-arrow-left-linear" /></button>
         <button type="button" className="chat-profile-avatar" onClick={() => setProfileOpen(true)} aria-label={`View ${profile.name} profile`}><img src={profile.image} alt="" /></button>
-        <button type="button" className="chat-profile-copy" onClick={() => setProfileOpen(true)}><strong>{profile.name}</strong><small>Online</small></button>
+        <button type="button" className="chat-profile-copy" onClick={() => setProfileOpen(true)}>
+          <strong>{profile.name}</strong>
+          <small className={chat.isTyping ? 'text-pink-400 font-bold animate-pulse' : ''}>
+            {chat.isTyping ? 'Sedang mengetik...' : 'Online'}
+          </small>
+        </button>
         <button type="button" aria-label="Conversation menu" onClick={() => setMenuOpen(true)}><Icon icon="solar:menu-dots-bold" /></button>
       </header>
       <div className="chat-messages" ref={messagesRef}>
@@ -101,7 +106,15 @@ export function ConversationPage({ profile, onBack }: Props) {
       <form className="chat-composer" onSubmit={(event) => { event.preventDefault(); send(); }}>
         <div className="chat-input-shell">
           <button type="button" onClick={() => setPicker(picker === 'sticker' ? null : 'sticker')} aria-label="Emoji and stickers"><Icon icon="solar:emoji-funny-square-linear" /></button>
-          <input value={draft} onFocus={() => setPicker(null)} onChange={(event) => setDraft(event.target.value)} placeholder="Send a message..." />
+          <input
+            value={draft}
+            onFocus={() => setPicker(null)}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              chat.sendTyping();
+            }}
+            placeholder="Send a message..."
+          />
           <button type="button" onClick={() => imageInput.current?.click()} aria-label="Attach image"><Icon icon="solar:paperclip-2-linear" /></button>
           <button type="button" onClick={() => setPicker(picker === 'gif' ? null : 'gif')} aria-label="GIF"><b>GIF</b></button>
         </div>
