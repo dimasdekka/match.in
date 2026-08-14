@@ -165,11 +165,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
-<<<<<<< HEAD
-  font-size: 11px;
-=======
-  font-size: 13px;
->>>>>>> a857cd6 (Match capsule height (44px) between Menyukai/Disukai and Terdekat selector, and add vibrant pink shadow glow to active dock)
+  font-size: 12px;
   font-weight: 800;
   color: #aaa7ad;
   transition: all 160ms ease;
