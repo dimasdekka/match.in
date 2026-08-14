@@ -121,14 +121,6 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
           ))}
         </div>
       )}
-      <motion.button
-        className="compose-button"
-        type="button"
-        onClick={onDiscover}
-        whileTap={{ scale: 0.9 }}
-      >
-        <Icon icon="solar:pen-new-round-bold" />
-      </motion.button>
     </section>
   );
 }
