@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"matchin-backend/internal/domain"
 	"gorm.io/gorm"
@@ -77,38 +78,33 @@ func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserI
 		query = query.Where("user_id NOT IN ?", swipedTargetIDs)
 	}
 
-	if currentProfile.TargetGender != domain.GenderAll {
-		query = query.Where("gender = ?", currentProfile.TargetGender)
+	// 1. Strict Gender Filter
+	if currentProfile.TargetGender != domain.GenderAll && currentProfile.TargetGender != "" {
+		query = query.Where("LOWER(TRIM(gender)) = LOWER(TRIM(?))", string(currentProfile.TargetGender))
 	}
 
+	// 2. Strict Age Range Filter
 	if currentProfile.MinAgePref > 0 && currentProfile.MaxAgePref > 0 {
 		query = query.Where("age >= ? AND age <= ?", currentProfile.MinAgePref, currentProfile.MaxAgePref)
 	}
 
-	// Apply Feed-specific filters
-	switch feedType {
-	case "nearby":
-		if currentProfile.City != "" {
-			query = query.Where("LOWER(city) = LOWER(?)", currentProfile.City)
+	// 3. Strict Location Filter based on TargetLocationMode & Feed
+	if feedType == "nearby" || currentProfile.TargetLocationMode == domain.FilterCity {
+		if strings.TrimSpace(currentProfile.City) != "" {
+			query = query.Where("LOWER(TRIM(city)) = LOWER(TRIM(?))", strings.TrimSpace(currentProfile.City))
 		}
-	case "serious":
-		query = query.Where("relationship_goal IN ('long_term', 'marriage') OR dating_intention IN ('serious', 'marriage', 'long_term')")
-	default:
-		// Standard location filter for general feeds
-		switch currentProfile.TargetLocationMode {
-		case domain.FilterCity:
-			if currentProfile.City != "" {
-				query = query.Where("LOWER(city) = LOWER(?) AND LOWER(country) = LOWER(?)", currentProfile.City, currentProfile.Country)
-			}
-		case domain.FilterCountry:
-			if currentProfile.Country != "" {
-				query = query.Where("LOWER(country) = LOWER(?)", currentProfile.Country)
-			}
-		case domain.FilterGlobal:
+	} else if currentProfile.TargetLocationMode == domain.FilterCountry {
+		if strings.TrimSpace(currentProfile.Country) != "" {
+			query = query.Where("LOWER(TRIM(country)) = LOWER(TRIM(?))", strings.TrimSpace(currentProfile.Country))
 		}
 	}
 
-	// Order by feed type
+	// 4. Feed-specific filters
+	if feedType == "serious" {
+		query = query.Where("relationship_goal IN ('long_term', 'marriage') OR dating_intention IN ('serious', 'marriage', 'long_term')")
+	}
+
+	// 5. Order by feed type
 	var orderBy string
 	switch feedType {
 	case "popular":
@@ -125,20 +121,6 @@ func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserI
 	err := query.Order(orderBy).Limit(limit).Find(&profiles).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to query profile recommendations: %w", err)
-	}
-
-	// If no results for restricted location/filters, fallback to general profiles
-	if len(profiles) == 0 {
-		fallbackQuery := r.db.WithContext(ctx).Preload("User").Where("user_id != ?", currentUserID)
-		if len(swipedTargetIDs) > 0 {
-			fallbackQuery = fallbackQuery.Where("user_id NOT IN ?", swipedTargetIDs)
-		}
-		if currentProfile.TargetGender != domain.GenderAll {
-			fallbackQuery = fallbackQuery.Where("gender = ?", currentProfile.TargetGender)
-		}
-		if fallbackErr := fallbackQuery.Order("is_boosted DESC, updated_at DESC").Limit(limit).Find(&profiles).Error; fallbackErr != nil {
-			return nil, fmt.Errorf("failed to query fallback profile recommendations: %w", fallbackErr)
-		}
 	}
 
 	return profiles, nil

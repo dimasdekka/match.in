@@ -137,30 +137,35 @@ func (s *botService) SendMatchNotification(ctx context.Context, telegramID int64
 		return nil
 	}
 
-	msgText := fmt.Sprintf("🎉 <b>It's a Match!</b> 💕\n\nKamu dan <b>%s</b> saling menyukai!\n\nLangsung alihkan ke Telegram untuk mulai chatting:", matchedName)
+	appURL := s.webAppURL
+	if appURL == "" {
+		appURL = "https://t.me/matchin_bot/app"
+	}
+
+	msgText := fmt.Sprintf("🎉 <b>IT'S A MATCH!</b> 💕\n\nKamu dan <b>%s</b> sekarang saling menyukai!\n\nKalian berdua telah resmi cocok. Silakan mulai percakapan sekarang:", matchedName)
+
+	var inlineButtons [][]map[string]interface{}
+	inlineButtons = append(inlineButtons, []map[string]interface{}{
+		{
+			"text":    "💬 Buka Match.in & Mulai Chat",
+			"web_app": map[string]string{"url": appURL},
+		},
+	})
 
 	if matchedTelegramUsername != "" {
-		msgText += fmt.Sprintf("\n💬 Telegram: @%s", matchedTelegramUsername)
+		inlineButtons = append(inlineButtons, []map[string]interface{}{
+			{
+				"text": "✈️ Chat @" + matchedTelegramUsername + " di Telegram",
+				"url":  "https://t.me/" + matchedTelegramUsername,
+			},
+		})
 	}
 
 	payload := TelegramSendMessagePayload{
 		ChatID:      telegramID,
 		Text:        msgText,
 		ParseMode:   "HTML",
-		ReplyMarkup: s.getPersistentKeyboard(),
-	}
-
-	if matchedTelegramUsername != "" {
-		payload.ReplyMarkup = map[string]interface{}{
-			"inline_keyboard": [][]map[string]string{
-				{
-					{
-						"text": "💬 Chat @" + matchedTelegramUsername + " di Telegram",
-						"url":  "https://t.me/" + matchedTelegramUsername,
-					},
-				},
-			},
-		}
+		ReplyMarkup: map[string]interface{}{"inline_keyboard": inlineButtons},
 	}
 
 	return s.SendMessage(ctx, &payload)

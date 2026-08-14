@@ -69,11 +69,21 @@ func (r *SwipeRepositoryImpl) DeleteAllSwipesForUser(ctx context.Context, userID
 }
 
 func (r *SwipeRepositoryImpl) GetLikesReceived(ctx context.Context, userID uint) ([]uint, error) {
+	// Only return incoming likes from users that the current user has NOT swiped on yet
+	var swipedByMeIDs []uint
+	_ = r.db.WithContext(ctx).Model(&domain.Swipe{}).
+		Where("swiper_id = ?", userID).
+		Pluck("target_id", &swipedByMeIDs).Error
+
 	var swiperIDs []uint
-	err := r.db.WithContext(ctx).Model(&domain.Swipe{}).
-		Where("target_id = ? AND action IN ('like', 'superlike')", userID).
-		Order("created_at DESC").
-		Pluck("swiper_id", &swiperIDs).Error
+	query := r.db.WithContext(ctx).Model(&domain.Swipe{}).
+		Where("target_id = ? AND action IN ('like', 'superlike')", userID)
+
+	if len(swipedByMeIDs) > 0 {
+		query = query.Where("swiper_id NOT IN ?", swipedByMeIDs)
+	}
+
+	err := query.Order("created_at DESC").Pluck("swiper_id", &swiperIDs).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get incoming likes: %w", err)
 	}
