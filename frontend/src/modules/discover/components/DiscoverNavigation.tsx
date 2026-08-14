@@ -10,7 +10,7 @@ interface DiscoverNavigationProps {
 }
 
 export function DiscoverNavigation({ active, onChange }: DiscoverNavigationProps) {
-  const activeIndex = DISCOVER_NAV.findIndex((item) => item.id === active);
+  const activeIndex = Math.max(0, DISCOVER_NAV.findIndex((item) => item.id === active));
 
   return (
     <nav className="discover-nav" aria-label="Main navigation">
@@ -18,7 +18,7 @@ export function DiscoverNavigation({ active, onChange }: DiscoverNavigationProps
         className="discover-nav-indicator"
         aria-hidden="true"
         initial={false}
-        animate={{ x: activeIndex * 66 }}
+        animate={{ x: `${activeIndex * 100}%` }}
         transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
       />
       {DISCOVER_NAV.map((item) => (

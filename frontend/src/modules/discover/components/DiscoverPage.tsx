@@ -19,7 +19,7 @@ import '@/modules/app-shell/styles.css';
 import '@/modules/app-shell/pages.css';
 import '../styles.css';
 
-type OverlayPage = 'profile' | 'edit-profile' | 'settings' | 'date-night' | null;
+type OverlayPage = 'edit-profile' | 'settings' | 'date-night' | null;
 
 export function DiscoverPage() {
   const [activeNav, setActiveNav] = useState<DiscoverNavId>('discover');
@@ -35,7 +35,8 @@ export function DiscoverPage() {
       console.error('Failed to save edited profile to backend', error);
     }
     window.localStorage.setItem('matchin:onboarding-profile', JSON.stringify(profile));
-    setOverlay('profile');
+    setOverlay(null);
+    setActiveNav('profile');
   };
 
   return (
@@ -49,25 +50,17 @@ export function DiscoverPage() {
               onBack={() => setConversation(null)}
             />
           )}
-          {!conversation && overlay === 'profile' && (
-            <ProfilePage
-              key="profile"
-              onBack={() => setOverlay(null)}
-              onSettings={() => setOverlay('settings')}
-              onEdit={() => setOverlay('edit-profile')}
-            />
-          )}
           {!conversation && overlay === 'edit-profile' && (
             <OnboardingWizard
               key="edit-profile"
               mode="edit"
               initialData={storedProfile ?? undefined}
-              onCancel={() => setOverlay('profile')}
+              onCancel={() => setOverlay(null)}
               onComplete={saveEditedProfile}
             />
           )}
           {!conversation && overlay === 'settings' && (
-            <SettingsPage key="settings" onBack={() => setOverlay('profile')} />
+            <SettingsPage key="settings" onBack={() => setOverlay(null)} />
           )}
           {!conversation && overlay === 'date-night' && (
             <DateNightPage
@@ -83,7 +76,7 @@ export function DiscoverPage() {
             <LikesPage
               key="likes"
               profiles={deck.likedProfiles}
-              onMenu={() => setOverlay('profile')}
+              onMenu={() => setActiveNav('profile')}
               onDateNight={() => setOverlay('date-night')}
               onOpenConversation={setConversation}
             />
@@ -92,14 +85,22 @@ export function DiscoverPage() {
             <MessagesPage
               key="chats"
               profiles={deck.likedProfiles}
-              onProfile={() => setOverlay('profile')}
+              onProfile={() => setActiveNav('profile')}
               onDiscover={() => setActiveNav('discover')}
               onOpenConversation={setConversation}
             />
           )}
+          {!conversation && !overlay && activeNav === 'profile' && (
+            <ProfilePage
+              key="profile"
+              onBack={() => setActiveNav('discover')}
+              onSettings={() => setOverlay('settings')}
+              onEdit={() => setOverlay('edit-profile')}
+            />
+          )}
           {!conversation && !overlay && activeNav === 'discover' && (
             <div className="discover-view" key="discover">
-              <DiscoverHeader onProfile={() => setOverlay('profile')} />
+              <DiscoverHeader onProfile={() => setActiveNav('profile')} />
               <div className="profile-deck">
                 <ProfileCard
                   key={`background-${deck.nextProfile.id}`}
