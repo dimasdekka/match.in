@@ -234,6 +234,30 @@ func (s *botService) SendMessage(ctx context.Context, payload *TelegramSendMessa
 	return nil
 }
 
+func (s *botService) AnswerCallbackQuery(ctx context.Context, callbackQueryID string, text string) error {
+	if s.botToken == "" || callbackQueryID == "" {
+		return nil
+	}
+
+	payload := map[string]string{
+		"callback_query_id": callbackQueryID,
+		"text":              text,
+	}
+	bodyBytes, _ := json.Marshal(payload)
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/answerCallbackQuery", s.botToken)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
 func (s *botService) SendPhoto(ctx context.Context, payload *TelegramSendPhotoPayload) error {
 	if payload == nil {
 		return fmt.Errorf("send photo payload cannot be nil")
@@ -244,25 +268,33 @@ func (s *botService) SendPhoto(ctx context.Context, payload *TelegramSendPhotoPa
 		return nil
 	}
 
-	bodyBytes, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal photo payload: %w", err)
+	// Only send via sendPhoto if photo is a valid public HTTP/HTTPS URL
+	if strings.HasPrefix(payload.Photo, "http://") || strings.HasPrefix(payload.Photo, "https://") {
+		bodyBytes, err := json.Marshal(payload)
+		if err == nil {
+			apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", s.botToken)
+			req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
+			if reqErr == nil {
+				req.Header.Set("Content-Type", "application/json")
+				resp, doErr := s.client.Do(req)
+				if doErr == nil {
+					defer resp.Body.Close()
+					if resp.StatusCode < 400 {
+						return nil
+					}
+					log.Printf("Warning: sendPhoto returned status %d, falling back to sendMessage\n", resp.StatusCode)
+				}
+			}
+		}
 	}
 
-	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", s.botToken)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return fmt.Errorf("failed to create http request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send bot photo: %w", err)
-	}
-	defer resp.Body.Close()
-
-	return nil
+	// Fallback to text message
+	return s.SendMessage(ctx, &TelegramSendMessagePayload{
+		ChatID:      payload.ChatID,
+		Text:        payload.Caption,
+		ParseMode:   payload.ParseMode,
+		ReplyMarkup: payload.ReplyMarkup,
+	})
 }
 
 func (s *botService) ProcessUpdate(ctx context.Context, update *domain.TelegramBotUpdate) error {
@@ -353,6 +385,8 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 		return nil
 	}
 
+	_ = s.AnswerCallbackQuery(ctx, cb.ID, "")
+
 	chatID := cb.Message.Chat.ID
 	data := cb.Data
 
@@ -374,7 +408,7 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 		if err != nil || swiperProf == nil {
 			return s.SendMessage(ctx, &TelegramSendMessagePayload{
 				ChatID:    chatID,
-				Text:      "Profil tidak lagi tersedia.",
+				Text:      "Profil pengguna tidak ditemukan atau telah di-reset.",
 				ParseMode: "HTML",
 			})
 		}
@@ -385,7 +419,11 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 		}
 
 		caption := fmt.Sprintf(
-			"👤 <b>%s</b>, %d\n📍 %s, %s\n💬 <i>\"%s\"</i>\n\nIngin match dengan %s?",
+			"💖 <b>Profil Pengguna Yang Menyukaimu:</b>\n\n"+
+				"👤 <b>%s</b>, %d\n"+
+				"📍 %s, %s\n"+
+				"💬 <i>\"%s\"</i>\n\n"+
+				"Ingin saling menyukai dan mulai mengobrol dengan <b>%s</b>?",
 			swiperProf.Name, swiperProf.Age, swiperProf.City, swiperProf.Country, bio, swiperProf.Name,
 		)
 
@@ -393,7 +431,7 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 			"inline_keyboard": [][]map[string]interface{}{
 				{
 					{
-						"text":          "💖 Suka Juga!",
+						"text":          "💖 Suka Juga & Match!",
 						"callback_data": fmt.Sprintf("like_back:%d", swiperUserID),
 					},
 					{
@@ -412,7 +450,7 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 			}
 		}
 
-		if photoURL != "" {
+		if photoURL != "" && (strings.HasPrefix(photoURL, "http://") || strings.HasPrefix(photoURL, "https://")) {
 			return s.SendPhoto(ctx, &TelegramSendPhotoPayload{
 				ChatID:      chatID,
 				Photo:       photoURL,
@@ -434,24 +472,60 @@ func (s *botService) handleCallbackQuery(ctx context.Context, cb *domain.Telegra
 			return nil
 		}
 		swiperUserID, _ := strconv.ParseUint(parts[1], 10, 64)
+		var matchCreated bool
 		if s.matchmakingService != nil {
 			req := &domain.SwipeRequest{
 				TargetID: uint(swiperUserID),
 				Action:   domain.ActionLike,
 			}
-			_, _ = s.matchmakingService.ProcessSwipe(ctx, targetUser.ID, req)
+			res, _ := s.matchmakingService.ProcessSwipe(ctx, targetUser.ID, req)
+			if res != nil && res.IsMatch {
+				matchCreated = true
+			}
 		}
+
+		appURL := s.webAppURL
+		if appURL == "" {
+			appURL = "https://t.me/matchin_bot/app"
+		}
+
+		msgText := "🎉 <b>IT'S A MATCH!</b>\n\nKamu dan pasanganmu sekarang saling menyukai! 💕\nKalian bisa langsung mengobrol dan saling mengenal lebih dekat."
+		if !matchCreated {
+			msgText = "💖 <b>Like Berhasil Dikirim!</b>\n\nKamu telah menyukai balik profil ini."
+		}
+
+		replyMarkup := map[string]interface{}{
+			"inline_keyboard": [][]map[string]interface{}{
+				{
+					{
+						"text":    "💬 Buka Match.in & Mulai Chat",
+						"web_app": map[string]string{"url": appURL},
+					},
+				},
+			},
+		}
+
 		return s.SendMessage(ctx, &TelegramSendMessagePayload{
 			ChatID:      chatID,
-			Text:        "🎉 Mantap! Kamu sudah menyukai balik. Selamat mengobrol!",
+			Text:        msgText,
 			ParseMode:   "HTML",
-			ReplyMarkup: s.getPersistentKeyboard(),
+			ReplyMarkup: replyMarkup,
 		})
 
 	case "skip_like":
+		if len(parts) >= 2 {
+			swiperUserID, _ := strconv.ParseUint(parts[1], 10, 64)
+			if s.matchmakingService != nil {
+				req := &domain.SwipeRequest{
+					TargetID: uint(swiperUserID),
+					Action:   domain.ActionPass,
+				}
+				_, _ = s.matchmakingService.ProcessSwipe(ctx, targetUser.ID, req)
+			}
+		}
 		return s.SendMessage(ctx, &TelegramSendMessagePayload{
 			ChatID:      chatID,
-			Text:        "Oke, profil di-skip.",
+			Text:        "👌 Profil telah dilewati.",
 			ParseMode:   "HTML",
 			ReplyMarkup: s.getPersistentKeyboard(),
 		})
