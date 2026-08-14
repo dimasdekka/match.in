@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
+import { Icon } from '@iconify/react';
 import { DiscoverHeader } from './DiscoverHeader';
 import { ProfileCard } from './ProfileCard';
 import { SwipeActions } from './SwipeActions';
@@ -106,22 +107,62 @@ export function DiscoverPage() {
                 onFeedModeChange={deck.setFeedMode}
                 onFilterClick={() => setOverlay('settings')}
               />
-              <div className="profile-deck">
-                <ProfileCard
-                  key={`background-${deck.nextProfile.id}`}
-                  profile={deck.nextProfile}
-                  onSwipe={deck.decide}
-                  background
-                />
-                <AnimatePresence custom={deck.direction} initial={false}>
-                  <ProfileCard
-                    key={`active-${deck.profile.id}`}
-                    profile={deck.profile}
-                    onSwipe={deck.decide}
-                  />
-                </AnimatePresence>
-              </div>
-              <SwipeActions onSwipe={deck.decide} />
+
+              {deck.loading ? (
+                <div className="flex flex-col items-center justify-center flex-1 text-neutral-400 gap-3">
+                  <Icon icon="svg-spinners:ring-resize" className="w-10 h-10 text-pink-500 animate-spin" />
+                  <p className="text-sm font-semibold">Mencari rekomendasi profil...</p>
+                </div>
+              ) : deck.profile ? (
+                <>
+                  <div className="profile-deck">
+                    {deck.nextProfile && (
+                      <ProfileCard
+                        key={`background-${deck.nextProfile.id}`}
+                        profile={deck.nextProfile}
+                        onSwipe={deck.decide}
+                        background
+                      />
+                    )}
+                    <AnimatePresence custom={deck.direction} initial={false}>
+                      <ProfileCard
+                        key={`active-${deck.profile.id}`}
+                        profile={deck.profile}
+                        onSwipe={deck.decide}
+                      />
+                    </AnimatePresence>
+                  </div>
+                  <SwipeActions onSwipe={deck.decide} />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center flex-1 text-center p-6 text-neutral-300 gap-4 my-auto">
+                  <div className="w-20 h-20 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-3xl text-pink-500 shadow-xl">
+                    <Icon icon="solar:radar-2-bold" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white">Tidak Ada Profil Tersedia</h3>
+                    <p className="text-xs text-neutral-400 max-w-[260px] mx-auto mt-1">
+                      Anda telah melihat semua rekomendasi di mode ini. Coba ubah mode feed atau perluas preferensi pencarian.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => deck.reload()}
+                      className="px-4 py-2 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30"
+                    >
+                      <Icon icon="solar:restart-bold" /> Muat Ulang
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOverlay('settings')}
+                      className="px-4 py-2 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold transition border border-white/10"
+                    >
+                      Ubah Filter
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </AnimatePresence>

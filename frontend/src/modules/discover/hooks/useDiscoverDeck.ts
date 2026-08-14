@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { api } from '@/utils/api';
-import { DISCOVER_PROFILES } from '../constants/profile';
 import type { DiscoverProfile, SwipeDecision } from '../@types';
 
 export type FeedMode = 'for_you' | 'nearby' | 'popular' | 'new' | 'serious';
@@ -85,13 +84,12 @@ export function useDiscoverDeck() {
         setDeckProfiles(mapped);
         setIndex(0);
       } else {
-        // Fallback to sample profiles if empty
-        setDeckProfiles(DISCOVER_PROFILES);
+        setDeckProfiles([]);
         setIndex(0);
       }
     } catch (err) {
-      console.error('Failed to load backend recommendations, using fallback deck', err);
-      setDeckProfiles(DISCOVER_PROFILES);
+      console.error('Failed to load backend recommendations', err);
+      setDeckProfiles([]);
       setIndex(0);
     } finally {
       setLoading(false);
@@ -102,12 +100,11 @@ export function useDiscoverDeck() {
     void loadRealRecommendations(feedMode);
   }, [feedMode, loadRealRecommendations]);
 
-  const activeProfiles = deckProfiles.length > 0 ? deckProfiles : DISCOVER_PROFILES;
-  const profile = activeProfiles[index % activeProfiles.length];
-  const nextProfile = activeProfiles[(index + 1) % activeProfiles.length];
+  const profile = deckProfiles[index] || null;
+  const nextProfile = deckProfiles[index + 1] || null;
 
   const decide = async (decision: SwipeDecision) => {
-    if (transitionLocked.current) return;
+    if (!profile || transitionLocked.current) return;
     transitionLocked.current = true;
     const liked = decision !== 'pass';
     setDirection(liked ? 1 : -1);
@@ -118,20 +115,18 @@ export function useDiscoverDeck() {
       );
     }
 
-    // Call backend swipe API
+    // Call real backend swipe API
     try {
       const swipeRes = await api.swipe(profile.id, decision);
       if (swipeRes.is_match) {
         setMatch(profile);
-      } else if (liked && profile.willMatch) {
-        setMatch(profile);
       }
-    } catch {
-      if (liked && profile.willMatch) setMatch(profile);
+    } catch (err) {
+      console.error('Failed to record swipe on server', err);
     }
 
     const nextIndex = index + 1;
-    if (nextIndex >= activeProfiles.length) {
+    if (nextIndex >= deckProfiles.length) {
       void loadRealRecommendations(feedMode);
       setIndex(0);
     } else {
