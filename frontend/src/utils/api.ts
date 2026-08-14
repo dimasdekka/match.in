@@ -66,8 +66,8 @@ export const api = {
     return { profile: parsedProfile as Profile };
   },
 
-  async getRecommendations(limit = 10): Promise<{ profiles: Profile[] }> {
-    const res = await fetch(`${API_BASE_URL}/recommendations?limit=${limit}`, {
+  async getRecommendations(limit = 20, feed = 'for_you'): Promise<{ profiles: Profile[] }> {
+    const res = await fetch(`${API_BASE_URL}/recommendations?limit=${limit}&feed=${encodeURIComponent(feed)}`, {
       headers: getHeaders(),
     });
     if (!res.ok) throw new Error(`Failed to fetch profile recommendations: ${res.statusText}`);

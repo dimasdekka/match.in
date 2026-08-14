@@ -72,7 +72,9 @@ func (h *ProfileHandler) GetRecommendations(c *gin.Context) {
 		limit = 50
 	}
 
-	recommendations, err := h.profileService.GetRecommendations(c.Request.Context(), user.ID, limit)
+	feed := c.DefaultQuery("feed", "for_you")
+
+	recommendations, err := h.profileService.GetRecommendations(c.Request.Context(), user.ID, limit, feed)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recommendations: " + err.Error()})
 		return

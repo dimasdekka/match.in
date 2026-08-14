@@ -582,7 +582,7 @@ func (s *botService) handleSearchCommand(ctx context.Context, chatID int64, user
 		return fmt.Errorf("profile service is not configured")
 	}
 
-	recs, err := s.profileService.GetRecommendations(ctx, user.ID, 3)
+	recs, err := s.profileService.GetRecommendations(ctx, user.ID, 3, "for_you")
 	if err != nil {
 		return fmt.Errorf("failed to search recommendations for user %d: %w", user.ID, err)
 	}

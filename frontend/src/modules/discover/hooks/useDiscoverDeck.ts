@@ -3,7 +3,43 @@ import { api } from '@/utils/api';
 import { DISCOVER_PROFILES } from '../constants/profile';
 import type { DiscoverProfile, SwipeDecision } from '../@types';
 
+export type FeedMode = 'for_you' | 'nearby' | 'popular' | 'new' | 'serious';
+
+export const FEED_OPTIONS: Array<{ id: FeedMode; label: string; icon: string; desc: string }> = [
+  {
+    id: 'for_you',
+    label: 'Untuk Anda',
+    icon: 'solar:magic-stick-3-bold',
+    desc: 'Rekomendasi terbaik yang disesuaikan untuk Anda',
+  },
+  {
+    id: 'nearby',
+    label: 'Terdekat',
+    icon: 'solar:map-point-bold',
+    desc: 'Temukan profil di sekitar kota atau area Anda',
+  },
+  {
+    id: 'popular',
+    label: 'Populer',
+    icon: 'solar:fire-bold',
+    desc: 'Profil yang paling banyak disukai dan aktif',
+  },
+  {
+    id: 'new',
+    label: 'Baru Bergabung',
+    icon: 'solar:user-plus-bold',
+    desc: 'Member baru yang baru saja membuat akun',
+  },
+  {
+    id: 'serious',
+    label: 'Hubungan Serius',
+    icon: 'solar:hearts-bold',
+    desc: 'Mencari komitmen & hubungan jangka panjang',
+  },
+];
+
 export function useDiscoverDeck() {
+  const [feedMode, setFeedMode] = useState<FeedMode>('for_you');
   const [deckProfiles, setDeckProfiles] = useState<DiscoverProfile[]>([]);
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -12,10 +48,10 @@ export function useDiscoverDeck() {
   const [loading, setLoading] = useState(true);
   const transitionLocked = useRef(false);
 
-  const loadRealRecommendations = useCallback(async () => {
+  const loadRealRecommendations = useCallback(async (currentFeed: FeedMode = feedMode) => {
     try {
       setLoading(true);
-      const res = await api.getRecommendations(20);
+      const res = await api.getRecommendations(20, currentFeed);
       if (res.profiles && res.profiles.length > 0) {
         const mapped: DiscoverProfile[] = res.profiles.map((p) => {
           let photos: string[] = [];
@@ -47,21 +83,24 @@ export function useDiscoverDeck() {
           };
         });
         setDeckProfiles(mapped);
+        setIndex(0);
       } else {
-        // Fallback to sample profiles if fresh empty database
+        // Fallback to sample profiles if empty
         setDeckProfiles(DISCOVER_PROFILES);
+        setIndex(0);
       }
     } catch (err) {
       console.error('Failed to load backend recommendations, using fallback deck', err);
       setDeckProfiles(DISCOVER_PROFILES);
+      setIndex(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [feedMode]);
 
   useEffect(() => {
-    void loadRealRecommendations();
-  }, [loadRealRecommendations]);
+    void loadRealRecommendations(feedMode);
+  }, [feedMode, loadRealRecommendations]);
 
   const activeProfiles = deckProfiles.length > 0 ? deckProfiles : DISCOVER_PROFILES;
   const profile = activeProfiles[index % activeProfiles.length];
@@ -93,7 +132,7 @@ export function useDiscoverDeck() {
 
     const nextIndex = index + 1;
     if (nextIndex >= activeProfiles.length) {
-      void loadRealRecommendations();
+      void loadRealRecommendations(feedMode);
       setIndex(0);
     } else {
       setIndex(nextIndex);
@@ -111,8 +150,10 @@ export function useDiscoverDeck() {
     match,
     likedProfiles,
     loading,
+    feedMode,
+    setFeedMode,
     decide,
-    reload: loadRealRecommendations,
+    reload: () => loadRealRecommendations(feedMode),
     closeMatch: () => setMatch(null),
   };
 }

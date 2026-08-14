@@ -11,7 +11,7 @@ import (
 type ProfileRepository interface {
 	GetByUserID(ctx context.Context, userID uint) (*domain.Profile, error)
 	Upsert(ctx context.Context, profile *domain.Profile) error
-	GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int) ([]*domain.Profile, error)
+	GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int, feedType string) ([]*domain.Profile, error)
 	DeleteByUserID(ctx context.Context, userID uint) error
 }
 
@@ -54,7 +54,7 @@ func (r *profileRepository) Upsert(ctx context.Context, profile *domain.Profile)
 	return nil
 }
 
-func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int) ([]*domain.Profile, error) {
+func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserID uint, currentProfile *domain.Profile, limit int, feedType string) ([]*domain.Profile, error) {
 	var swipedTargetIDs []uint
 	r.db.WithContext(ctx).Model(&domain.Swipe{}).Where("swiper_id = ?", currentUserID).Pluck("target_id", &swipedTargetIDs)
 
@@ -72,25 +72,50 @@ func (r *profileRepository) GetRecommendations(ctx context.Context, currentUserI
 		query = query.Where("age >= ? AND age <= ?", currentProfile.MinAgePref, currentProfile.MaxAgePref)
 	}
 
-	switch currentProfile.TargetLocationMode {
-	case domain.FilterCity:
+	// Apply Feed-specific filters
+	switch feedType {
+	case "nearby":
 		if currentProfile.City != "" {
-			query = query.Where("LOWER(city) = LOWER(?) AND LOWER(country) = LOWER(?)", currentProfile.City, currentProfile.Country)
+			query = query.Where("LOWER(city) = LOWER(?)", currentProfile.City)
 		}
-	case domain.FilterCountry:
-		if currentProfile.Country != "" {
-			query = query.Where("LOWER(country) = LOWER(?)", currentProfile.Country)
+	case "serious":
+		query = query.Where("relationship_goal IN ('long_term', 'marriage') OR dating_intention IN ('serious', 'marriage', 'long_term')")
+	default:
+		// Standard location filter for general feeds
+		switch currentProfile.TargetLocationMode {
+		case domain.FilterCity:
+			if currentProfile.City != "" {
+				query = query.Where("LOWER(city) = LOWER(?) AND LOWER(country) = LOWER(?)", currentProfile.City, currentProfile.Country)
+			}
+		case domain.FilterCountry:
+			if currentProfile.Country != "" {
+				query = query.Where("LOWER(country) = LOWER(?)", currentProfile.Country)
+			}
+		case domain.FilterGlobal:
 		}
-	case domain.FilterGlobal:
+	}
+
+	// Order by feed type
+	var orderBy string
+	switch feedType {
+	case "popular":
+		orderBy = "is_boosted DESC, total_likes DESC, updated_at DESC"
+	case "new":
+		orderBy = "is_boosted DESC, created_at DESC"
+	case "nearby":
+		orderBy = "is_boosted DESC, updated_at DESC"
+	default: // for_you, serious
+		orderBy = "is_boosted DESC, updated_at DESC"
 	}
 
 	var profiles []*domain.Profile
-	err := query.Order("is_boosted DESC, updated_at DESC").Limit(limit).Find(&profiles).Error
+	err := query.Order(orderBy).Limit(limit).Find(&profiles).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to query profile recommendations: %w", err)
 	}
 
-	if len(profiles) == 0 && currentProfile.TargetLocationMode != domain.FilterGlobal {
+	// If no results for restricted location/filters, fallback to general profiles
+	if len(profiles) == 0 {
 		fallbackQuery := r.db.WithContext(ctx).Preload("User").Where("user_id != ?", currentUserID)
 		if len(swipedTargetIDs) > 0 {
 			fallbackQuery = fallbackQuery.Where("user_id NOT IN ?", swipedTargetIDs)

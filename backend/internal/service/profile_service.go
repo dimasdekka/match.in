@@ -12,7 +12,7 @@ import (
 type ProfileService interface {
 	GetProfileByUserID(ctx context.Context, userID uint) (*domain.Profile, error)
 	SaveProfile(ctx context.Context, userID uint, req *domain.ProfileRequest) (*domain.Profile, error)
-	GetRecommendations(ctx context.Context, userID uint, limit int) ([]*domain.Profile, error)
+	GetRecommendations(ctx context.Context, userID uint, limit int, feedType string) ([]*domain.Profile, error)
 }
 
 type profileService struct {
@@ -87,7 +87,7 @@ func (s *profileService) SaveProfile(ctx context.Context, userID uint, req *doma
 	return s.profileRepo.GetByUserID(ctx, userID)
 }
 
-func (s *profileService) GetRecommendations(ctx context.Context, userID uint, limit int) ([]*domain.Profile, error) {
+func (s *profileService) GetRecommendations(ctx context.Context, userID uint, limit int, feedType string) ([]*domain.Profile, error) {
 	profile, err := s.profileRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user profile for recommendations: %w", err)
@@ -104,5 +104,9 @@ func (s *profileService) GetRecommendations(ctx context.Context, userID uint, li
 		limit = 50
 	}
 
-	return s.profileRepo.GetRecommendations(ctx, userID, profile, limit)
+	if feedType == "" {
+		feedType = "for_you"
+	}
+
+	return s.profileRepo.GetRecommendations(ctx, userID, profile, limit, feedType)
 }

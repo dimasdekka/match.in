@@ -100,7 +100,12 @@ export function DiscoverPage() {
           )}
           {!conversation && !overlay && activeNav === 'discover' && (
             <div className="discover-view" key="discover">
-              <DiscoverHeader onProfile={() => setActiveNav('profile')} />
+              <DiscoverHeader
+                onProfile={() => setActiveNav('profile')}
+                feedMode={deck.feedMode}
+                onFeedModeChange={deck.setFeedMode}
+                onFilterClick={() => setOverlay('settings')}
+              />
               <div className="profile-deck">
                 <ProfileCard
                   key={`background-${deck.nextProfile.id}`}
