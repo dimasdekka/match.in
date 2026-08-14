@@ -1,9 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Icon } from '@iconify/react';
 import { AppPageHeader } from '@/modules/app-shell/components/AppPageHeader';
 import { MenuCard } from '@/modules/app-shell/components/MenuCard';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
+import {
+  BrandedRangeSlider,
+  BrandedSlider,
+} from '@/modules/onboarding/components/BrandedSlider';
 import { api } from '@/utils/api';
 import type { Profile, Gender, LocationFilterMode } from '@/@types';
+
+function PreferenceHeading({
+  icon,
+  label,
+  children,
+}: {
+  icon: string;
+  label: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="preferences-slider-heading">
+      <div className="preferences-section-heading">
+        <Icon icon={icon} />
+        <span>{label}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function PreferenceOptions<T extends string>({
+  icon,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  icon: string;
+  label: string;
+  value: T;
+  options: ReadonlyArray<readonly [T, string, string]>;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <section className="preferences-sheet-section">
+      <PreferenceHeading icon={icon} label={label} />
+      <div className="preferences-options">
+        {options.map(([optionValue, optionIcon, optionLabel]) => (
+          <button
+            key={optionValue}
+            type="button"
+            className={value === optionValue ? 'selected' : ''}
+            onClick={() => onChange(optionValue)}
+          >
+            <Icon icon={optionIcon} />
+            <span>{optionLabel}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function SettingsPage({ onBack }: { onBack: () => void }) {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -133,126 +191,64 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
       />
 
       {/* ── Discovery Preferences BottomSheet Modal ── */}
-      {showPreferencesSheet && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] p-6 max-h-[85vh] overflow-y-auto space-y-5 animate-slide-up shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-extrabold text-slate-900">Discovery Preferences</h3>
-              <button
-                type="button"
-                onClick={() => setShowPreferencesSheet(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition"
-              >
-                <Icon icon="mingcute:close-line" className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Target Gender */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Mencari Target</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['male', 'female', 'all'] as Gender[]).map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setTargetGender(g)}
-                    className={`py-3 rounded-2xl text-xs font-bold transition border ${
-                      targetGender === g
-                        ? 'match-gradient text-white border-transparent match-shadow-btn'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {g === 'male' ? '👨 Pria' : g === 'female' ? '👩 Wanita' : '👫 Semua'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Location Mode */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Jangkauan Lokasi</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    ['same_city', '🏙️ Kota Sama'],
-                    ['same_country', '🇮🇩 Se-Indonesia'],
-                    ['global', '🌍 Global'],
-                  ] as const
-                ).map(([mode, label]) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setLocationMode(mode as LocationFilterMode)}
-                    className={`py-2.5 px-2 rounded-2xl text-xs font-bold transition border ${
-                      locationMode === mode
-                        ? 'bg-pink-50 border-[#FF3366] text-[#FF3366]'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Age Range Slider */}
-            <div className="space-y-2 pt-1">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Rentang Usia</label>
-                <span className="text-xs font-bold text-[#FF3366]">
-                  {minAge} - {maxAge} tahun
-                </span>
-              </div>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="range"
-                  min={18}
-                  max={60}
-                  value={minAge}
-                  onChange={(e) => setMinAge(Math.min(Number(e.target.value), maxAge - 1))}
-                  className="w-full accent-[#FF3366]"
-                />
-                <input
-                  type="range"
-                  min={19}
-                  max={99}
-                  value={maxAge}
-                  onChange={(e) => setMaxAge(Math.max(Number(e.target.value), minAge + 1))}
-                  className="w-full accent-[#FF3366]"
-                />
-              </div>
-            </div>
-
-            {/* Max Distance Slider */}
-            <div className="space-y-2 pt-1">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Jarak Maksimum</label>
-                <span className="text-xs font-bold text-[#FF3366]">{maxDistance} km</span>
-              </div>
-              <input
-                type="range"
-                min={5}
-                max={100}
-                value={maxDistance}
-                onChange={(e) => setMaxDistance(Number(e.target.value))}
-                className="w-full accent-[#FF3366]"
-              />
-            </div>
-
-            {/* Save Button */}
-            <div className="pt-3">
-              <button
-                type="button"
-                onClick={handleSavePreferences}
-                disabled={saving}
-                className="w-full py-4 rounded-full match-gradient text-white font-bold text-sm match-shadow-btn active:scale-98 disabled:opacity-50 transition cursor-pointer"
-              >
-                {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
-              </button>
-            </div>
-          </div>
+      <BottomSheet
+        open={showPreferencesSheet}
+        onOpenChange={setShowPreferencesSheet}
+        title="Discovery Preferences"
+        description="Atur siapa dan seberapa jauh profil yang ingin kamu temukan."
+        className="discovery-preferences-sheet"
+      >
+        <div className="preferences-sheet-form">
+          <PreferenceOptions<Gender>
+            icon="solar:users-group-rounded-bold"
+            label="Mencari target"
+            value={targetGender}
+            onChange={setTargetGender}
+            options={[
+              ['male', 'solar:men-bold', 'Pria'],
+              ['female', 'solar:women-bold', 'Wanita'],
+              ['all', 'solar:users-group-rounded-bold', 'Semua'],
+            ]}
+          />
+          <PreferenceOptions<LocationFilterMode>
+            icon="solar:map-point-bold"
+            label="Jangkauan lokasi"
+            value={locationMode}
+            onChange={setLocationMode}
+            options={[
+              ['same_city', 'solar:city-bold', 'Kota sama'],
+              ['same_country', 'solar:map-bold', 'Indonesia'],
+              ['global', 'solar:global-bold', 'Global'],
+            ]}
+          />
+          <section className="preferences-sheet-section slider-section">
+            <PreferenceHeading icon="solar:calendar-date-bold" label="Rentang usia">
+              <strong>{minAge}–{maxAge} tahun</strong>
+            </PreferenceHeading>
+            <BrandedRangeSlider
+              min={18}
+              max={70}
+              value={[minAge, maxAge]}
+              onChange={([minimum, maximum]) => {
+                setMinAge(minimum);
+                setMaxAge(maximum);
+              }}
+              ariaLabel="Rentang usia"
+            />
+            <div className="preferences-scale"><span>18</span><span>70+</span></div>
+          </section>
+          <section className="preferences-sheet-section slider-section">
+            <PreferenceHeading icon="solar:routing-2-bold" label="Jarak maksimum">
+              <strong>{maxDistance} km</strong>
+            </PreferenceHeading>
+            <BrandedSlider min={1} max={100} value={maxDistance} onChange={setMaxDistance} ariaLabel="Jarak maksimum" />
+            <div className="preferences-scale"><span>1 km</span><span>100 km</span></div>
+          </section>
+          <button type="button" className="pink-cta preferences-save" onClick={handleSavePreferences} disabled={saving || !profile}>
+            {saving ? <Icon icon="svg-spinners:ring-resize" /> : 'Simpan pengaturan'}
+          </button>
         </div>
-      )}
+      </BottomSheet>
     </section>
   );
 }
