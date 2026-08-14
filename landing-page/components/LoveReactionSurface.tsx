@@ -40,22 +40,24 @@ export function LoveReactionSurface({ children }: { children: ReactNode }) {
     [],
   );
 
-  const createReactions = (event: PointerEvent<HTMLDivElement>) => {
+  const createReactions = (event: PointerEvent<HTMLDivElement>, photoBurst = false) => {
     if ((event.target as HTMLElement).closest("button, a, input, textarea")) return;
 
-    const burst = Array.from({ length: 5 }, () => ({
+    const isPhotoTile = photoBurst;
+    const burstSize = isPhotoTile ? 9 : 5;
+    const burst = Array.from({ length: burstSize }, () => ({
       id: nextId.current++,
       icon: LOVE_REACTIONS[Math.floor(Math.random() * LOVE_REACTIONS.length)],
       x: Math.max(
         24,
-        Math.min(window.innerWidth - 24, event.clientX + (Math.random() - 0.5) * 72),
+        Math.min(window.innerWidth - 24, event.clientX + (Math.random() - 0.5) * (isPhotoTile ? 54 : 72)),
       ),
       y: Math.max(
         24,
-        Math.min(window.innerHeight - 24, event.clientY + (Math.random() - 0.5) * 44),
+        Math.min(window.innerHeight - 24, event.clientY + (Math.random() - 0.5) * (isPhotoTile ? 34 : 44)),
       ),
-      drift: (Math.random() - 0.5) * 110,
-      size: 25 + Math.random() * 19,
+      drift: (Math.random() - 0.5) * (isPhotoTile ? 86 : 110),
+      size: isPhotoTile ? 22 + Math.random() * 17 : 25 + Math.random() * 19,
       rotate: (Math.random() - 0.5) * 38,
       rise: Math.min(event.clientY * (0.55 + Math.random() * 0.2), 420),
       duration: 1.35 + Math.random() * 0.25,
@@ -71,8 +73,19 @@ export function LoveReactionSurface({ children }: { children: ReactNode }) {
     );
   };
 
+  const createPhotoHoverReactions = (event: PointerEvent<HTMLDivElement>) => {
+    const photoTile = (event.target as HTMLElement).closest(".photo-tile");
+    if (!photoTile) return;
+    if (event.relatedTarget instanceof Node && photoTile.contains(event.relatedTarget)) return;
+    createReactions(event, true);
+  };
+
   return (
-    <div className="landing-reaction-surface" onPointerDown={createReactions}>
+    <div
+      className="landing-reaction-surface"
+      onPointerDown={createReactions}
+      onPointerOver={createPhotoHoverReactions}
+    >
       {children}
       <div className="love-reaction-layer" aria-hidden="true">
         {reactions.map((reaction) => (
