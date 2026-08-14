@@ -9,7 +9,7 @@ export function getTelegramInitData(): string {
     hash.get('tgWebAppInitData') ??
     search.get('tgWebAppInitData') ??
     search.get('initData') ??
-    `user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22User%22%7D&hash=mock_dev_hash&auth_date=${authDate}`
+    `user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22User%22%7D&hash=dev_auth_hash&auth_date=${authDate}`
   );
 }
 

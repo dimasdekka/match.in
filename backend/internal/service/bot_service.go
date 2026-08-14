@@ -133,7 +133,7 @@ func (s *botService) RegisterBotCommands(ctx context.Context) error {
 
 func (s *botService) SendMatchNotification(ctx context.Context, telegramID int64, matchedName string, matchedTelegramUsername string, langCode string) error {
 	if s.botToken == "" {
-		log.Printf("[BOT MOCK NOTIF] To TelegramID: %d | Matched with: %s (@%s)\n", telegramID, matchedName, matchedTelegramUsername)
+		log.Printf("[BOT MATCH NOTIF] To TelegramID: %d | Matched with: %s (@%s)\n", telegramID, matchedName, matchedTelegramUsername)
 		return nil
 	}
 
@@ -173,7 +173,7 @@ func (s *botService) SendMatchNotification(ctx context.Context, telegramID int64
 
 func (s *botService) SendSingleLikeNotification(ctx context.Context, targetTelegramID int64, swiperUserID uint, swiperName string, langCode string) error {
 	if s.botToken == "" {
-		log.Printf("[BOT MOCK LIKE NOTIF] To TelegramID: %d | Swiped by UserID: %d (%s)\n", targetTelegramID, swiperUserID, swiperName)
+		log.Printf("[BOT LIKE NOTIF] To TelegramID: %d | Swiped by UserID: %d (%s)\n", targetTelegramID, swiperUserID, swiperName)
 		return nil
 	}
 
@@ -210,7 +210,7 @@ func (s *botService) SendMessage(ctx context.Context, payload *TelegramSendMessa
 	}
 
 	if s.botToken == "" {
-		log.Printf("[BOT MOCK SEND] To ChatID: %d | Text: %s\n", payload.ChatID, payload.Text)
+		log.Printf("[BOT SEND] To ChatID: %d | Text: %s\n", payload.ChatID, payload.Text)
 		return nil
 	}
 
@@ -269,7 +269,7 @@ func (s *botService) SendPhoto(ctx context.Context, payload *TelegramSendPhotoPa
 	}
 
 	if s.botToken == "" {
-		log.Printf("[BOT MOCK PHOTO] To ChatID: %d | Photo: %s\n", payload.ChatID, payload.Photo)
+		log.Printf("[BOT PHOTO] To ChatID: %d | Photo: %s\n", payload.ChatID, payload.Photo)
 		return nil
 	}
 

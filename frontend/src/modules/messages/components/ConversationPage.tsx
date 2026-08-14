@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { motion } from 'motion/react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
-import { useMockChat } from '../hooks/useMockChat';
+import { useChat } from '../hooks/useChat';
 import { ChatMediaPicker } from './ChatMediaPicker';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -17,7 +17,7 @@ export function ConversationPage({ profile, onBack }: Props) {
   const [picker, setPicker] = useState<'sticker' | 'gif' | null>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  const chat = useMockChat(String(profile.id));
+  const chat = useChat(String(profile.id));
   const recorder = useRef<MediaRecorder | null>(null);
   const recordingStartedAt = useRef(0);
   const [isRecording, setIsRecording] = useState(false);

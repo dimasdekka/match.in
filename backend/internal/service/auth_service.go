@@ -81,7 +81,7 @@ func (s *authService) ValidateTelegramInitData(ctx context.Context, initDataRaw 
 	}
 
 	// HMAC signature check for real Telegram Mini App sessions
-	if hashReceived != "mock_dev_hash" && s.botToken != "" {
+	if hashReceived != "dev_auth_hash" && s.botToken != "" {
 		var keys []string
 		for k := range values {
 			if k != "hash" {

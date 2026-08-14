@@ -1,5 +1,5 @@
-import { MOCK_BOT_STICKERS, MOCK_GIFS } from '../constants/media';
-import type { MockSticker } from '../@types';
+import { BOT_STICKERS, CHAT_GIFS } from '../constants/media';
+import type { ChatSticker } from '../@types';
 
 export function ChatMediaPicker({
   mode,
@@ -7,7 +7,7 @@ export function ChatMediaPicker({
   onGif,
 }: {
   mode: 'sticker' | 'gif';
-  onSticker: (item: MockSticker) => void;
+  onSticker: (item: ChatSticker) => void;
   onGif: (url: string) => void;
 }) {
   return (
@@ -15,12 +15,12 @@ export function ChatMediaPicker({
       <strong>{mode === 'sticker' ? 'Bot stickers' : 'GIFs'}</strong>
       <div className="chat-media-grid">
         {mode === 'sticker'
-          ? MOCK_BOT_STICKERS.map((item) => (
+          ? BOT_STICKERS.map((item) => (
               <button type="button" key={item.fileId} onClick={() => onSticker(item)}>
                 <img src={item.previewUrl} alt={item.emoji} />
               </button>
             ))
-          : MOCK_GIFS.map((url, index) => (
+          : CHAT_GIFS.map((url, index) => (
               <button type="button" key={url} onClick={() => onGif(url)}>
                 <img src={url} alt={`GIF ${index + 1}`} />
               </button>

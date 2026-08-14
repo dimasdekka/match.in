@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { MESSAGE_REACTIONS } from '../constants/media';
-import type { MessageReaction, MockChatMessage } from '../@types';
+import type { MessageReaction, ConversationMessage } from '../@types';
 const LABEL: Record<MessageReaction, string> = { heart: '❤️', laugh: '😂', fire: '🔥', like: '👍' };
 const formatDuration = (seconds = 0) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
 const formatMessageTime = (value?: string) => {
@@ -15,7 +15,7 @@ export function ChatMessageBubble({
   message,
   onReact,
 }: {
-  message: MockChatMessage;
+  message: ConversationMessage;
   onReact: (value: MessageReaction) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);

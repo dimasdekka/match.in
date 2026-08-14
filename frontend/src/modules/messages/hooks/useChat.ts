@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import type { MessageReaction, MockChatMessage, MockSticker, MockMessageType } from '../@types';
+import type { MessageReaction, ConversationMessage, ChatSticker, MessageType } from '../@types';
 import { api, getTelegramInitData } from '@/utils/api';
 import type { ChatMessage } from '@/@types';
 
-export function useMockChat(conversationId: string) {
+export function useChat(conversationId: string) {
   const matchId = Number(conversationId) || 0;
-  const [messages, setMessages] = useState<MockChatMessage[]>([]);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const currentUserIdRef = useRef<number>(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -22,9 +22,9 @@ export function useMockChat(conversationId: string) {
       .catch(() => {});
   }, []);
 
-  const mapBackendMessage = useCallback((msg: ChatMessage): MockChatMessage => {
+  const mapBackendMessage = useCallback((msg: ChatMessage): ConversationMessage => {
     const isOutgoing = msg.sender_id === currentUserIdRef.current || (currentUserIdRef.current === 0 && msg.sender_id !== 0);
-    const msgType: MockMessageType = (msg.message_type as MockMessageType) || (msg.image_url ? 'image' : 'text');
+    const msgType: MessageType = (msg.message_type as MessageType) || (msg.image_url ? 'image' : 'text');
 
     return {
       id: String(msg.id),
@@ -89,7 +89,7 @@ export function useMockChat(conversationId: string) {
             if (data.event === 'chat_message' && data.message && data.match_id === matchId) {
               const incomingMsg = mapBackendMessage(data.message);
               setMessages((prev) => {
-                // Deduplicate if already present or replace temp optimistic message
+                // Deduplicate if already present
                 const exists = prev.some((m) => m.id === incomingMsg.id);
                 if (exists) return prev;
                 return [...prev, incomingMsg];
@@ -108,7 +108,6 @@ export function useMockChat(conversationId: string) {
 
         ws.onclose = () => {
           if (pingInterval) clearInterval(pingInterval);
-          // Reconnect after 3 seconds if component still mounted
           if (isMounted) {
             reconnectTimer = setTimeout(connectWS, 3000);
           }
@@ -139,7 +138,7 @@ export function useMockChat(conversationId: string) {
   }, [matchId, mapBackendMessage]);
 
   const sendText = async (content: string) => {
-    const optimisticMsg: MockChatMessage = {
+    const optimisticMsg: ConversationMessage = {
       id: `temp-${Date.now()}`,
       type: 'text',
       direction: 'outgoing',
@@ -170,7 +169,7 @@ export function useMockChat(conversationId: string) {
   };
 
   const sendImage = async (mediaUrl: string) => {
-    const optimisticMsg: MockChatMessage = {
+    const optimisticMsg: ConversationMessage = {
       id: `temp-${Date.now()}`,
       type: 'image',
       direction: 'outgoing',
@@ -202,7 +201,7 @@ export function useMockChat(conversationId: string) {
   };
 
   const sendGif = async (mediaUrl: string) => {
-    const optimisticMsg: MockChatMessage = {
+    const optimisticMsg: ConversationMessage = {
       id: `temp-${Date.now()}`,
       type: 'gif',
       direction: 'outgoing',
@@ -234,7 +233,7 @@ export function useMockChat(conversationId: string) {
   };
 
   const sendVoice = async (mediaUrl: string, duration: number) => {
-    const optimisticMsg: MockChatMessage = {
+    const optimisticMsg: ConversationMessage = {
       id: `temp-${Date.now()}`,
       type: 'voice',
       direction: 'outgoing',
@@ -266,8 +265,8 @@ export function useMockChat(conversationId: string) {
     }
   };
 
-  const sendSticker = async (sticker: MockSticker) => {
-    const optimisticMsg: MockChatMessage = {
+  const sendSticker = async (sticker: ChatSticker) => {
+    const optimisticMsg: ConversationMessage = {
       id: `temp-${Date.now()}`,
       type: 'sticker',
       direction: 'outgoing',

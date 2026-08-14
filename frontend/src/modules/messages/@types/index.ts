@@ -1,9 +1,9 @@
-export type MockMessageType = 'text' | 'image' | 'gif' | 'voice' | 'sticker';
+export type MessageType = 'text' | 'image' | 'gif' | 'voice' | 'sticker';
 export type MessageReaction = 'heart' | 'laugh' | 'fire' | 'like';
 
-export interface MockChatMessage {
+export interface ConversationMessage {
   id: string;
-  type: MockMessageType;
+  type: MessageType;
   direction: 'incoming' | 'outgoing';
   content?: string;
   mediaUrl?: string;
@@ -14,7 +14,7 @@ export interface MockChatMessage {
   status?: 'sent' | 'delivered' | 'read';
 }
 
-export interface MockSticker {
+export interface ChatSticker {
   fileId: string;
   emoji: string;
   previewUrl: string;
