@@ -138,13 +138,13 @@
 .header-segmented-pill {
   height: 38px;
   width: 100%;
-  max-width: 246px;
+  max-width: 206px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 3px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(145deg, #1e1e21, #121214);
+  background: linear-gradient(145deg, #222225, #141416);
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
     inset 0 1.5px 2px rgba(255, 255, 255, 0.15),
@@ -160,9 +160,9 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  color: #8e8e93;
+  color: #aaa7ad;
   transition: all 160ms ease;
   border: none;
   background: transparent;
@@ -172,13 +172,32 @@
 }
 
 .header-segmented-pill button.active {
-  background: linear-gradient(135deg, #e11d48, #be123c);
+  background: linear-gradient(110deg, var(--match-pink), var(--match-pink-2));
   color: #ffffff;
   font-weight: 900;
   box-shadow:
     inset 0 1.5px 2px rgba(255, 255, 255, 0.32),
     inset 0 -2px 5px rgba(0, 0, 0, 0.28),
-    0 2px 8px rgba(225, 29, 72, 0.4);
+    0 3px 10px rgba(255, 54, 117, 0.34);
+}
+
+.likes-header .app-circle-button {
+  color: var(--color-brand);
+}
+
+.likes-header .app-header-left .app-circle-button {
+  color: #ffffff;
+}
+
+@media (max-width: 360px) {
+  .header-segmented-pill {
+    max-width: 184px;
+  }
+
+  .header-segmented-pill button {
+    font-size: 10px;
+    padding-inline: 4px;
+  }
 }
 
 .app-page-header {

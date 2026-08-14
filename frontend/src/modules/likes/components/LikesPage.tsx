@@ -75,6 +75,7 @@ export function LikesPage({
   return (
     <section className="app-page likes-page">
       <AppHeader
+        className="likes-header"
         left={
           <button type="button" className="app-circle-button" onClick={onMenu} aria-label="Menu">
             <Icon icon="solar:widget-4-bold" />

@@ -205,8 +205,8 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             value={targetGender}
             onChange={setTargetGender}
             options={[
-              ['male', 'solar:men-bold', 'Pria'],
-              ['female', 'solar:women-bold', 'Wanita'],
+              ['male', 'fluent-emoji-flat:man-light', 'Pria'],
+              ['female', 'streamline-emojis:woman-2', 'Wanita'],
               ['all', 'solar:users-group-rounded-bold', 'Semua'],
             ]}
           />
