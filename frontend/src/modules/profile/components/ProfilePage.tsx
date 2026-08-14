@@ -1,8 +1,7 @@
 import { Icon } from '@iconify/react';
 import { MenuCard } from '@/modules/app-shell/components/MenuCard';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
-
-
+import { AppHeader } from '@/modules/app-shell/components/AppHeader';
 
 export function ProfilePage({
   onBack,
@@ -14,14 +13,22 @@ export function ProfilePage({
   onEdit: () => void;
 }) {
   const profile = useCurrentProfile();
+
   return (
     <section className="app-page profile-page">
-      <button type="button" className="profile-back" onClick={onBack} aria-label="Close profile">
-        <Icon icon="mingcute:close-line" />
-      </button>
-      <button type="button" className="profile-settings" onClick={onSettings} aria-label="Settings">
-        <Icon icon="solar:settings-bold" />
-      </button>
+      <AppHeader
+        left={
+          <button type="button" className="app-circle-button" onClick={onBack} aria-label="Close profile">
+            <Icon icon="solar:alt-arrow-left-linear" />
+          </button>
+        }
+        center={<h1 className="text-lg font-black tracking-tight text-white m-0">Profile</h1>}
+        right={
+          <button type="button" className="app-circle-button" onClick={onSettings} aria-label="Settings">
+            <Icon icon="solar:settings-bold" />
+          </button>
+        }
+      />
       <div className="profile-avatar">
         {profile.mainPhoto ? <img src={profile.mainPhoto} alt={profile.name} /> : profile.initials}
       </div>

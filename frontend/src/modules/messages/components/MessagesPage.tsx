@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
 import { useCurrentProfile } from '@/modules/app-shell/hooks/useCurrentProfile';
+import { AppHeader } from '@/modules/app-shell/components/AppHeader';
 import { api } from '@/utils/api';
 
 interface Props {
@@ -58,17 +59,19 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
 
   return (
     <section className="app-page messages-page">
-      <header className="messages-header fixed-page-header">
-        <span />
-        <h1>Messages</h1>
-        <button type="button" className="profile-monogram" onClick={onProfile} aria-label="Profile">
-          {currentProfile.mainPhoto ? (
-            <img src={currentProfile.mainPhoto} alt={currentProfile.name} />
-          ) : (
-            currentProfile.initials
-          )}
-        </button>
-      </header>
+      <AppHeader
+        left={<span className="w-11 h-11" />}
+        center={<h1 className="text-lg font-black tracking-tight text-white m-0">Messages</h1>}
+        right={
+          <button type="button" className="profile-monogram" onClick={onProfile} aria-label="Profile">
+            {currentProfile.mainPhoto ? (
+              <img src={currentProfile.mainPhoto} alt={currentProfile.name} />
+            ) : (
+              currentProfile.initials
+            )}
+          </button>
+        }
+      />
       {displayProfiles.length === 0 ? (
         <LoveReactionSurface>
           <div className="empty-state messages-empty">

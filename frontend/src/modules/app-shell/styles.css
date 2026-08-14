@@ -1,18 +1,60 @@
 .app-page {
   min-height: 100%;
-  padding: 2px 0 100px;
+  padding: calc(max(10px, env(safe-area-inset-top)) + 58px) 0 calc(max(20px, env(safe-area-inset-bottom)) + 74px);
   color: #fff;
 }
+
+.app-header-shell {
+  position: fixed;
+  z-index: 50;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 412px);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px;
+  pointer-events: auto;
+}
+
+.app-header-left,
+.app-header-right {
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+  height: 44px;
+}
+
+.app-header-left {
+  justify-content: flex-start;
+}
+
+.app-header-right {
+  justify-content: flex-end;
+}
+
+.app-header-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+
 .app-page-header {
   position: fixed;
   z-index: 52;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(10px, env(safe-area-inset-top));
   left: 50%;
-  width: min(calc(100% - 36px), 424px);
+  width: min(calc(100% - 24px), 412px);
   transform: translateX(-50%);
-  min-height: 52px;
+  min-height: 48px;
   display: grid;
-  grid-template-columns: 52px 1fr 52px;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
   background: linear-gradient(180deg, #050505 62%, transparent);
 }
@@ -22,12 +64,12 @@
 }
 .app-page-header h1 {
   text-align: center;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 950;
 }
 .app-circle-button {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -36,8 +78,8 @@
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.09);
 }
 .app-circle-button svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 .app-menu-card {
   overflow: hidden;

@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import { motion } from 'motion/react';
 import type { DiscoverProfile } from '@/modules/discover/@types';
 import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReactionSurface';
+import { AppHeader } from '@/modules/app-shell/components/AppHeader';
 import { api } from '@/utils/api';
 import type { Profile } from '@/@types';
 
@@ -73,46 +74,49 @@ export function LikesPage({
 
   return (
     <section className="app-page likes-page">
-      <div className="likes-toolbar">
-        <button type="button" className="app-circle-button" onClick={onMenu} aria-label="Menu">
-          <Icon icon="solar:widget-4-bold" />
-        </button>
-
-        {/* 2 Segmented Control Tabs */}
-        <div className="flex bg-neutral-900/90 p-1 rounded-full border border-white/10 text-xs font-bold w-full max-w-[280px] justify-between">
+      <AppHeader
+        left={
+          <button type="button" className="app-circle-button" onClick={onMenu} aria-label="Menu">
+            <Icon icon="solar:widget-4-bold" />
+          </button>
+        }
+        center={
+          <div className="flex bg-neutral-900/90 p-1 rounded-full border border-white/10 text-xs font-bold w-full max-w-[260px] justify-between">
+            <button
+              type="button"
+              onClick={() => setTab('received')}
+              className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
+                tab === 'received'
+                  ? 'bg-pink-600 text-white shadow-sm font-extrabold'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Menyukai ({receivedLikes.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('sent')}
+              className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
+                tab === 'sent'
+                  ? 'bg-pink-600 text-white shadow-sm font-extrabold'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Disukai ({sentLikes.length})
+            </button>
+          </div>
+        }
+        right={
           <button
             type="button"
-            onClick={() => setTab('received')}
-            className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
-              tab === 'received'
-                ? 'bg-pink-600 text-white shadow-sm font-extrabold'
-                : 'text-neutral-400 hover:text-white'
-            }`}
+            className="app-circle-button"
+            onClick={onDateNight}
+            aria-label="Date Night"
           >
-            Yang Menyukai ({receivedLikes.length})
+            <Icon icon="solar:heart-bold" />
           </button>
-          <button
-            type="button"
-            onClick={() => setTab('sent')}
-            className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
-              tab === 'sent'
-                ? 'bg-pink-600 text-white shadow-sm font-extrabold'
-                : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            Yang Saya Sukai ({sentLikes.length})
-          </button>
-        </div>
-
-        <button
-          type="button"
-          className="app-circle-button"
-          onClick={onDateNight}
-          aria-label="Date Night"
-        >
-          <Icon icon="solar:heart-bold" />
-        </button>
-      </div>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center h-64 text-neutral-400">
