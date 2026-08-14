@@ -7,7 +7,7 @@ import (
 	"matchin-backend/internal/domain"
 	"matchin-backend/internal/repository"
 
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -210,7 +210,7 @@ func TestProfileRepository(t *testing.T) {
 		currentP, _ := profileRepo.GetByUserID(ctx, u1.ID)
 
 		// 1. Same city mode (Jakarta)
-		recs, err := profileRepo.GetRecommendations(ctx, u1.ID, currentP, 10)
+		recs, err := profileRepo.GetRecommendations(ctx, u1.ID, currentP, 10, "for_you")
 		if err != nil {
 			t.Fatalf("GetRecommendations failed: %v", err)
 		}
@@ -223,7 +223,7 @@ func TestProfileRepository(t *testing.T) {
 
 		// 2. Global location mode
 		currentP.TargetLocationMode = domain.FilterGlobal
-		recsGlobal, err := profileRepo.GetRecommendations(ctx, u1.ID, currentP, 10)
+		recsGlobal, err := profileRepo.GetRecommendations(ctx, u1.ID, currentP, 10, "for_you")
 		if err != nil {
 			t.Fatalf("GetRecommendations global failed: %v", err)
 		}

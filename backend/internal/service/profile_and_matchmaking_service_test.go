@@ -100,7 +100,7 @@ func TestProfileService(t *testing.T) {
 		uNoProfile := &domain.User{TelegramID: 60002, Username: "noprofile"}
 		_ = userSvc.CreateOrUpdate(ctx, uNoProfile)
 
-		recsNoProfile, err := profileSvc.GetRecommendations(ctx, uNoProfile.ID, 10)
+		recsNoProfile, err := profileSvc.GetRecommendations(ctx, uNoProfile.ID, 10, "for_you")
 		if err != nil {
 			t.Fatalf("GetRecommendations for user with no profile failed: %v", err)
 		}
@@ -109,7 +109,7 @@ func TestProfileService(t *testing.T) {
 		}
 
 		// User with profile requesting limit <= 0 should default to 10
-		recsDefault, err := profileSvc.GetRecommendations(ctx, u.ID, -5)
+		recsDefault, err := profileSvc.GetRecommendations(ctx, u.ID, -5, "for_you")
 		if err != nil {
 			t.Fatalf("GetRecommendations default limit failed: %v", err)
 		}
