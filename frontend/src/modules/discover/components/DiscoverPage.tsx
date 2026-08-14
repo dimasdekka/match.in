@@ -135,30 +135,30 @@ export function DiscoverPage() {
                   <SwipeActions onSwipe={deck.decide} />
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center flex-1 text-center p-6 text-neutral-300 gap-4 my-auto">
-                  <div className="w-20 h-20 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-3xl text-pink-500 shadow-xl">
-                    <Icon icon="solar:radar-2-bold" />
+                <div className="brand-empty-state">
+                  <div className="brand-empty-icon" aria-hidden="true">
+                    <Icon icon="solar:radar-2-bold-duotone" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white">Tidak Ada Profil Tersedia</h3>
-                    <p className="text-xs text-neutral-400 max-w-[260px] mx-auto mt-1">
-                      Anda telah melihat semua rekomendasi di mode ini. Coba ubah mode feed atau perluas preferensi pencarian.
+                  <div className="brand-empty-copy">
+                    <h3>Semua profil sudah dilihat</h3>
+                    <p>
+                      Coba muat ulang atau perluas preferensi untuk menemukan lebih banyak orang.
                     </p>
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className="brand-empty-actions">
                     <button
                       type="button"
                       onClick={() => deck.reload()}
-                      className="px-4 py-2 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30"
+                      className="brand-empty-button primary"
                     >
-                      <Icon icon="solar:restart-bold" /> Muat Ulang
+                      <Icon icon="solar:restart-bold" /> Muat ulang
                     </button>
                     <button
                       type="button"
                       onClick={() => setOverlay('settings')}
-                      className="px-4 py-2 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold transition border border-white/10"
+                      className="brand-empty-button secondary"
                     >
-                      Ubah Filter
+                      <Icon icon="solar:tuning-2-bold" /> Ubah filter
                     </button>
                   </div>
                 </div>

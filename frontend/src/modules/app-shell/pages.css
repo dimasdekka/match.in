@@ -79,6 +79,19 @@
   font-weight: 800;
   line-height: 1.45;
 }
+.brand-empty-state { width: 100%; flex: 1; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 28px 24px 44px; text-align: center; }
+.brand-empty-icon { position: relative; width: 82px; height: 82px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.11); border-radius: 50%; color: #ff4f87; background: radial-gradient(circle at 38% 28%,#2f292e 0,#1b191c 45%,#111113 100%); box-shadow: inset 0 2px 3px rgba(255,255,255,.1),inset 0 -8px 14px rgba(0,0,0,.36),0 14px 34px rgba(0,0,0,.35),0 0 28px rgba(255,54,117,.08); }
+.brand-empty-icon::after { content:""; position:absolute; inset:9px; border:1px solid rgba(255,79,135,.12); border-radius:50%; }
+.brand-empty-icon svg { position:relative; z-index:1; width:36px; height:36px; filter:drop-shadow(0 4px 9px rgba(255,54,117,.3)); }
+.brand-empty-copy { max-width:300px; }
+.brand-empty-copy h3 { color:#fff; font-size:19px; font-weight:950; line-height:1.2; letter-spacing:-.25px; }
+.brand-empty-copy p { margin-top:7px; color:#9c999f; font-size:12px; font-weight:700; line-height:1.5; }
+.brand-empty-actions { display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; margin-top:2px; }
+.brand-empty-button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 17px; border:1px solid rgba(255,255,255,.1); border-radius:999px; color:#eee; background:linear-gradient(145deg,#303033,#202023); font-size:12px; font-weight:900; box-shadow:inset 0 1.5px 2px rgba(255,255,255,.17),inset 0 -4px 7px rgba(0,0,0,.32),0 6px 14px rgba(0,0,0,.28); transition:transform .12s ease,filter .15s ease; }
+.brand-empty-button.primary { border-color:rgba(255,125,164,.42); color:#fff; background:linear-gradient(110deg,var(--match-pink),var(--match-pink-2)); box-shadow:inset 0 2px 2px rgba(255,255,255,.3),inset 0 -5px 8px rgba(138,0,50,.28),0 8px 22px rgba(255,54,117,.28); }
+.brand-empty-button svg { width:17px; height:17px; }
+.brand-empty-button:active { transform:translateY(1px) scale(.97); filter:brightness(.92); box-shadow:inset 0 3px 7px rgba(0,0,0,.3); }
+@media(max-height:680px) { .brand-empty-state { min-height:260px; gap:13px; padding-block:18px 34px; }.brand-empty-icon { width:70px; height:70px; }.brand-empty-icon svg { width:31px; height:31px; } }
 .stacked-cards {
   position: relative;
   width: 120px;

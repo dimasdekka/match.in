@@ -74,23 +74,23 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
       />
       {displayProfiles.length === 0 ? (
         <LoveReactionSurface>
-          <div className="flex flex-col items-center justify-center flex-1 text-center p-6 text-neutral-300 gap-4 my-auto">
-            <div className="w-20 h-20 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-3xl text-pink-500 shadow-xl">
-              <Icon icon="solar:chat-round-heart-bold" />
+          <div className="brand-empty-state">
+            <div className="brand-empty-icon" aria-hidden="true">
+              <Icon icon="solar:chat-round-heart-bold-duotone" />
             </div>
-            <div>
-              <h3 className="text-lg font-black text-white">Belum Ada Percakapan</h3>
-              <p className="text-xs text-neutral-400 max-w-[260px] mx-auto mt-1">
-                Mulai obrolan baru dengan menemukan pasangan cocok Anda di halaman Discover.
+            <div className="brand-empty-copy">
+              <h3>Belum ada percakapan</h3>
+              <p>
+                Temukan seseorang yang cocok, lalu mulai percakapan pertamamu.
               </p>
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="brand-empty-actions">
               <button
                 type="button"
-                className="px-4 py-2 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30"
+                className="brand-empty-button primary"
                 onClick={onDiscover}
               >
-                <Icon icon="solar:magnifer-linear" /> Cari Pasangan
+                <Icon icon="solar:heart-angle-bold" /> Cari pasangan
               </button>
             </div>
           </div>
