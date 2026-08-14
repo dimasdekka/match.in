@@ -425,18 +425,20 @@ html.conversation-open .discover-shell {
 
 .discover-nav button.active,
 .discover-nav .discover-nav-item.active {
-  color: #ffffff;
+  color: #ff4d88;
 }
 
 .discover-nav-indicator {
   position: absolute;
   inset: 0;
   border-radius: var(--radius-pill);
-  background: linear-gradient(145deg, #6c6e6c, #484b49);
+  background: linear-gradient(145deg, #2c2127, #191215);
+  border: 1px solid rgba(255, 75, 134, 0.45);
   box-shadow:
     inset 0 1.5px 2px rgba(255, 255, 255, 0.22),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.28),
-    0 3px 8px rgba(0, 0, 0, 0.3);
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(255, 75, 134, 0.55),
+    0 3px 10px rgba(225, 29, 72, 0.4);
   z-index: 0;
   pointer-events: none;
   contain: layout paint;
