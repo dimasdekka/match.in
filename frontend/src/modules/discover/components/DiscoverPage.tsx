@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Icon } from '@iconify/react';
 import { DiscoverHeader } from './DiscoverHeader';
@@ -14,6 +14,7 @@ import { ProfilePage, SettingsPage } from '@/modules/profile';
 import { DateNightPage } from '@/modules/date-night';
 import { OnboardingWizard } from '@/modules/onboarding';
 import type { ProfileFormData } from '@/modules/onboarding/@types';
+import { IncomingLikeNotification } from '@/modules/app-shell/components/IncomingLikeNotification';
 import { api } from '@/utils/api';
 import { readJson } from '@/utils/storage';
 import '@/modules/app-shell/styles.css';
@@ -26,8 +27,43 @@ export function DiscoverPage() {
   const [activeNav, setActiveNav] = useState<DiscoverNavId>('discover');
   const [overlay, setOverlay] = useState<OverlayPage>(null);
   const [conversation, setConversation] = useState<DiscoverProfile | null>(null);
+  const [incomingLikes, setIncomingLikes] = useState<DiscoverProfile[]>([]);
   const deck = useDiscoverDeck();
   const storedProfile = readJson<ProfileFormData | null>('matchin:onboarding-profile', null);
+
+  const fetchIncomingLikes = useCallback(async () => {
+    try {
+      const res = await api.getLikesReceived();
+      if (res?.profiles) {
+        const mapped: DiscoverProfile[] = res.profiles.map((p) => {
+          let photos: string[] = [];
+          try {
+            photos = typeof p.photos === 'string' ? JSON.parse(p.photos) : p.photos || [];
+          } catch {
+            photos = [];
+          }
+          return {
+            id: p.user_id || p.id,
+            name: p.name,
+            age: p.age,
+            city: p.city || 'Jakarta',
+            distance: 3,
+            bio: p.bio || '',
+            image: photos[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+            verified: p.is_verified ?? true,
+            interests: [],
+          };
+        });
+        setIncomingLikes(mapped);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    void fetchIncomingLikes();
+    const interval = setInterval(fetchIncomingLikes, 5000);
+    return () => clearInterval(interval);
+  }, [fetchIncomingLikes]);
 
   const saveEditedProfile = async (profile: ProfileFormData) => {
     try {
@@ -168,6 +204,11 @@ export function DiscoverPage() {
         </AnimatePresence>
         {!conversation && !overlay && <DiscoverNavigation active={activeNav} onChange={setActiveNav} />}
       </div>
+      <IncomingLikeNotification
+        incomingLikes={incomingLikes}
+        onOpenConversation={setConversation}
+        onDismissLike={(id) => setIncomingLikes((prev) => prev.filter((p) => p.id !== id))}
+      />
       <MatchFeedback profile={deck.match} onClose={deck.closeMatch} />
     </main>
   );

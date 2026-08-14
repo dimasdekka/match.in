@@ -6,6 +6,7 @@ import (
 
 	"matchin-backend/internal/domain"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SwipeRepository interface {
@@ -30,7 +31,10 @@ func NewSwipeRepository(db *gorm.DB) SwipeRepository {
 }
 
 func (r *SwipeRepositoryImpl) RecordSwipe(ctx context.Context, swipe *domain.Swipe) error {
-	err := r.db.WithContext(ctx).Save(swipe).Error
+	err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "swiper_id"}, {Name: "target_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"action", "created_at"}),
+	}).Create(swipe).Error
 	if err != nil {
 		return fmt.Errorf("failed to record swipe: %w", err)
 	}
