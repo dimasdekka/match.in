@@ -770,12 +770,23 @@ func (s *botService) handleMatchesCommand(ctx context.Context, chatID int64, use
 }
 
 func (s *botService) handleResetCommand(ctx context.Context, chatID int64, user *domain.User) error {
-	if s.accountService != nil {
-		if err := s.accountService.DeleteAccount(ctx, user.ID); err != nil {
-			return fmt.Errorf("failed to reset account for user %d: %w", user.ID, err)
+	var targetUserID uint
+	if user != nil && user.ID != 0 {
+		targetUserID = user.ID
+	} else if s.userService != nil {
+		if u, err := s.userService.GetByTelegramID(ctx, chatID); err == nil && u != nil {
+			targetUserID = u.ID
 		}
-	} else if s.matchmakingService != nil {
-		_ = s.matchmakingService.ResetSwipes(ctx, user.ID)
+	}
+
+	if targetUserID != 0 && s.accountService != nil {
+		if err := s.accountService.DeleteAccount(ctx, targetUserID); err != nil {
+			log.Printf("Error resetting account for user %d: %v\n", targetUserID, err)
+		} else {
+			log.Printf("Successfully reset account for user %d (TelegramID: %d)\n", targetUserID, chatID)
+		}
+	} else if targetUserID != 0 && s.matchmakingService != nil {
+		_ = s.matchmakingService.ResetSwipes(ctx, targetUserID)
 	}
 
 	appURL := s.webAppURL
@@ -787,7 +798,12 @@ func (s *botService) handleResetCommand(ctx context.Context, chatID int64, user 
 		"Seluruh profil, foto, riwayat swipe/like, daftar match, dan obrolan Anda telah dihapus secara permanen.\n\n" +
 		"Ketik <b>/start</b> atau klik tombol di bawah untuk mendaftar ulang dan mulai baru dari awal! ✨"
 
-	if user.LanguageCode == "en" {
+	langCode := "id"
+	if user != nil && user.LanguageCode != "" {
+		langCode = user.LanguageCode
+	}
+
+	if langCode == "en" {
 		text = "🔄 <b>Account Successfully Reset!</b>\n\n" +
 			"All your profile data, photos, swipe/like history, matches, and chat conversations have been permanently wiped.\n\n" +
 			"Type <b>/start</b> or tap the button below to register fresh and create a new profile! ✨"
