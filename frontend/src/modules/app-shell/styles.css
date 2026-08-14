@@ -24,8 +24,10 @@
 .app-header-right {
   display: flex;
   align-items: center;
+  width: 44px;
   min-width: 44px;
   height: 44px;
+  min-height: 44px;
 }
 
 .app-header-left {
@@ -43,6 +45,57 @@
   justify-content: center;
   text-align: center;
   min-width: 0;
+}
+
+/* Universal Header Circle Action Buttons */
+.app-circle-button,
+.discover-icon-button,
+.profile-monogram {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #222225, #151517);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.09),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 120ms ease, opacity 120ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-circle-button svg,
+.discover-icon-button svg,
+.app-header-left svg,
+.app-header-right svg {
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  min-height: 22px;
+  display: block;
+}
+
+.profile-monogram {
+  font-size: 15px;
+  font-weight: 900;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.profile-monogram img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }
 
 .app-page-header {
@@ -67,20 +120,7 @@
   font-size: 18px;
   font-weight: 950;
 }
-.app-circle-button {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #242426, #171719);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.09);
-}
-.app-circle-button svg {
-  width: 22px;
-  height: 22px;
-}
+
 .app-menu-card {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.06);
