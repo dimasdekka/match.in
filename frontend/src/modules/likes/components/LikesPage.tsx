@@ -6,7 +6,7 @@ import { LoveReactionSurface } from '@/modules/app-shell/components/LoveReaction
 import { api } from '@/utils/api';
 import type { Profile } from '@/@types';
 
-type LikeTab = 'received' | 'sent' | 'matches';
+type LikeTab = 'received' | 'sent';
 
 export function LikesPage({
   onDateNight,
@@ -21,7 +21,6 @@ export function LikesPage({
   const [tab, setTab] = useState<LikeTab>('received');
   const [receivedLikes, setReceivedLikes] = useState<DiscoverProfile[]>([]);
   const [sentLikes, setSentLikes] = useState<DiscoverProfile[]>([]);
-  const [matches, setMatches] = useState<DiscoverProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<DiscoverProfile | null>(null);
 
@@ -54,23 +53,13 @@ export function LikesPage({
     Promise.allSettled([
       api.getLikesReceived(),
       api.getLikesSent(),
-      api.getMatches(),
-    ]).then(([recRes, sentRes, matchRes]) => {
+    ]).then(([recRes, sentRes]) => {
       if (!mounted) return;
       if (recRes.status === 'fulfilled' && recRes.value.profiles) {
         setReceivedLikes(recRes.value.profiles.map(mapProfile));
       }
       if (sentRes.status === 'fulfilled' && sentRes.value.profiles) {
         setSentLikes(sentRes.value.profiles.map(mapProfile));
-      }
-      if (matchRes.status === 'fulfilled' && matchRes.value.matches) {
-        setMatches(
-          matchRes.value.matches.map((m) => {
-            const mapped = mapProfile(m.matched_profile);
-            mapped.id = m.match_id;
-            return mapped;
-          }),
-        );
       }
       setLoading(false);
     });
@@ -80,8 +69,7 @@ export function LikesPage({
     };
   }, []);
 
-  const currentList =
-    tab === 'received' ? receivedLikes : tab === 'sent' ? sentLikes : matches;
+  const currentList = tab === 'received' ? receivedLikes : sentLikes;
 
   return (
     <section className="app-page likes-page">
@@ -90,40 +78,29 @@ export function LikesPage({
           <Icon icon="solar:widget-4-bold" />
         </button>
 
-        {/* Segmented Control Tabs */}
-        <div className="flex bg-neutral-900/90 p-1 rounded-full border border-white/10 text-xs font-bold">
+        {/* 2 Segmented Control Tabs */}
+        <div className="flex bg-neutral-900/90 p-1 rounded-full border border-white/10 text-xs font-bold w-full max-w-[280px] justify-between">
           <button
             type="button"
             onClick={() => setTab('received')}
-            className={`px-3 py-1.5 rounded-full transition ${
+            className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
               tab === 'received'
-                ? 'bg-pink-600 text-white shadow-sm'
+                ? 'bg-pink-600 text-white shadow-sm font-extrabold'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            Likes You ({receivedLikes.length})
+            Yang Menyukai ({receivedLikes.length})
           </button>
           <button
             type="button"
             onClick={() => setTab('sent')}
-            className={`px-3 py-1.5 rounded-full transition ${
+            className={`flex-1 py-1.5 px-2 rounded-full text-center transition ${
               tab === 'sent'
-                ? 'bg-pink-600 text-white shadow-sm'
+                ? 'bg-pink-600 text-white shadow-sm font-extrabold'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            You Liked ({sentLikes.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('matches')}
-            className={`px-3 py-1.5 rounded-full transition ${
-              tab === 'matches'
-                ? 'bg-pink-600 text-white shadow-sm'
-                : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            Matches ({matches.length})
+            Yang Saya Sukai ({sentLikes.length})
           </button>
         </div>
 
@@ -151,20 +128,10 @@ export function LikesPage({
               animate={{ opacity: 1, scale: 1 }}
               role="button"
               tabIndex={0}
-              onClick={() => {
-                if (tab === 'matches' && onOpenConversation) {
-                  onOpenConversation(profile);
-                } else {
-                  setSelectedProfile(profile);
-                }
-              }}
+              onClick={() => setSelectedProfile(profile)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
-                  if (tab === 'matches' && onOpenConversation) {
-                    onOpenConversation(profile);
-                  } else {
-                    setSelectedProfile(profile);
-                  }
+                  setSelectedProfile(profile);
                 }
               }}
               className="cursor-pointer"
@@ -177,9 +144,9 @@ export function LikesPage({
                 <span>
                   {profile.city} · {profile.distance} km
                 </span>
-                {tab === 'matches' && (
+                {tab === 'received' && (
                   <span className="text-[11px] text-pink-400 font-bold mt-0.5">
-                    💬 Ketuk untuk chat
+                    ✨ Menyukai profil Anda
                   </span>
                 )}
               </div>
@@ -197,21 +164,18 @@ export function LikesPage({
             </div>
             <h2>
               {tab === 'received'
-                ? 'Belum ada yang menyukai'
-                : tab === 'sent'
-                ? 'Belum ada yang disukai'
-                : 'Belum ada match'}
+                ? 'Belum ada yang menyukai Anda'
+                : 'Belum ada profil yang Anda sukai'}
             </h2>
             <p>
               {tab === 'received'
-                ? 'Profil pengguna yang menyukai Anda akan muncul di sini'
-                : tab === 'sent'
-                ? 'Profil yang telah Anda like akan tersimpan di sini'
-                : 'Ketika kalian saling like, match akan muncul di sini'}
+                ? 'Profil pengguna yang menyukai Anda saat swipe akan muncul di sini'
+                : 'Profil yang telah Anda beri Like akan tersimpan di sini'}
             </p>
           </div>
         </LoveReactionSurface>
       )}
+
       {selectedProfile && (
         <motion.section className="liked-profile-detail" initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }}>
           <header className="liked-profile-header">
@@ -229,11 +193,33 @@ export function LikesPage({
             <div className="liked-profile-copy">
               <h1>{selectedProfile.name} {selectedProfile.verified && <Icon icon="solar:verified-check-bold" />}</h1>
               <span><Icon icon="solar:map-point-bold" /> {selectedProfile.city}</span>
-              <p>{selectedProfile.bio || 'Say hello and get to know each other.'}</p>
+              <p>{selectedProfile.bio || 'Katakan halo dan saling mengenal lebih dekat.'}</p>
             </div>
             <div className="liked-profile-actions">
-              <button type="button" onClick={() => onOpenConversation?.(selectedProfile)}>Message</button>
-              <button type="button" aria-label="Like"><Icon icon="solar:heart-bold" /></button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenConversation) {
+                    onOpenConversation(selectedProfile);
+                  }
+                }}
+              >
+                Kirim Pesan
+              </button>
+              <button
+                type="button"
+                aria-label="Like back"
+                onClick={async () => {
+                  try {
+                    await api.swipe(selectedProfile.id, 'like');
+                    alert(`Anda telah menyukai ${selectedProfile.name}!`);
+                  } catch {
+                    alert('Gagal mengirim like');
+                  }
+                }}
+              >
+                <Icon icon="solar:heart-bold" />
+              </button>
             </div>
             {selectedProfile.interests && selectedProfile.interests.length > 0 && (
               <div className="liked-profile-highlights">
