@@ -159,23 +159,22 @@ export function LikesPage({
         </div>
       ) : (
         <LoveReactionSurface>
-          <div className="empty-state likes-empty">
-            <div className="stacked-cards">
-              <span />
-              <span>
-                <Icon icon="solar:heart-bold" />
-              </span>
+          <div className="flex flex-col items-center justify-center flex-1 text-center p-6 text-neutral-300 gap-4 my-auto">
+            <div className="w-20 h-20 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-3xl text-pink-500 shadow-xl">
+              <Icon icon="solar:heart-bold" />
             </div>
-            <h2>
-              {tab === 'received'
-                ? 'Belum ada yang menyukai Anda'
-                : 'Belum ada profil yang Anda sukai'}
-            </h2>
-            <p>
-              {tab === 'received'
-                ? 'Profil pengguna yang menyukai Anda saat swipe akan muncul di sini'
-                : 'Profil yang telah Anda beri Like akan tersimpan di sini'}
-            </p>
+            <div>
+              <h3 className="text-lg font-black text-white">
+                {tab === 'received'
+                  ? 'Belum Ada yang Menyukai'
+                  : 'Belum Ada Profil yang Disukai'}
+              </h3>
+              <p className="text-xs text-neutral-400 max-w-[260px] mx-auto mt-1">
+                {tab === 'received'
+                  ? 'Profil pengguna yang menyukai Anda saat swipe akan muncul di sini.'
+                  : 'Profil pengguna yang telah Anda beri Like saat swipe akan tersimpan di sini.'}
+              </p>
+            </div>
           </div>
         </LoveReactionSurface>
       )}

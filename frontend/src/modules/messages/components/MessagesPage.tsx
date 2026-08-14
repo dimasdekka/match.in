@@ -74,25 +74,25 @@ export function MessagesPage({ profiles, onDiscover, onProfile, onOpenConversati
       />
       {displayProfiles.length === 0 ? (
         <LoveReactionSurface>
-          <div className="empty-state messages-empty">
-            <div className="message-heart-icon">
+          <div className="flex flex-col items-center justify-center flex-1 text-center p-6 text-neutral-300 gap-4 my-auto">
+            <div className="w-20 h-20 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-3xl text-pink-500 shadow-xl">
               <Icon icon="solar:chat-round-heart-bold" />
-              <Icon icon="solar:stars-bold" className="message-spark" />
             </div>
-            <h2>No conversations yet</h2>
-            <p>
-              Start a new chat by
-              <br />
-              finding your matches
-            </p>
-            <motion.button
-              type="button"
-              className="pink-action"
-              onClick={onDiscover}
-              whileTap={{ scale: 0.96 }}
-            >
-              <Icon icon="solar:magnifer-linear" /> Find Matches
-            </motion.button>
+            <div>
+              <h3 className="text-lg font-black text-white">Belum Ada Percakapan</h3>
+              <p className="text-xs text-neutral-400 max-w-[260px] mx-auto mt-1">
+                Mulai obrolan baru dengan menemukan pasangan cocok Anda di halaman Discover.
+              </p>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30"
+                onClick={onDiscover}
+              >
+                <Icon icon="solar:magnifer-linear" /> Cari Pasangan
+              </button>
+            </div>
           </div>
         </LoveReactionSurface>
       ) : (
