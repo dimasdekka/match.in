@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# TypeScript
+*.tsbuildinfo
