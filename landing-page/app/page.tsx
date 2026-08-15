@@ -723,7 +723,7 @@ function InfoSection({ reducedMotion }: { reducedMotion: boolean | null }) {
 
       <footer className="site-footer" id="about">
         <div className="footer-brand">
-          <MatchinLogo />
+          <MatchinLogo size="lg" />
           <div className="social-links" aria-label="Matchin social media">
             <a href="#instagram" aria-label="Instagram"><SocialIcon type="instagram" /></a>
             <a href="#x" aria-label="X"><SocialIcon type="x" /></a>
@@ -752,8 +752,8 @@ function InfoSection({ reducedMotion }: { reducedMotion: boolean | null }) {
 
       <div className="footer-watermark" aria-hidden="true">
         <div className="footer-watermark-content">
-          <MatchinLogoIcon size={130} />
-          <MatchinWordmark size="watermark" />
+          <MatchinLogoIcon size={175} />
+          <MatchinWordmark size="watermark" color="pink" />
         </div>
       </div>
     </section>
