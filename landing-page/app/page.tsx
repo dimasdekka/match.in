@@ -626,20 +626,23 @@ const INFO_CARDS = [
 function SocialIcon({ type }: { type: "instagram" | "x" | "tiktok" }) {
   if (type === "instagram") {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle className="social-dot" cx="17.5" cy="6.5" r="1" />
+      <svg className="icon-stroke" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle className="social-dot" cx="17.6" cy="6.4" r="1.1" />
       </svg>
     );
   }
   if (type === "x") {
-    return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3 20 21M20 3 4 21" /></svg>;
+    return (
+      <svg className="icon-fill" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    );
   }
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M14 4v10.5a4.5 4.5 0 1 1-4-4.47" />
-      <path d="M14 4c.8 2.7 2.5 4.1 5 4.4" />
+    <svg className="icon-fill" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.24 6.24 0 0 0 1.83-4.47V8.92a8.3 8.3 0 0 0 4.94 1.6V7.08a4.93 4.93 0 0 1-1-.39z" />
     </svg>
   );
 }
@@ -760,6 +763,57 @@ function InfoSection({ reducedMotion }: { reducedMotion: boolean | null }) {
   );
 }
 
+function Navbar() {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const navLinks = [
+    { href: "#help", label: "Help" },
+    { href: "#safety", label: "Safety" },
+    { href: "#stories", label: "Stories" },
+    { href: "#about", label: "About" },
+  ];
+
+  return (
+    <nav className="navbar" aria-label="Main navigation">
+      <div className="navbar-brand-col">
+        <a href="#home" className="navbar-logo-link" aria-label="matchin home">
+          <MatchinLogo />
+        </a>
+      </div>
+
+      <ul className="navbar-menu" onMouseLeave={() => setHoveredIndex(null)}>
+        {navLinks.map((link, idx) => (
+          <li key={link.href} className="navbar-menu-item" onMouseEnter={() => setHoveredIndex(idx)}>
+            <a href={link.href} className="navbar-menu-link">
+              {hoveredIndex === idx && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="nav-pill-indicator"
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                />
+              )}
+              <span className="navbar-menu-label">{link.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <div className="navbar-action-col">
+        <Button asChild variant="download" size="download">
+          <a
+            href="https://t.me/MatchInDating_bot"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open MatchInDating bot on Telegram"
+          >
+            <TelegramIcon />
+            <span>Telegram</span>
+          </a>
+        </Button>
+      </div>
+    </nav>
+  );
+}
+
 export default function Home() {
   const shouldReduceMotion = useReducedMotion();
   const [showIntro, setShowIntro] = useState(true);
@@ -769,7 +823,7 @@ export default function Home() {
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setNavbarScrolled(latest > 24);
+    setNavbarScrolled(latest > 8);
   });
 
   useEffect(() => {
@@ -795,15 +849,26 @@ export default function Home() {
   }, [heroReady, shouldReduceMotion]);
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
+    if (shouldReduceMotion) {
+      return;
+    }
 
-    const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+    });
+
     let frame = 0;
-    const tick = (time: number) => {
+    const raf = (time: number) => {
       lenis.raf(time);
-      frame = requestAnimationFrame(tick);
+      frame = requestAnimationFrame(raf);
     };
-    frame = requestAnimationFrame(tick);
+
+    frame = requestAnimationFrame(raf);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -820,21 +885,13 @@ export default function Home() {
     </AnimatePresence>
     <main id="home">
       <header className={`navbar-shell${navbarScrolled ? " navbar-shell--scrolled" : ""}`}>
-      <div className="navbar">
-        <a href="#home" aria-label="matchin home"><MatchinLogo /></a>
-        <nav aria-label="Main navigation">
-          <a href="#help">Help</a>
-          <a href="#safety">Safety</a>
-          <a href="#stories">Stories</a>
-          <a href="#about">About</a>
-        </nav>
-        <Button asChild variant="download" size="download">
-          <a href="https://t.me/MatchInDating_bot" target="_blank" rel="noreferrer" aria-label="Open MatchInDating bot on Telegram">
-            <TelegramIcon />
-            <span>Telegram</span>
-          </a>
-        </Button>
-      </div>
+        <div aria-hidden="true" className="navbar-backdrop">
+          <div className="navbar-backdrop__bleed" />
+          <div className="navbar-backdrop__blur-heavy" />
+          <div className="navbar-backdrop__blur-soft" />
+          <div className="navbar-backdrop__tint" />
+        </div>
+        <Navbar />
       </header>
 
     <section className="hero">
