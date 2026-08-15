@@ -1,8 +1,9 @@
 import React from "react";
+import Image from "next/image";
 
 export function MatchinLogoIcon({
   className = "",
-  size = 42,
+  size = 40,
 }: {
   className?: string;
   size?: number;
@@ -15,33 +16,24 @@ export function MatchinLogoIcon({
         height: size,
         minWidth: size,
         minHeight: size,
-        borderRadius: Math.round(size * 0.28),
+        borderRadius: Math.round(size * 0.26),
       }}
     >
-      <svg
-        viewBox="0 0 100 100"
-        width="100%"
-        height="100%"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="matchinPinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ff7eb3" />
-            <stop offset="100%" stopColor="#ff457b" />
-          </linearGradient>
-        </defs>
-        {/* Rounded pink squircle */}
-        <rect width="100" height="100" rx="28" fill="url(#matchinPinkGrad)" />
-        {/* Two white heads */}
-        <circle cx="36" cy="34" r="7.5" fill="#ffffff" />
-        <circle cx="64" cy="34" r="7.5" fill="#ffffff" />
-        {/* Connected M body */}
-        <path
-          d="M 28 72 C 28 50 36 43 42 43 C 48 43 50 54 50 63 C 50 54 52 43 58 43 C 64 43 72 50 72 72 C 72 75 67 75 67 72 C 67 56 62 50 58 50 C 54 50 54 67 50 67 C 46 67 46 50 42 50 C 38 50 33 56 33 72 C 33 75 28 75 28 72 Z"
-          fill="#ffffff"
-        />
-      </svg>
+      <Image
+        src="/matchin-app-icon.png"
+        alt="Match.in Logo"
+        width={size * 2}
+        height={size * 2}
+        priority
+        className="matchin-app-icon-img"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          borderRadius: "inherit",
+          display: "block",
+        }}
+      />
     </div>
   );
 }
@@ -85,7 +77,7 @@ export function MatchinLogo({
   color?: "dark" | "white" | "gradient";
   className?: string;
 }) {
-  const iconSize = hero ? 54 : size === "lg" ? 44 : size === "sm" ? 28 : 36;
+  const iconSize = hero ? 56 : size === "lg" ? 44 : size === "sm" ? 28 : 38;
   const wordmarkSize = hero ? "xl" : size;
 
   return (

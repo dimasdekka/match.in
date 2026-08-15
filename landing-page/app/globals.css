@@ -1538,10 +1538,11 @@ a { color: inherit; text-decoration: none; }
 }
 
 .matchin-wordmark--watermark {
-  font-size: min(150px, 13vw);
+  font-size: min(170px, 15vw);
   font-weight: 900;
   letter-spacing: -0.05em;
-  color: rgba(255, 77, 136, 0.16);
+  color: #ff4d88;
+  opacity: 0.35;
 }
 
 .matchin-i-wrapper {
@@ -1581,15 +1582,15 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* Footer Watermark (Slightly cropped at bottom) */
+/* Footer Watermark (Cleanly half-visible and cut off at bottom) */
 .footer-watermark {
   position: relative;
-  z-index: 0;
+  z-index: 1;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
-  height: 180px;
-  margin: 60px -64px -40px;
+  height: 100px;
+  margin: 60px -64px 0;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1597,32 +1598,19 @@ a { color: inherit; text-decoration: none; }
 .footer-watermark-content {
   display: flex;
   align-items: center;
-  gap: 24px;
-  opacity: 0.22;
-  transform: translateY(42%);
+  justify-content: center;
+  gap: 28px;
+  transform: translateY(-8%);
   user-select: none;
-  filter: drop-shadow(0 10px 24px rgba(255, 77, 136, 0.15));
+}
+
+.footer-watermark-content .matchin-logo-icon {
+  opacity: 0.35;
+  box-shadow: none;
 }
 
 .info-section::after {
-  position: absolute;
-  z-index: 2;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 270px;
-  content: "";
-  background: linear-gradient(
-    180deg,
-    rgba(255,250,250,0) 0%,
-    rgba(255,250,250,.02) 20%,
-    rgba(255,250,250,.06) 40%,
-    rgba(255,250,250,.14) 60%,
-    rgba(255,250,250,.34) 78%,
-    rgba(255,250,250,.64) 91%,
-    rgba(255,250,250,.9) 100%
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .footer-brand .logo {
